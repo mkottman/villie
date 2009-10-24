@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <logicalFolder name="core" displayName="core" projectFiles="true">
+        <itemPath>core/Edge.h</itemPath>
+        <itemPath>core/Graph.h</itemPath>
+        <itemPath>core/Node.h</itemPath>
+        <itemPath>core/common.h</itemPath>
+        <itemPath>core/element.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="gui" displayName="gui" projectFiles="true">
+        <itemPath>gui/grapheditorpanel.h</itemPath>
+        <itemPath>gui/main_window.h</itemPath>
+        <itemPath>gui/vedge.h</itemPath>
+        <itemPath>gui/velement.h</itemPath>
+        <itemPath>gui/vnode.h</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="core" displayName="core" projectFiles="true">
+        <itemPath>core/Edge.cpp</itemPath>
+        <itemPath>core/Graph.cpp</itemPath>
+        <itemPath>core/Node.cpp</itemPath>
+        <itemPath>core/element.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="gui" displayName="gui" projectFiles="true">
+        <itemPath>gui/grapheditorpanel.cpp</itemPath>
+        <itemPath>gui/grapheditorpanel.ui</itemPath>
+        <itemPath>gui/main_window.cpp</itemPath>
+        <itemPath>gui/main_window.ui</itemPath>
+        <itemPath>gui/vedge.cpp</itemPath>
+        <itemPath>gui/velement.cpp</itemPath>
+        <itemPath>gui/vnode.cpp</itemPath>
+      </logicalFolder>
+      <itemPath>main.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+      <itemPath>Makefile.Debug</itemPath>
+      <itemPath>Makefile.Release</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>core</Elem>
+    <Elem>gui</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="4">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>MinGW|MinGW</compilerSet>
+        <platform>3</platform>
+      </toolsSet>
+      <qt>
+        <destdir>${CND_CONF}</destdir>
+        <modules>core gui</modules>
+      </qt>
+      <compileType>
+        <ccTool>
+          <preprocessorList>
+            <Elem>__GNUC__</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="4">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>MinGW|MinGW</compilerSet>
+        <platform>3</platform>
+      </toolsSet>
+      <qt>
+        <buildMode>1</buildMode>
+        <modules>core gui</modules>
+      </qt>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
