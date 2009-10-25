@@ -6,12 +6,12 @@
 
 # Macros
 TOP=`pwd`
-CND_PLATFORM=MinGW-Windows
+CND_PLATFORM=MinGW-Linux-x86
 CND_CONF=Release
 CND_DISTDIR=dist
 TMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/villie
+OUTPUT_PATH=build/${CND_CONF}/villie
 OUTPUT_BASENAME=villie
 PACKAGE_TOP_DIR=villie/
 
@@ -59,7 +59,7 @@ mkdir -p ${TMPDIR}
 # Copy files and create directories and links
 cd "${TOP}"
 makeDirectory ${TMPDIR}/villie/bin
-copyFileToTmpDir "${OUTPUT_PATH}.exe" "${TMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe" 0755
+copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
 
 
 # Generate tar file

@@ -9,8 +9,8 @@
 #define GRAPH_H_
 
 #include "common.h"
-#include "Edge.h"
-#include "Node.h"
+#include "edge.h"
+#include "node.h"
 
 class Graph
 {

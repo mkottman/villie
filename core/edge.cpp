@@ -5,7 +5,7 @@
  *      Author: MKottman
  */
 
-#include "Edge.h"
+#include "edge.h"
 
 #include <qalgorithms.h>
 #include <QVector>

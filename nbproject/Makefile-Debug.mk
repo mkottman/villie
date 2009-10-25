@@ -12,14 +12,14 @@ MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc.exe
-CCC=g++.exe
-CXX=g++.exe
+CC=gcc
+CCC=g++
+CXX=g++
 FC=
-AS=as.exe
+AS=as
 
 # Macros
-CND_PLATFORM=MinGW-Windows
+CND_PLATFORM=GNU-Linux-x86
 CND_CONF=Debug
 CND_DISTDIR=dist
 
@@ -51,14 +51,12 @@ LDLIBSOPTIONS=
 nbproject/qt-${CONF}.mk: nbproject/qt-${CONF}.pro FORCE
 	qmake VPATH=. -o qttmp-${CONF}.mk nbproject/qt-${CONF}.pro
 	mv -f qttmp-${CONF}.mk nbproject/qt-${CONF}.mk
-	@sed -e 's:\\\(.\):/\1:g' nbproject/qt-${CONF}.mk >nbproject/qt-${CONF}.tmp
-	@mv -f nbproject/qt-${CONF}.tmp nbproject/qt-${CONF}.mk
 
 FORCE:
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS} nbproject/qt-${CONF}.mk
-	${MAKE} -f nbproject/qt-${CONF}.mk Debug/villie.exe
+	${MAKE} -f nbproject/qt-${CONF}.mk build/Debug/villie
 
 # Subprojects
 .build-subprojects:

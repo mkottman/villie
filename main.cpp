@@ -1,5 +1,5 @@
 #include "gui/main_window.h"
-#include "core/Graph.h"
+#include "core/graph.h"
 
 #include <cstdlib>
 
@@ -7,8 +7,6 @@
 #include <QApplication>
 
 #include <qdebug.h>
-
-#include "core/Graph.h"
 
 int main(int argc, char *argv[])
 {

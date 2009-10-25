@@ -16,14 +16,12 @@
 #include "vnode.h"
 
 GraphEditorPanel::GraphEditorPanel(QWidget *parent)
-    : QWidget(parent), _layoutTimer(0), _graph(0)
-{
-        ui.setupUi(this);
-        setMouseTracking(true);
+: QWidget(parent), _layoutTimer(0), _graph(0) {
+    ui.setupUi(this);
+    setMouseTracking(true);
 }
 
-GraphEditorPanel::~GraphEditorPanel()
-{
+GraphEditorPanel::~GraphEditorPanel() {
 
 }
 
@@ -42,29 +40,34 @@ void GraphEditorPanel::reloadGraph() {
     if (_layoutTimer > 0)
         killTimer(_layoutTimer);
 
-    foreach (Node *n, _graph->nodes()) {
+    _vElements.clear();
+
+    foreach(Node *n, _graph->nodes()) {
         VNode *vn = new VNode(n);
         vn->setRect(QRectF(rand() % width(), rand() % height(), 100, 50).normalized());
+        _vElements.append(vn);
     }
-    foreach (Edge *e, _graph->edges()) {
+
+    foreach(Edge *e, _graph->edges()) {
         VEdge *ve = new VEdge(e);
         ve->setRect(QRectF(rand() % width(), rand() % height(), 100, 50).normalized());
+        _vElements.append(ve);
     }
 
-    _layoutTimer = startTimer(50);
+    _layoutTimer = startTimer(10);
 }
 
-double K = 100;
+double K = 1;
 
 static void computeCalm(int nElements) {
     double R = 1;
-	K =  pow((4.0*R*R*R*M_PI)/(nElements*3), 1.0/3);
+    K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
 }
 
 static inline double length(const QPointF &p) {
     double x = p.x();
     double y = p.y();
-    return sqrt(x*x + y*y) / 100;
+    return sqrt(x * x + y * y) / 100;
 }
 
 static inline double dist(const QPointF &p1, const QPointF &p2) {
@@ -99,24 +102,11 @@ static QPointF attractive(const VElement *v1, const VElement *v2) {
 
 void GraphEditorPanel::layoutStep() {
     int count = 0;
-    QList<VElement*> velements;
-
-    // pozbieraj uzly a hrany
-    qDebug() << "Zbieram uzly a hrany";
-
-    foreach (Node *n, _graph->nodes()) {
-        VElement *v = n->visual();
-        velements.append(v);
-    }
-    foreach (Edge *e, _graph->edges()) {
-        VElement *v = e->visual();
-        velements.append(v);
-    }
 
     // vypocitaj stred
     _centroid = QPointF();
 
-    foreach (VElement *v, velements) {
+    foreach(VElement *v, _vElements) {
         v->_force = QPointF();
         _centroid += v->center();
         count++;
@@ -126,24 +116,28 @@ void GraphEditorPanel::layoutStep() {
 
     computeCalm(count);
 
-    qDebug() << "Mam " << count << " bodov, K = " << K;
+    // qDebug() << "Mam " << count << " bodov, K = " << K;
 
-    qDebug() << "Pocitam odpudive sily";
+    // qDebug() << "Pocitam odpudive sily";
 
     // odpudiva sila medzi vsetkymi prvkami
-    foreach (VElement *v, velements) {
-        foreach (VElement *u, velements) {
+
+    foreach(VElement *v, _vElements) {
+
+        foreach(VElement *u, _vElements) {
             if (v != u)
                 v->_force += repulsive(v, u);
         }
     }
 
-    qDebug() << "Pocitam pritazlive sily";
+    // qDebug() << "Pocitam pritazlive sily";
 
     // pritazliva sila na hranach
-    foreach (Edge *e, _graph->edges()) {
+
+    foreach(Edge *e, _graph->edges()) {
         VElement *v = e->visual();
-        foreach (Node *n, e->connectedNodes()) {
+
+        foreach(Node *n, e->connectedNodes()) {
             VElement *u = n->visual();
             QPointF force = attractive(v, u);
             v->_force += force;
@@ -151,10 +145,11 @@ void GraphEditorPanel::layoutStep() {
         }
     }
 
-    qDebug() << "Aplikujem silu";
-    
+    // qDebug() << "Aplikujem silu";
+
     // aplikovanie sil
-    foreach (VElement *v, velements) {
+
+    foreach(VElement *v, _vElements) {
         v->_force *= 0.05;
         v->moveBy(v->_force);
     }
@@ -168,34 +163,39 @@ void GraphEditorPanel::timerEvent(QTimerEvent* e) {
         layoutStep();
 }
 
+void GraphEditorPanel::mouseEvent(QMouseEvent *e) {
+    qDebug() << e->type();
+}
+
 void GraphEditorPanel::mouseMoveEvent(QMouseEvent *e) {
-        _mx = e->x();
-        _my = e->y();
-        update();
+    _mx = e->x();
+    _my = e->y();
+    update();
 }
 
 void GraphEditorPanel::paintEvent(QPaintEvent *event) {
-    QPainter p(this);    
+    QPainter p(this);
 
-    p.drawRect(event->rect().adjusted(0,0,-1,-1));
-    p.setPen(QColor(255,0,0));
+    p.drawRect(event->rect().adjusted(0, 0, -1, -1));
+    p.setPen(QColor(255, 0, 0));
     p.drawEllipse(_mx - 5, _my - 5, 10, 10);
 
     p.setPen(Qt::black);
 
     if (!_graph)
         return;
-    
-    foreach (Edge *e, _graph->edges()) {
+
+    foreach(Edge *e, _graph->edges()) {
         VElement *ve = e->visual();
-        foreach (Node *n, e->connectedNodes()) {
+
+        foreach(Node *n, e->connectedNodes()) {
             VElement *vn = n->visual();
             p.drawLine(vn->center(), ve->center());
         }
         ve->render(p);
     }
 
-    foreach (Node *n, _graph->nodes()) {
+    foreach(Node *n, _graph->nodes()) {
         VElement *vn = n->visual();
         vn->render(p);
     }

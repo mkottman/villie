@@ -20,6 +20,7 @@ public slots:
     void reloadGraph();
 
 protected:
+    virtual void mouseEvent(QMouseEvent *e);
     virtual void mouseMoveEvent(QMouseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
     virtual void timerEvent(QTimerEvent *e);
@@ -27,6 +28,7 @@ protected:
     void layoutStep();
 
 private:
+    QList<VElement*> _vElements;
     int _layoutTimer;
     Graph * _graph;
     QPointF _centroid;

@@ -4,7 +4,7 @@
 #include <QtGui/QMainWindow>
 #include "ui_main_window.h"
 
-#include "../core/Graph.h"
+#include "../core/graph.h"
 
 class main_window: public QMainWindow
 {

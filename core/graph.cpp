@@ -5,7 +5,7 @@
  *      Author: MKottman
  */
 
-#include "Graph.h"
+#include "graph.h"
 
 Graph::Graph()
 {
