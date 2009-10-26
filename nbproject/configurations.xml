@@ -35,6 +35,8 @@
       <logicalFolder name="gui" displayName="gui" projectFiles="true">
         <itemPath>gui/grapheditorpanel.cpp</itemPath>
         <itemPath>gui/grapheditorpanel.ui</itemPath>
+        <itemPath>gui/layouter.cpp</itemPath>
+        <itemPath>gui/layouter.h</itemPath>
         <itemPath>gui/main_window.cpp</itemPath>
         <itemPath>gui/main_window.ui</itemPath>
         <itemPath>gui/vector.cpp</itemPath>
