@@ -27,6 +27,7 @@ HEADERS += gui/main_window.h \
     gui/vector.h \
     gui/layouter.h \
     gui/graphscene.h \
+    gui/graphview.h \
     gui/connector.h
 SOURCES += gui/main_window.cpp \
     core/edge.cpp \
@@ -40,6 +41,7 @@ SOURCES += gui/main_window.cpp \
     gui/vector.cpp \
     gui/layouter.cpp \
     gui/graphscene.cpp \
+    gui/graphview.cpp \
     gui/connector.cpp
 FORMS += gui/main_window.ui
 RESOURCES += 

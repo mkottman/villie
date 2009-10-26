@@ -5,7 +5,7 @@
 
 
 void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    QRadialGradient rg(QPointF(0,0), 25, QPointF(0,0));
+    QRadialGradient rg(QPointF(0,0), 50, QPointF(0,0));
     rg.setColorAt(0, Qt::white);
     rg.setColorAt(1, Qt::darkBlue);
     painter->setBrush(rg);
@@ -15,5 +15,5 @@ void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
 }
 
 QRectF VNode::boundingRect() const {
-    return QRectF(-76, -26, 76, 26);
+    return QRectF(-51, -26, 102, 52);
 }

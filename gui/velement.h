@@ -6,14 +6,22 @@
 #include <QPainter>
 #include "vector.h"
 
-class VElement : public QGraphicsItem
-{
+class VElement : public QGraphicsItem {
 public:
-    VElement(QGraphicsItem *parent = 0) : QGraphicsItem(parent) {}
+
+    VElement(QGraphicsItem *parent = 0) : QGraphicsItem(parent) {
+    }
 
 public:
     virtual QString name() = 0;
-    virtual QString type() = 0;
+
+    enum {
+        Type = UserType + 1
+    };
+
+    int type() const {
+        return Type;
+    }
 
 public:
     double _FRspeed;

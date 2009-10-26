@@ -28,7 +28,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QGraphicsView" name="graphView"/>
+     <widget class="GraphView" name="graphView"/>
     </item>
    </layout>
   </widget>
@@ -115,6 +115,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GraphView</class>
+   <extends>QGraphicsView</extends>
+   <header>gui/graphview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

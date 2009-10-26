@@ -4,18 +4,21 @@
 #include "velement.h"
 #include "../core/node.h"
 
-class VNode : public VElement
-{
+class VNode : public VElement {
 public:
-    VNode(Node *n) : VElement(), _node(n) { n->setVisual(this); }
+
+    VNode(Node *n) : VElement(), _node(n) {
+        n->setVisual(this);
+    }
 
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;
-    
-    QString name() { return _node->name(); }
-    QString type() { return _node->type(); }
-    
+
+    QString name() {
+        return _node->name();
+    }
+
 private:
     Node * _node;
 };

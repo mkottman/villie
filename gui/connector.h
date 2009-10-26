@@ -12,7 +12,6 @@
 
 #include "velement.h"
 
-
 class Connector : public QGraphicsLineItem {
 public:
 
@@ -33,7 +32,17 @@ public:
         return myEndItem;
     }
 
-public slots:
+    enum {
+        Type = UserType + 2
+    };
+
+    int type() const {
+        return Type;
+    }
+
+
+    public
+slots:
     void updatePosition();
 
 protected:
@@ -43,6 +52,7 @@ protected:
 private:
     VElement *myStartItem;
     VElement *myEndItem;
+    int myId;
     QColor myColor;
     QPolygonF arrowHead;
 };

@@ -4,17 +4,20 @@
 #include "velement.h"
 #include "../core/edge.h"
 
-class VEdge : public VElement
-{
+class VEdge : public VElement {
 public:
-    VEdge(Edge *e) : VElement(), _edge(e) { e->setVisual(this); }
+
+    VEdge(Edge *e) : VElement(), _edge(e) {
+        e->setVisual(this);
+    }
 
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;
 
-    QString name() { return _edge->name(); }
-    QString type() { return _edge->type(); }
+    QString name() {
+        return _edge->name();
+    }
 
 private:
     Edge * _edge;

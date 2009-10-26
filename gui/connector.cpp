@@ -14,13 +14,19 @@
 
 const qreal Pi = 3.14;
 
+#include <QDebug>
+
+static int lineId = 0;
+
 Connector::Connector(VElement *startItem, VElement *endItem,
         QGraphicsItem *parent, QGraphicsScene *scene)
 : QGraphicsLineItem(parent, scene) {
     myStartItem = startItem;
     myEndItem = endItem;
+    myId = ++lineId;
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     myColor = Qt::black;
+    setZValue(10000);
     setPen(QPen(myColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
@@ -40,6 +46,9 @@ void Connector::updatePosition() {
 
 void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         QWidget *) {
+    if (!myStartItem || !myEndItem)
+        return;
+
     if (myStartItem->collidesWithItem(myEndItem))
         return;
 
@@ -49,6 +58,7 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     painter->setBrush(myColor);
 
     QLineF centerLine(myStartItem->pos(), myEndItem->pos());
+/*
     QPolygonF endPolygon = myEndItem->shape().toFillPolygon();
     QPointF p1 = endPolygon.first() + myEndItem->pos();
     QPointF p2;
@@ -65,6 +75,8 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     }
 
     setLine(QLineF(intersectPoint, myStartItem->pos()));
+*/
+    setLine(centerLine);
 
     painter->drawLine(line());
     if (isSelected()) {

@@ -31,10 +31,12 @@ void Layouter::reloadLayouter() {
     if (_running)
         stopLayouter();
 
-    foreach (QGraphicsItem *item, _scene->items()) {
-        VElement *ve = static_cast<VElement*>(item);
-        ve->_force = vector2(0,0);
-        ve->setPos(qrand() % 100, qrand() % 100);
+    foreach(QGraphicsItem *item, _scene->items()) {
+        VElement *ve = qgraphicsitem_cast<VElement*>(item);
+        if (ve) {
+            ve->_force = vector2(0, 0);
+            ve->setPos(qrand() % 100, qrand() % 100);
+        }
     }
 
     startLayouter();
@@ -50,7 +52,7 @@ void Layouter::timerEvent(QTimerEvent* e) {
 double K = 1;
 
 static void computeCalm(int nElements) {
-    double R = 100;
+    double R = 50;
     K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
 }
 
@@ -82,18 +84,19 @@ static vector2 attractive(const VElement *v1, const VElement *v2) {
     return force;
 }
 
-
 void Layouter::layoutStep() {
     int count = 0;
 
     // vypocitaj stred
     _centroid = vector2();
 
-    foreach (QGraphicsItem *item, _scene->items()) {
-        VElement *ve = static_cast<VElement*>(item);
-        ve->_force = vector2();
-        _centroid += ve->pos();
-        count++;
+    foreach(QGraphicsItem *item, _scene->items()) {
+        VElement *ve = qgraphicsitem_cast<VElement*>(item);
+        if (ve) {
+            ve->_force = vector2();
+            _centroid += ve->pos();
+            count++;
+        }
     }
 
     _centroid /= count;
@@ -102,14 +105,17 @@ void Layouter::layoutStep() {
 
     // odpudiva sila medzi vsetkymi prvkami
 
-    foreach (QGraphicsItem *item1, _scene->items()) {
-        VElement *u = static_cast<VElement*>(item1);
+    foreach(QGraphicsItem *item1, _scene->items()) {
+        VElement *u = qgraphicsitem_cast<VElement*>(item1);
+        if (u) {
 
-        foreach(QGraphicsItem *item2, _scene->items()) {
-            VElement *v = static_cast<VElement*>(item2);
-            
-            if (u != v)
-                u->_force += repulsive(u, v);
+            foreach(QGraphicsItem *item2, _scene->items()) {
+                VElement *v = qgraphicsitem_cast<VElement*>(item2);
+                if (v) {
+                    if (u != v)
+                        u->_force += repulsive(u, v);
+                }
+            }
         }
     }
 
@@ -133,8 +139,10 @@ void Layouter::layoutStep() {
     // aplikovanie sil
 
     foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *v = static_cast<VElement*>(item);
-        v->_force *= 0.05;
-        v->moveBy(v->_force.x, v->_force.y);
+        VElement *v = qgraphicsitem_cast<VElement*>(item);
+        if (v) {
+            v->_force *= 0.05;
+            v->moveBy(v->_force.x, v->_force.y);
+        }
     }
 }

@@ -12,6 +12,8 @@
 #include "vedge.h"
 #include "connector.h"
 
+#include <QDebug>
+
 void GraphScene::setGraph(Graph* g) {
     if (g == _graph)
         return;
@@ -30,12 +32,7 @@ void GraphScene::setGraph(Graph* g) {
         addItem(ve);
 
         foreach(Node *n, e->connectedNodes()) {
-            if (n->visual() == NULL || e->visual() == NULL) {
-                int x = 1;
-                x = 2;
-            }
-
-            Connector *conn = new Connector(e->visual(), n->visual(), e->visual(), this);
+            Connector *conn = new Connector(e->visual(), n->visual());
             addItem(conn);
         }
     }
