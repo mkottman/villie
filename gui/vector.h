@@ -8,6 +8,9 @@
 #ifndef _VECTOR_H
 #define	_VECTOR_H
 
+#include <math.h>
+#include <QPointF>
+
 class vector2 {
 public:
     double x, y;
@@ -15,12 +18,14 @@ public:
     vector2() : x(0), y(0) {
     }
 
-    vector2(const vector2& orig) : x(orig.x), y(orig.y) {
-    }
+    vector2(const QPointF &p) : x(p.x()), y(p.y()) {}
+
+    vector2(const vector2& orig) : x(orig.x), y(orig.y) {}
 
     vector2(double xx, double yy) : x(xx), y(yy) {
     }
-    ~vector2();
+
+    ~vector2() {}
 
     vector2 & operator =(const vector2 &a) {
         x = a.x;
@@ -36,18 +41,39 @@ public:
         return vector2(x + a.x, y + a.y);
     }
 
-    vector2 operator -(const vector2 &a) const {
-        return vector2(x - a.x, y - a.y);
+    void operator +=(const vector2 &a) {
+        x += a.x; y += a.y;
     }
-    // Multiplication and division by scalar
+
+    void operator -=(const vector2 &a) {
+        x -= a.x; y -= a.y;
+    }
 
     vector2 operator *(double a) const {
         return vector2(x*a, y*a);
     }
 
+    void operator *=(double a) {
+       x *= a; y *= a;
+    }
+
     vector2 operator /(double a) const {
-        double oneOverA = 1.0f / a; // NOTE: no check for divide by zero here
+        double oneOverA = 1.0f / a;
         return vector2(x*oneOverA, y*oneOverA);
+    }
+
+    void operator /=(double a) {
+        double oneOverA = 1.0f / a;
+        x *= oneOverA; y *= oneOverA;
+    }
+
+    double length() const {
+        return sqrt(x*x + y*y);
+    }
+
+    void normalize() {
+        double len = length();
+        *this /= len;
     }
 
 };

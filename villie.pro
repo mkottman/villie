@@ -15,8 +15,7 @@ release {
 QT += core \
     webkit \
     gui
-HEADERS += gui/grapheditorpanel.h \
-    gui/main_window.h \
+HEADERS += gui/main_window.h \
     core/common.h \
     core/edge.h \
     core/graph.h \
@@ -25,9 +24,11 @@ HEADERS += gui/grapheditorpanel.h \
     gui/velement.h \
     gui/vnode.h \
     gui/vedge.h \
-    gui/vector.h
-SOURCES += gui/grapheditorpanel.cpp \
-    gui/main_window.cpp \
+    gui/vector.h \
+    gui/layouter.h \
+    gui/graphscene.h \
+    gui/connector.h
+SOURCES += gui/main_window.cpp \
     core/edge.cpp \
     core/graph.cpp \
     core/node.cpp \
@@ -36,9 +37,11 @@ SOURCES += gui/grapheditorpanel.cpp \
     gui/velement.cpp \
     gui/vnode.cpp \
     gui/vedge.cpp \
-    gui/vector.cpp
-FORMS += gui/grapheditorpanel.ui \
-    gui/main_window.ui
+    gui/vector.cpp \
+    gui/layouter.cpp \
+    gui/graphscene.cpp \
+    gui/connector.cpp
+FORMS += gui/main_window.ui
 RESOURCES += 
 UI_DIR = gui/
 MOC_DIR = moc/

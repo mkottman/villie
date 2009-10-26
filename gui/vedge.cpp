@@ -1,11 +1,17 @@
 #include "vedge.h"
 
-void VEdge::render(QPainter &p) {
-    QRadialGradient rg(_rect.center(), _rect.height(), _rect.center());
+#include <QRadialGradient>
+
+void VEdge::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    QRadialGradient rg(QPointF(0,0), 25, QPointF(0,0));
     rg.setColorAt(0, Qt::white);
     rg.setColorAt(1, Qt::yellow);
-    p.setBrush(rg);
-    p.setPen(QPen(Qt::black, 2));
-    p.drawRect(_rect);
-    p.drawText(_rect, name(), QTextOption(Qt::AlignCenter));
+    painter->setBrush(rg);
+    painter->setPen(QPen(Qt::black, 2));
+    painter->drawRect(boundingRect());
+    painter->drawText(boundingRect(), name(), QTextOption(Qt::AlignCenter));
+}
+
+QRectF VEdge::boundingRect() const {
+    return QRectF(-76, -26, 76, 26);
 }

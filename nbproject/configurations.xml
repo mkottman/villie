@@ -12,7 +12,6 @@
         <itemPath>core/node.h</itemPath>
       </logicalFolder>
       <logicalFolder name="gui" displayName="gui" projectFiles="true">
-        <itemPath>gui/grapheditorpanel.h</itemPath>
         <itemPath>gui/main_window.h</itemPath>
         <itemPath>gui/vedge.h</itemPath>
         <itemPath>gui/velement.h</itemPath>
@@ -33,8 +32,10 @@
         <itemPath>core/node.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="gui" displayName="gui" projectFiles="true">
-        <itemPath>gui/grapheditorpanel.cpp</itemPath>
-        <itemPath>gui/grapheditorpanel.ui</itemPath>
+        <itemPath>gui/connector.cpp</itemPath>
+        <itemPath>gui/connector.h</itemPath>
+        <itemPath>gui/graphscene.cpp</itemPath>
+        <itemPath>gui/graphscene.h</itemPath>
         <itemPath>gui/layouter.cpp</itemPath>
         <itemPath>gui/layouter.h</itemPath>
         <itemPath>gui/main_window.cpp</itemPath>

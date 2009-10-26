@@ -12,29 +12,36 @@
 #include <QTimer>
 
 #include "../core/graph.h"
+#include "vector.h"
+#include "graphscene.h"
 
-class Layouter : public QObject{
+class Layouter : public QObject {
+
     Q_OBJECT
-    
+
 public:
-    Layouter(Graph *g) : _graph(g), _layoutTimer(0) {}
-    ~Layouter() {}
+    Layouter(GraphScene *scene) :  _scene(scene), _layoutTimer(0), _running(false) {}
 
-    bool isRunning() { return _running; }
+    bool isRunning() {
+        return _running;
+    }
 
 protected:
-    void timerEvent(QTimerEvent *e);
-    
+    void timerEvent(QTimerEvent * e);
+
 public slots:
-    void start();
-    void stop();
-    void reload();
+    void startLayouter();
+    void stopLayouter();
+    void reloadLayouter();
 
 protected:
-    Graph * _graph;
-    QList<VElement*> _elements;
+    void layoutStep();
+
+protected:
+    GraphScene * _scene;
     int _layoutTimer;
     bool _running;
+    vector2 _centroid;
 };
 
 #endif	/* _LAYOUTER_H */

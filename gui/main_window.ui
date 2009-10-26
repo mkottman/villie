@@ -21,8 +21,14 @@
     </sizepolicy>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="margin">
+     <number>0</number>
+    </property>
     <item>
-     <widget class="GraphEditorPanel" name="graphPanel" native="true"/>
+     <widget class="QGraphicsView" name="graphView"/>
     </item>
    </layout>
   </widget>
@@ -32,7 +38,7 @@
      <x>0</x>
      <y>0</y>
      <width>543</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -57,8 +63,17 @@
      <string>Help</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuLayouting">
+    <property name="title">
+     <string>Layouting</string>
+    </property>
+    <addaction name="actionStart"/>
+    <addaction name="actionStop"/>
+    <addaction name="actionReset"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuLayouting"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -84,15 +99,22 @@
     <string>Update</string>
    </property>
   </action>
+  <action name="actionStart">
+   <property name="text">
+    <string>Start</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>Pause</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>GraphEditorPanel</class>
-   <extends>QWidget</extends>
-   <header>grapheditorpanel.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>

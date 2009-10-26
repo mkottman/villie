@@ -10,15 +10,11 @@ public:
     VEdge(Edge *e) : VElement(), _edge(e) { e->setVisual(this); }
 
 public:
-    void render(QPainter &p);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
+    QRectF boundingRect() const;
 
-    QString type() {
-        return "Generic Edge";
-    }
-
-    QString name() {
-        return QString::fromUtf8("edge %1").arg(_edge->id());
-    }
+    QString name() { return _edge->name(); }
+    QString type() { return _edge->type(); }
 
 private:
     Edge * _edge;
