@@ -5,6 +5,7 @@
 #include "ui_grapheditorpanel.h"
 
 #include "../core/graph.h"
+#include "layouter.h"
 
 class GraphEditorPanel : public QWidget
 {
@@ -18,9 +19,11 @@ public:
     
 public slots:
     void reloadGraph();
+    void updateViewport();
 
 protected:
-    virtual void mouseEvent(QMouseEvent *e);
+    virtual void mousePressEvent(QMouseEvent *e);
+    virtual void wheelEvent(QWheelEvent *e);
     virtual void mouseMoveEvent(QMouseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
     virtual void timerEvent(QTimerEvent *e);
@@ -28,9 +31,8 @@ protected:
     void layoutStep();
 
 private:
-    QList<VElement*> _vElements;
-    int _layoutTimer;
     Graph * _graph;
+    Layouter * _layouter;
     QPointF _centroid;
     int _mx, _my;
     Ui::GraphEditorPanelClass ui;

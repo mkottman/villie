@@ -15,9 +15,12 @@
 #include "vedge.h"
 #include "vnode.h"
 
+#define ZOOM_FACTOR 2
+
 GraphEditorPanel::GraphEditorPanel(QWidget *parent)
-: QWidget(parent), _layoutTimer(0), _graph(0) {
+: QWidget(parent), _graph(0) {
     ui.setupUi(this);
+    connect(this, SIGNAL())
     setMouseTracking(true);
 }
 
@@ -27,35 +30,11 @@ GraphEditorPanel::~GraphEditorPanel() {
 
 void GraphEditorPanel::setGraph(Graph* gr) {
     _graph = gr;
-    reloadGraph();
+    _layouter = new Layouter(gr);
+    _layouter.start();
     update();
 }
 
-void GraphEditorPanel::reloadGraph() {
-    //TODO: delete pamati pre stare nody
-
-    if (!_graph)
-        return;
-
-    if (_layoutTimer > 0)
-        killTimer(_layoutTimer);
-
-    _vElements.clear();
-
-    foreach(Node *n, _graph->nodes()) {
-        VNode *vn = new VNode(n);
-        vn->setRect(QRectF(rand() % width(), rand() % height(), 100, 50).normalized());
-        _vElements.append(vn);
-    }
-
-    foreach(Edge *e, _graph->edges()) {
-        VEdge *ve = new VEdge(e);
-        ve->setRect(QRectF(rand() % width(), rand() % height(), 100, 50).normalized());
-        _vElements.append(ve);
-    }
-
-    _layoutTimer = startTimer(10);
-}
 
 double K = 1;
 
@@ -163,14 +142,25 @@ void GraphEditorPanel::timerEvent(QTimerEvent* e) {
         layoutStep();
 }
 
-void GraphEditorPanel::mouseEvent(QMouseEvent *e) {
-    qDebug() << e->type();
+int i = 0;
+
+void GraphEditorPanel::mousePressEvent(QMouseEvent *e) {
+    qDebug() << "Press" << i++ << e->type();
 }
 
 void GraphEditorPanel::mouseMoveEvent(QMouseEvent *e) {
     _mx = e->x();
     _my = e->y();
     update();
+}
+
+void GraphEditorPanel::wheelEvent(QWheelEvent* e) {
+    qDebug() << "Wheel" << i++ << e->delta();
+    if (e->delta() > 0) {
+        _zoom *= ZOOM_FACTOR;
+    } else {
+        _zoom /= ZOOM_FACTOR;
+    }
 }
 
 void GraphEditorPanel::paintEvent(QPaintEvent *event) {
