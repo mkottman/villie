@@ -1,4 +1,5 @@
 moc/*
 build/*
 gui/ui_*.h
+Makefile
 

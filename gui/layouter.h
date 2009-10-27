@@ -36,6 +36,10 @@ public slots:
 
 protected:
     void layoutStep();
+    int findCenter();
+    void addAttractive();
+    void addRepulsive();
+    void moveElements();
 
 protected:
     GraphScene * _scene;

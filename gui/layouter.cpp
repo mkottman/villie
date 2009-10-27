@@ -12,6 +12,7 @@
 #include "velement.h"
 
 #define TIMER_INTERVAL 10
+#define LAYOUT_STEPS 1
 
 void Layouter::startLayouter() {
     if (!_running) {
@@ -44,27 +45,37 @@ void Layouter::reloadLayouter() {
 
 void Layouter::timerEvent(QTimerEvent* e) {
     if (e->timerId() == _layoutTimer) {
-        layoutStep();
+        for (int i=0; i<LAYOUT_STEPS; i++)
+            layoutStep();
+        moveElements();
     }
 }
+
+
+const double MAX_DISTANCE = 300;
 
 
 double K = 1;
 
 static void computeCalm(int nElements) {
     double R = 50;
-    K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
+    //K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
+    K = 20;
 }
 
 static inline float rep(double distance) {
     return (double) (-(K * K) / distance);
 }
 
-static vector2 repulsive(const VElement *v1, const VElement *v2) {
-    vector2 force(v2->pos() - v1->pos());
+static vector2 repulsive(VElement *v1, VElement *v2) {
+    vector2 force = v2->pos() - v1->pos();
     double dist = force.length();
-    if (dist == 0)
-        return QPointF();
+    if (dist == 0) {
+        v2->moveBy(rand() % 10, rand() % 10);
+        force = v2->pos() - v1->pos();
+    } else if (dist > MAX_DISTANCE) {
+        return vector2();
+    }
     force.normalize();
     force *= rep(dist);
     return force;
@@ -84,31 +95,45 @@ static vector2 attractive(const VElement *v1, const VElement *v2) {
     return force;
 }
 
-void Layouter::layoutStep() {
+int Layouter::findCenter() {
     int count = 0;
-
-    // vypocitaj stred
     _centroid = vector2();
 
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *ve = qgraphicsitem_cast<VElement*>(item);
         if (ve) {
-            ve->_force = vector2();
             _centroid += ve->pos();
             count++;
         }
     }
 
     _centroid /= count;
+    return count;
+}
 
+void Layouter::layoutStep() {
+    int count = findCenter();
     computeCalm(count);
+    addRepulsive();
+    addAttractive();
+}
 
-    // odpudiva sila medzi vsetkymi prvkami
+void Layouter::addAttractive() {
+    foreach(Edge *e, _scene->graph()->edges()) {
+        VElement *v = e->visual();
+        foreach(Node *n, e->connectedNodes()) {
+            VElement *u = n->visual();
+            vector2 force = attractive(v, u);
+            v->_force += force;
+            u->_force -= force;
+        }
+    }
+}
 
+void Layouter::addRepulsive() {
     foreach(QGraphicsItem *item1, _scene->items()) {
         VElement *u = qgraphicsitem_cast<VElement*>(item1);
         if (u) {
-
             foreach(QGraphicsItem *item2, _scene->items()) {
                 VElement *v = qgraphicsitem_cast<VElement*>(item2);
                 if (v) {
@@ -118,31 +143,30 @@ void Layouter::layoutStep() {
             }
         }
     }
+}
 
-    // qDebug() << "Pocitam pritazlive sily";
+const double MAX_FORCE = 20;
+const double MIN_FORCE = 0.5;
+const double ALPHA = 0.05;
 
-    // pritazliva sila na hranach
-
-    foreach(Edge *e, _scene->graph()->edges()) {
-        VElement *v = e->visual();
-
-        foreach(Node *n, e->connectedNodes()) {
-            VElement *u = n->visual();
-            vector2 force = attractive(v, u);
-            v->_force += force;
-            u->_force -= force;
-        }
-    }
-
-    // qDebug() << "Aplikujem silu";
-
-    // aplikovanie sil
-
+void Layouter::moveElements() {
+    bool moved = false;
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *v = qgraphicsitem_cast<VElement*>(item);
         if (v) {
-            v->_force *= 0.05;
-            v->moveBy(v->_force.x, v->_force.y);
+            v->_force *= ALPHA;
+            double len = v->_force.length();
+            if (len > MAX_FORCE) {
+                v->_force.normalize();
+                v->_force *= MAX_FORCE;
+            }
+            if (len > MIN_FORCE) {
+                v->moveBy(v->_force.x, v->_force.y);
+                moved = true;
+            }
+            v->_force = vector2();
         }
     }
+    if (!moved)
+        stopLayouter();
 }
