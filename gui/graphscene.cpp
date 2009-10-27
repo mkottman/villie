@@ -7,7 +7,6 @@
 
 #include "graphscene.h"
 
-#include "velement.h"
 #include "vnode.h"
 #include "vedge.h"
 #include "connector.h"
@@ -23,12 +22,12 @@ void GraphScene::setGraph(Graph* g) {
     clear();
 
     foreach(Node *n, _graph->nodes()) {
-        VNode *vn = new VNode(n);
+        VNode *vn = new VNode(this, n);
         addItem(vn);
     }
 
     foreach(Edge *e, _graph->edges()) {
-        VEdge *ve = new VEdge(e);
+        VEdge *ve = new VEdge(this, e);
         addItem(ve);
 
         foreach(Node *n, e->connectedNodes()) {
@@ -36,4 +35,9 @@ void GraphScene::setGraph(Graph* g) {
             addItem(conn);
         }
     }
+}
+
+
+void GraphScene::itemChanged() {
+    emit needsUpdate();
 }

@@ -52,7 +52,6 @@ protected:
 private:
     VElement *myStartItem;
     VElement *myEndItem;
-    int myId;
     QColor myColor;
     QPolygonF arrowHead;
 };

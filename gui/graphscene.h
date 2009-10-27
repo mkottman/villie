@@ -10,13 +10,25 @@
 
 #include <QGraphicsScene>
 #include "../core/graph.h"
+#include "velement.h"
 
 class GraphScene : public QGraphicsScene {
+
+    Q_OBJECT
+
 public:
     GraphScene() {}
+    virtual ~GraphScene() {}
 
     void setGraph(Graph *g);
     Graph *graph() { return _graph; }
+
+protected:
+    void itemChanged();
+    friend class VElement;
+    
+signals:
+    void needsUpdate();
 
 private:
     Graph * _graph;

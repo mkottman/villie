@@ -7,9 +7,7 @@
 class VNode : public VElement {
 public:
 
-    VNode(Node *n) : VElement(), _node(n) {
-        n->setVisual(this);
-    }
+    VNode(GraphScene *scene, Node *n);
 
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);

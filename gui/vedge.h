@@ -7,9 +7,7 @@
 class VEdge : public VElement {
 public:
 
-    VEdge(Edge *e) : VElement(), _edge(e) {
-        e->setVisual(this);
-    }
+    VEdge(GraphScene *scene, Edge *e);
 
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);

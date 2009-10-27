@@ -35,11 +35,12 @@ public slots:
     void reloadLayouter();
 
 protected:
+    void initialize();
     void layoutStep();
-    int findCenter();
     void addAttractive();
     void addRepulsive();
     void moveElements();
+    void updatePositions();
 
 protected:
     GraphScene * _scene;

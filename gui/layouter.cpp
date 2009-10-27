@@ -11,8 +11,8 @@
 #include "layouter.h"
 #include "velement.h"
 
-#define TIMER_INTERVAL 10
-#define LAYOUT_STEPS 1
+#define TIMER_INTERVAL 50
+#define LAYOUT_STEPS 5
 
 void Layouter::startLayouter() {
     if (!_running) {
@@ -45,9 +45,10 @@ void Layouter::reloadLayouter() {
 
 void Layouter::timerEvent(QTimerEvent* e) {
     if (e->timerId() == _layoutTimer) {
-        for (int i=0; i<LAYOUT_STEPS; i++)
+        initialize();
+        for (int i = 0; i < LAYOUT_STEPS; i++)
             layoutStep();
-        moveElements();
+        updatePositions();
     }
 }
 
@@ -68,11 +69,11 @@ static inline float rep(double distance) {
 }
 
 static vector2 repulsive(VElement *v1, VElement *v2) {
-    vector2 force = v2->pos() - v1->pos();
+    vector2 force = v2->_pos - v1->_pos;
     double dist = force.length();
-    if (dist == 0) {
-        v2->moveBy(rand() % 10, rand() % 10);
-        force = v2->pos() - v1->pos();
+    if (dist < 5) {
+        v2->_pos += vector2(rand() % 10, rand() % 10);
+        force = v2->_pos - v1->_pos;
     } else if (dist > MAX_DISTANCE) {
         return vector2();
     }
@@ -86,7 +87,7 @@ static inline double attr(double distance) {
 }
 
 static vector2 attractive(const VElement *v1, const VElement *v2) {
-    vector2 force(v2->pos() - v1->pos());
+    vector2 force(v2->_pos - v1->_pos);
     double dist = force.length();
     if (dist == 0)
         return vector2();
@@ -95,27 +96,28 @@ static vector2 attractive(const VElement *v1, const VElement *v2) {
     return force;
 }
 
-int Layouter::findCenter() {
+void Layouter::initialize() {
     int count = 0;
     _centroid = vector2();
 
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *ve = qgraphicsitem_cast<VElement*>(item);
         if (ve) {
-            _centroid += ve->pos();
+            ve->updatePos();
+            _centroid += ve->_pos;
             count++;
         }
     }
 
     _centroid /= count;
-    return count;
+
+    computeCalm(count);
 }
 
 void Layouter::layoutStep() {
-    int count = findCenter();
-    computeCalm(count);
     addRepulsive();
     addAttractive();
+    moveElements();
 }
 
 void Layouter::addAttractive() {
@@ -161,7 +163,7 @@ void Layouter::moveElements() {
                 v->_force *= MAX_FORCE;
             }
             if (len > MIN_FORCE) {
-                v->moveBy(v->_force.x, v->_force.y);
+                v->_pos += v->_force;
                 moved = true;
             }
             v->_force = vector2();
@@ -169,4 +171,13 @@ void Layouter::moveElements() {
     }
     if (!moved)
         stopLayouter();
+}
+
+void Layouter::updatePositions() {
+    foreach(QGraphicsItem *item, _scene->items()) {
+        VElement *v = qgraphicsitem_cast<VElement*>(item);
+        if (v) {
+            v->applyPos();
+        }
+    }
 }

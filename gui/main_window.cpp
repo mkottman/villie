@@ -10,6 +10,8 @@ QMainWindow(parent) {
     connect(ui.actionStart, SIGNAL(triggered()), _layouter, SLOT(startLayouter()));
     connect(ui.actionStop, SIGNAL(triggered()), _layouter, SLOT(stopLayouter()));
     connect(ui.actionReset, SIGNAL(triggered()), _layouter, SLOT(reloadLayouter()));
+
+    connect(&_graphScene, SIGNAL(needsUpdate()), _layouter, SLOT(startLayouter()));
 }
 
 main_window::~main_window() {

@@ -41,6 +41,10 @@ public:
         return vector2(x + a.x, y + a.y);
     }
 
+    vector2 operator -(const vector2 &a) const {
+        return vector2(x - a.x, y - a.y);
+    }
+
     void operator +=(const vector2 &a) {
         x += a.x; y += a.y;
     }

@@ -14,20 +14,15 @@
 
 const qreal Pi = 3.14;
 
-#include <QDebug>
-
-static int lineId = 0;
-
 Connector::Connector(VElement *startItem, VElement *endItem,
         QGraphicsItem *parent, QGraphicsScene *scene)
 : QGraphicsLineItem(parent, scene) {
     myStartItem = startItem;
     myEndItem = endItem;
-    myId = ++lineId;
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     myColor = Qt::black;
     setZValue(10000);
-    setPen(QPen(myColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    setPen(QPen(myColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 QRectF Connector::boundingRect() const {
@@ -58,24 +53,6 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     painter->setBrush(myColor);
 
     QLineF centerLine(myStartItem->pos(), myEndItem->pos());
-/*
-    QPolygonF endPolygon = myEndItem->shape().toFillPolygon();
-    QPointF p1 = endPolygon.first() + myEndItem->pos();
-    QPointF p2;
-    QPointF intersectPoint;
-    QLineF polyLine;
-    for (int i = 1; i < endPolygon.count(); ++i) {
-        p2 = endPolygon.at(i) + myEndItem->pos();
-        polyLine = QLineF(p1, p2);
-        QLineF::IntersectType intersectType =
-                polyLine.intersect(centerLine, &intersectPoint);
-        if (intersectType == QLineF::BoundedIntersection)
-            break;
-        p1 = p2;
-    }
-
-    setLine(QLineF(intersectPoint, myStartItem->pos()));
-*/
     setLine(centerLine);
 
     painter->drawLine(line());
