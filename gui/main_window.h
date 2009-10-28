@@ -20,6 +20,12 @@ public:
     
 public slots:
     void reloadGraph();
+    void addNode();
+    void addEdge();
+    void connectElements();
+
+private:
+    void createToolbar();
 
 private:
     Graph * _graph;

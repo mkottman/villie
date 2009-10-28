@@ -37,7 +37,53 @@ void GraphScene::setGraph(Graph* g) {
     }
 }
 
+VElement * GraphScene::createItemByType(int type) {
+    switch (type) {
+        case VNode::ItemType: {
+            Node *n = new Node();
+            _graph->addNode(n);
+            VNode *vn = new VNode(this, n);
+            addItem(vn);
+            return vn;
+        }
+
+        case VEdge::ItemType: {
+            Edge *e = new Edge();
+            _graph->addEdge(e);
+            VEdge *ve = new VEdge(this, e);
+            addItem(ve);
+            return ve;
+        }
+    }
+    return NULL;
+}
+
+void GraphScene::mousePressEvent(QGraphicsSceneMouseEvent *e) {
+    if (e->button() == Qt::LeftButton && _type) {
+        VElement *item = createItemByType(_type);
+        if (item) {
+           _type = 0;
+            addItem(item);
+            item->setPos(e->scenePos());
+            itemChanged();
+        } else {
+            qDebug() << "Unknown item type:" << _type;
+        }
+    }
+    QGraphicsScene::mousePressEvent(e);
+}
 
 void GraphScene::itemChanged() {
-    emit needsUpdate();
+    _moved = true;
+}
+
+void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
+    if (_moved)
+        emit needsUpdate();
+    _moved = false;
+    QGraphicsScene::mouseReleaseEvent(e);
+}
+
+void GraphScene::startConnector() {
+
 }

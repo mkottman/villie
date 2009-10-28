@@ -9,6 +9,7 @@ public:
 
     VNode(GraphScene *scene, Node *n);
 
+    enum { ItemType = 1 };
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;
