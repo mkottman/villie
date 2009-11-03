@@ -19,7 +19,7 @@ Connector::Connector(VElement *startItem, VElement *endItem,
 : QGraphicsLineItem(parent, scene) {
     myStartItem = startItem;
     myEndItem = endItem;
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    //setFlag(QGraphicsItem::ItemIsSelectable, true);
     myColor = Qt::black;
     setZValue(10000);
     setPen(QPen(myColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
@@ -56,6 +56,7 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     setLine(centerLine);
 
     painter->drawLine(line());
+    /*
     if (isSelected()) {
         painter->setPen(QPen(myColor, 1, Qt::DashLine));
         QLineF myLine = line();
@@ -64,4 +65,5 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         myLine.translate(0, -8.0);
         painter->drawLine(myLine);
     }
+    */
 }

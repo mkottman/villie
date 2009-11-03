@@ -9,10 +9,15 @@
         <itemPath>core/edge.h</itemPath>
         <itemPath>core/element.h</itemPath>
         <itemPath>core/graph.h</itemPath>
+        <itemPath>core/incidence.h</itemPath>
         <itemPath>core/node.h</itemPath>
       </logicalFolder>
       <logicalFolder name="gui" displayName="gui" projectFiles="true">
+        <itemPath>gui/connector.h</itemPath>
+        <itemPath>gui/graphscene.h</itemPath>
+        <itemPath>gui/layouter.h</itemPath>
         <itemPath>gui/main_window.h</itemPath>
+        <itemPath>gui/vector.h</itemPath>
         <itemPath>gui/vedge.h</itemPath>
         <itemPath>gui/velement.h</itemPath>
         <itemPath>gui/vnode.h</itemPath>
@@ -29,19 +34,16 @@
         <itemPath>core/edge.cpp</itemPath>
         <itemPath>core/element.cpp</itemPath>
         <itemPath>core/graph.cpp</itemPath>
+        <itemPath>core/incidence.cpp</itemPath>
         <itemPath>core/node.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="gui" displayName="gui" projectFiles="true">
         <itemPath>gui/connector.cpp</itemPath>
-        <itemPath>gui/connector.h</itemPath>
         <itemPath>gui/graphscene.cpp</itemPath>
-        <itemPath>gui/graphscene.h</itemPath>
         <itemPath>gui/layouter.cpp</itemPath>
-        <itemPath>gui/layouter.h</itemPath>
         <itemPath>gui/main_window.cpp</itemPath>
         <itemPath>gui/main_window.ui</itemPath>
         <itemPath>gui/vector.cpp</itemPath>
-        <itemPath>gui/vector.h</itemPath>
         <itemPath>gui/vedge.cpp</itemPath>
         <itemPath>gui/velement.cpp</itemPath>
         <itemPath>gui/vnode.cpp</itemPath>

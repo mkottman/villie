@@ -3,12 +3,12 @@ TARGET = villie
 CONFIG -= release
 
 debug {
-    DESTDIR = build/Debug
+DESTDIR = build/Debug
     message("Debug build...")
 }
 
 release {
-    DESTDIR = build/Release
+DESTDIR = build/Release
     message("Release build...")
 }
 
@@ -21,6 +21,7 @@ HEADERS += gui/main_window.h \
     core/graph.h \
     core/node.h \
     core/element.h \
+    core/incidence.h \
     gui/velement.h \
     gui/vnode.h \
     gui/vedge.h \
@@ -34,6 +35,7 @@ SOURCES += gui/main_window.cpp \
     core/graph.cpp \
     core/node.cpp \
     core/element.cpp \
+    core/incidence.cpp \
     main.cpp \
     gui/velement.cpp \
     gui/vnode.cpp \
@@ -44,7 +46,8 @@ SOURCES += gui/main_window.cpp \
     gui/graphview.cpp \
     gui/connector.cpp
 FORMS += gui/main_window.ui
-RESOURCES += 
+RESOURCES +=
+LIBS += -llua5.1 -lqscintilla2
 UI_DIR = gui/
 MOC_DIR = moc/
 OBJECTS_DIR = build/

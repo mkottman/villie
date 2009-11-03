@@ -74,13 +74,14 @@ void GraphScene::mousePressEvent(QGraphicsSceneMouseEvent *e) {
 }
 
 void GraphScene::itemChanged() {
-    _moved = true;
+    emit needsUpdate();
+    //_moved = true;
 }
 
 void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
-    if (_moved)
-        emit needsUpdate();
-    _moved = false;
+//    if (_moved)
+//        emit needsUpdate();
+//    _moved = false;
     QGraphicsScene::mouseReleaseEvent(e);
 }
 

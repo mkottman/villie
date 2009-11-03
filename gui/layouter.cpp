@@ -8,11 +8,13 @@
 #include <QGraphicsItem>
 #include <QTimerEvent>
 
+#include <QDebug>
+
 #include "layouter.h"
 #include "velement.h"
 
 #define TIMER_INTERVAL 50
-#define LAYOUT_STEPS 5
+#define LAYOUT_STEPS 10
 
 void Layouter::startLayouter() {
     if (!_running) {
@@ -61,7 +63,7 @@ double K = 1;
 static void computeCalm(int nElements) {
     double R = 50;
     //K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
-    K = 20;
+    K = 30;
 }
 
 static inline float rep(double distance) {
@@ -152,10 +154,12 @@ const double MIN_FORCE = 0.5;
 const double ALPHA = 0.05;
 
 void Layouter::moveElements() {
-    bool moved = false;
+    int moved=0;
+    int total=0;
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *v = qgraphicsitem_cast<VElement*>(item);
-        if (v) {
+        if (v && !v->_ignored) {
+            total++;
             v->_force *= ALPHA;
             double len = v->_force.length();
             if (len > MAX_FORCE) {
@@ -164,19 +168,21 @@ void Layouter::moveElements() {
             }
             if (len > MIN_FORCE) {
                 v->_pos += v->_force;
-                moved = true;
+                moved++;
             }
             v->_force = vector2();
         }
     }
-    if (!moved)
+    // stop if less than 10% of items moved
+    if (100*moved/total < 25) {
         stopLayouter();
+    }
 }
 
 void Layouter::updatePositions() {
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *v = qgraphicsitem_cast<VElement*>(item);
-        if (v) {
+        if (v && !v->_ignored) {
             v->applyPos();
         }
     }

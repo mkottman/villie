@@ -2,6 +2,7 @@
 #define VELEMENT_H
 
 #include <QGraphicsItem>
+#include <QGraphicsSceneMouseEvent>
 #include <QString>
 #include <QPainter>
 #include "vector.h"
@@ -12,7 +13,7 @@ class VElement : public QGraphicsItem {
 public:
 
     VElement(GraphScene* scene, QGraphicsItem *parent = 0) :
-        QGraphicsItem(parent), _scene(scene)
+        QGraphicsItem(parent), _scene(scene), _ignored(false)
     {
         setZValue(1);
         setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -39,12 +40,15 @@ public:
     }
 
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *e);
+    void mousePressEvent(QGraphicsSceneMouseEvent *e);
 
 public:
     double _FRspeed;
     vector2 _force;
     vector2 _pos;
     GraphScene * _scene;
+    bool _ignored;
 };
 
 #endif // VELEMENT_H
