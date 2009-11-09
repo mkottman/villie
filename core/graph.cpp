@@ -31,9 +31,9 @@ void Graph::disconnect(Node *src, Node *edge)
 {
 }
 
-void Graph::connect(Node *node, Edge *edge, const QString &name)
+void Graph::connect(Node *node, Edge *edge, const QString &name, IncidenceDirection dir)
 {
-    edge->connect(node, name);
+    edge->connect(node, name, dir);
 }
 
 EdgeList Graph::edges()

@@ -52,6 +52,17 @@ VElement * GraphScene::createItemByType(int type) {
             _graph->addEdge(e);
             VEdge *ve = new VEdge(this, e);
             addItem(ve);
+
+            // create a few nodes around
+            int cnt = rand() % 5 + 1;
+            for (int i=0; i<cnt; i++) {
+                Node *n = new Node();
+                _graph->addNode(n);
+                VNode *vn = new VNode(this, n);
+                addItem(vn);
+                _graph->connect(n, e);
+            }
+
             return ve;
         }
     }
@@ -82,6 +93,7 @@ void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
 //    if (_moved)
 //        emit needsUpdate();
 //    _moved = false;
+    qDebug() << "Released!";
     QGraphicsScene::mouseReleaseEvent(e);
 }
 

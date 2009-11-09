@@ -40,9 +40,9 @@ public:
         return Type;
     }
 
+    QPainterPath shape() const;
 
-    public
-slots:
+public slots:
     void updatePosition();
 
 protected:

@@ -6,4 +6,3 @@
  */
 
 #include "incidence.h"
-

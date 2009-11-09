@@ -137,10 +137,10 @@ void Layouter::addAttractive() {
 void Layouter::addRepulsive() {
     foreach(QGraphicsItem *item1, _scene->items()) {
         VElement *u = qgraphicsitem_cast<VElement*>(item1);
-        if (u) {
+        if (u && !u->_ignored) {
             foreach(QGraphicsItem *item2, _scene->items()) {
                 VElement *v = qgraphicsitem_cast<VElement*>(item2);
-                if (v) {
+                if (v && !v->_ignored) {
                     if (u != v)
                         u->_force += repulsive(u, v);
                 }

@@ -13,6 +13,7 @@
 #include <QHash>
 #include <QString>
 
+#include "incidence.h"
 
 
 class Edge : public Element
@@ -23,9 +24,7 @@ public:
 
 public:
     NodeList connectedNodes();
-    Node * nodeByName(const QString & name) {
-        return _nodes.value(name);
-    }
+    Node * nodeByName(const QString & name);
     
     QString name() {
         return QString("edge %1").arg(_id);
@@ -35,10 +34,14 @@ public:
         return "Generic Edge";
     }
 
-    void connect(Node *node, const QString &name);
+    NodeList inNodes();
+    NodeList outNodes();
+
+    void connect(Node *node, const QString &name, IncidenceDirection dir);
     
 private:
-    QHash<QString, Node*> _nodes;
+    NodeList gather(IncidenceDirection dir);
+    QHash<Incidence, Node*> _nodes;
     int _unnamedCounter;
 };
 

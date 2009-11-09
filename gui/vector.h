@@ -5,8 +5,8 @@
  * Created on October 24, 2009, 11:16 PM
  */
 
-#ifndef _VECTOR_H
-#define	_VECTOR_H
+#ifndef _MY_VECTOR_H
+#define	_MY_VECTOR_H
 
 #include <math.h>
 #include <QPointF>
@@ -82,5 +82,5 @@ public:
 
 };
 
-#endif	/* _VECTOR_H */
+#endif	/* _MY_VECTOR_H */
 

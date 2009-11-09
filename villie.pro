@@ -3,12 +3,12 @@ TARGET = villie
 CONFIG -= release
 
 debug {
-DESTDIR = build/Debug
+#   DESTDIR = build/Debug
     message("Debug build...")
 }
 
 release {
-DESTDIR = build/Release
+#   DESTDIR = build/Release
     message("Release build...")
 }
 

@@ -10,6 +10,8 @@
 #include <qalgorithms.h>
 #include <QVector>
 
+typedef QHash<Incidence, Node*>::const_iterator NodeIterator;
+
 NodeList Edge::connectedNodes()
 {
     QVector<Node*> ret(_nodes.count());
@@ -17,9 +19,36 @@ NodeList Edge::connectedNodes()
     return NodeList::fromVector(ret);
 }
 
-void Edge::connect(Node* node, const QString& name) {
+void Edge::connect(Node* node, const QString& name, IncidenceDirection dir) {
     QString key = name;
     if (name.isEmpty())
         key = QString("%1").arg(++_unnamedCounter);
-    _nodes.insert(key, node);
+    _nodes.insert(Incidence(key, dir), node);
+}
+
+NodeList Edge::gather(IncidenceDirection dir) {
+    QVector<Node*> ret(_nodes.count());
+    for (NodeIterator i = _nodes.constBegin(); i != _nodes.constEnd(); i++) {
+        if (i.key().dir == IN) {
+            ret.append(i.value());
+        }
+    }
+    return NodeList::fromVector(ret);
+}
+
+NodeList Edge::inNodes() {
+    return gather(IN);
+}
+
+NodeList Edge::outNodes() {
+    return gather(OUT);
+}
+
+Node * Edge::nodeByName(const QString &name) {
+    for (NodeIterator i = _nodes.constBegin(); i != _nodes.constEnd(); i++) {
+        if (i.key().name == name) {
+            return i.value();
+        }
+    }
+    return NULL;
 }

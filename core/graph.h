@@ -26,12 +26,15 @@ public:
     void removeNode(Node *node);
     void addEdge(Edge *edge);
     void removeEdge(Edge *edge);
-    void connect(Node *node, Edge *edge, const QString &name = "");
+    void connect(Node *node, Edge *edge, const QString &name = "", IncidenceDirection dir = IN);
     void disconnect(Node *node, Edge *edge);
+
 
     void disconnect(Node *src, Node *destination);
     void disconnect(Node *node);
+    /*
     void connect(NodeList *sources, Edge *edge, EdgeList *destinations);
+    */
 
 private:
     EdgeList _edges;

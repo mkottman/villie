@@ -39,8 +39,13 @@ void Connector::updatePosition() {
     setLine(line);
 }
 
-void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
-        QWidget *) {
+QPainterPath Connector::shape() const {
+    QPainterPath path = QGraphicsLineItem::shape();
+    path.addPolygon(arrowHead);
+    return path;
+}
+
+void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
     if (!myStartItem || !myEndItem)
         return;
 
@@ -56,14 +61,4 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     setLine(centerLine);
 
     painter->drawLine(line());
-    /*
-    if (isSelected()) {
-        painter->setPen(QPen(myColor, 1, Qt::DashLine));
-        QLineF myLine = line();
-        myLine.translate(0, 4.0);
-        painter->drawLine(myLine);
-        myLine.translate(0, -8.0);
-        painter->drawLine(myLine);
-    }
-    */
 }
