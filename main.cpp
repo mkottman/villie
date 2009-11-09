@@ -1,5 +1,5 @@
 #include "gui/main_window.h"
-#include "core/graph.h"
+#include "model/graph.h"
 
 #include <cstdlib>
 
@@ -11,6 +11,8 @@
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     Graph *g = new Graph();
+
+    srand(time(0));
 
     Edge *lastEdge = 0;
     for (int i = 0; i < 10; i++) {

@@ -19,20 +19,15 @@
 class Edge : public Element
 {
 public:
-    Edge() : _unnamedCounter(0) {}
+    Edge() : _unnamedCounter(0), _typeRef(0), _nameRef(0), _runRef(0), _configRef(0) {}
     virtual ~Edge() {}
 
 public:
     NodeList connectedNodes();
     Node * nodeByName(const QString & name);
     
-    QString name() {
-        return QString("edge %1").arg(_id);
-    }
-
-    QString type() {
-        return "Generic Edge";
-    }
+    QString name();
+    QString type();
 
     NodeList inNodes();
     NodeList outNodes();
@@ -43,6 +38,11 @@ private:
     NodeList gather(IncidenceDirection dir);
     QHash<Incidence, Node*> _nodes;
     int _unnamedCounter;
+
+    int _typeRef;
+    int _nameRef;
+    int _runRef;
+    int _configRef;
 };
 
 #endif /* EDGE_H_ */

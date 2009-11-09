@@ -11,7 +11,7 @@
 #include <QObject>
 #include <QTimer>
 
-#include "../core/graph.h"
+#include "../model/graph.h"
 #include "vector.h"
 #include "graphscene.h"
 

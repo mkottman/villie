@@ -10,7 +10,7 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
-#include "../core/graph.h"
+#include "../model/graph.h"
 #include "velement.h"
 
 

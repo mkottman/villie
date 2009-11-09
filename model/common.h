@@ -11,6 +11,8 @@
 #include <QString>
 #include <QList>
 
+#include <lua.hpp>
+
 #include "element.h"
 
 class Edge;

@@ -93,7 +93,6 @@ void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
 //    if (_moved)
 //        emit needsUpdate();
 //    _moved = false;
-    qDebug() << "Released!";
     QGraphicsScene::mouseReleaseEvent(e);
 }
 

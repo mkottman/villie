@@ -4,7 +4,7 @@
 #include <QtGui/QMainWindow>
 #include "ui_main_window.h"
 
-#include "../core/graph.h"
+#include "../model/graph.h"
 #include "layouter.h"
 
 class main_window : public QMainWindow {

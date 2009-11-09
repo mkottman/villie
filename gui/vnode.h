@@ -2,7 +2,7 @@
 #define VNODE_H
 
 #include "velement.h"
-#include "../core/node.h"
+#include "../model/node.h"
 
 class VNode : public VElement {
 public:
@@ -17,6 +17,9 @@ public:
     QString name() {
         return _node->name();
     }
+
+protected:
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
 
 private:
     Node * _node;

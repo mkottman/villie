@@ -2,7 +2,7 @@
 #define VEDGE_H
 
 #include "velement.h"
-#include "../core/edge.h"
+#include "../model/edge.h"
 
 class VEdge : public VElement {
 public:

@@ -16,13 +16,12 @@ public:
     Node() {}
     virtual ~Node() {}
 
-    QString name() {
-        return QString("node %1").arg(_id);
-    }
+    QString name();
+    QString type();
 
-    QString type() {
-        return "Generic Node";
-    }
+    virtual Value * value();
+    virtual void setValue(Value *val);
+    virtual bool ready();
 };
 
 #endif /* NODE_H_ */

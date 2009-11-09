@@ -6,9 +6,12 @@
  */
 
 #include "edge.h"
+#include "gui/connector.h"
 
 #include <qalgorithms.h>
 #include <QVector>
+
+#include <lua.hpp>
 
 typedef QHash<Incidence, Node*>::const_iterator NodeIterator;
 
@@ -51,4 +54,12 @@ Node * Edge::nodeByName(const QString &name) {
         }
     }
     return NULL;
+}
+
+QString Edge::name() {
+    return QString("edge %1").arg(_id);
+}
+
+QString Edge::type() {
+    return "generic edge";
 }

@@ -1,7 +1,10 @@
 #include <QPainter>
 #include <QPen>
+#include <qt4/QtGui/qgraphicsscene.h>
 
 #include "vnode.h"
+
+#include <QDebug>
 
 static QRadialGradient *gradient = NULL;
 
@@ -15,6 +18,32 @@ VNode::VNode(GraphScene *scene, Node* n) : VElement(scene), _node(n) {
         gradient->setColorAt(1, Qt::blue);
     }
 }
+
+#define TOLERANCE 5
+
+void VNode::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
+    QPointF pos = e->scenePos();
+    pos -= QPointF(TOLERANCE, TOLERANCE);
+
+    VElement *current = qgraphicsitem_cast<VElement*>(scene()->mouseGrabberItem());
+
+    if (current) {
+        QRectF rectf(pos, QSizeF(TOLERANCE*2, TOLERANCE*2));
+        QList<QGraphicsItem*> items = scene()->items(rectf, Qt::IntersectsItemBoundingRect);
+
+        foreach (QGraphicsItem *gi, items) {
+            if (gi == current)
+                continue;
+            
+            VElement *ve = qgraphicsitem_cast<VElement*>(gi);
+            if (ve) {
+                qDebug() << ve->name();
+            }
+        }
+    }
+    VElement::mouseReleaseEvent(e);
+}
+
 
 #define SIZE 10
 

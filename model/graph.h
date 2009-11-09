@@ -29,16 +29,15 @@ public:
     void connect(Node *node, Edge *edge, const QString &name = "", IncidenceDirection dir = IN);
     void disconnect(Node *node, Edge *edge);
 
+    void mergeNode(Node *from, Node* to);
 
-    void disconnect(Node *src, Node *destination);
-    void disconnect(Node *node);
-    /*
-    void connect(NodeList *sources, Edge *edge, EdgeList *destinations);
-    */
+    void save();
+    void load();
 
 private:
     EdgeList _edges;
     NodeList _nodes;
+    lua_State *L;
 };
 
 #endif /* GRAPH_H_ */
