@@ -10,15 +10,16 @@
 #include <QFile>
 #include <QDir>
 #include <QMessageBox>
+#include <QDebug>
 
-Graph::Graph()
-{
-    // TODO Auto-generated constructor stub
+Graph::Graph() {
     L = luaL_newstate();
     luaL_openlibs(L);
 
     QDir lib("lib");
-    foreach(QString file, lib.entryList("*.lua", QDir::Files)) {
+    QStringList filters;
+    filters << "*.lua";
+    foreach(QString file, lib.entryList(filters, QDir::Files)) {
         qDebug() << "Loading: " << file;
 
         int ok = luaL_loadfile(L, qPrintable(file));

@@ -8,12 +8,14 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+class Value;
+
 #include "common.h"
 
 class Node : public Element
 {
 public:
-    Node() {}
+    Node() : _value(0) {}
     virtual ~Node() {}
 
     QString name();
@@ -22,6 +24,9 @@ public:
     virtual Value * value();
     virtual void setValue(Value *val);
     virtual bool ready();
+
+private:
+    Value * _value;
 };
 
 #endif /* NODE_H_ */

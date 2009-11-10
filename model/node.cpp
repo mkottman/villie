@@ -14,3 +14,15 @@ QString Node::name() {
 QString Node::type() {
     return "Generic node";
 }
+
+Value * Node::value() {
+    return _value;
+}
+
+void Node::setValue(Value * val) {
+    _value = val;
+}
+
+bool Node::ready() {
+    return _value != NULL;
+}

@@ -1,15 +1,8 @@
 TEMPLATE = app
 TARGET = villie
 CONFIG -= release
-
-win32 {
-    INCLUDEPATH += C:\lua\include
-}
-
-unix {
-    INCLUDEPATH += /usr/include/lua5.1/
-}
-
+win32:INCLUDEPATH += C:\lua\include
+unix:INCLUDEPATH += /usr/include/lua5.1/
 QT += core \
     webkit \
     gui \
@@ -29,7 +22,8 @@ HEADERS += gui/main_window.h \
     gui/graphscene.h \
     gui/graphview.h \
     gui/connector.h \
-    exec/executor.h
+    exec/executor.h \
+    exec/value.h
 SOURCES += gui/main_window.cpp \
     model/edge.cpp \
     model/graph.cpp \
@@ -45,7 +39,8 @@ SOURCES += gui/main_window.cpp \
     gui/graphscene.cpp \
     gui/graphview.cpp \
     gui/connector.cpp \
-    exec/executor.cpp
+    exec/executor.cpp \
+    exec/value.cpp
 FORMS += gui/main_window.ui
 RESOURCES += 
 LIBS += -llua5.1 \
