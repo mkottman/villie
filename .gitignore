@@ -3,5 +3,4 @@ build/*
 gui/ui_*.h
 Makefile
 villie.pro.user
-
-
+nbproject
