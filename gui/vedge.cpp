@@ -14,6 +14,8 @@ VEdge::VEdge(GraphScene *scene, Edge* e) : VElement(scene), _edge(e) {
 }
 
 void VEdge::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    UNUSED(option);
+    UNUSED(widget);
     painter->setBrush(*gradient);
     painter->drawRect(boundingRect());
     painter->drawText(boundingRect(), name(), QTextOption(Qt::AlignCenter));

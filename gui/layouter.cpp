@@ -61,8 +61,9 @@ const double MAX_DISTANCE = 300;
 double K = 1;
 
 static void computeCalm(int nElements) {
-    double R = 50;
-    //K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
+    UNUSED(nElements);
+    // double R = 50;
+    // K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
     K = 30;
 }
 

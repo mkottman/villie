@@ -67,6 +67,7 @@ EdgeList Graph::edges() {
 
 void Graph::removeEdge(Edge *edge) {
     // TODO
+    UNUSED(edge);
 }
 
 void Graph::addEdge(Edge *edge)

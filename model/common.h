@@ -17,8 +17,12 @@
 
 class Edge;
 class Node;
+class Graph;
+class Value;
 
 typedef QList<Node*> NodeList;
 typedef QList<Edge*> EdgeList;
+
+#define UNUSED(x) ((void)x)
 
 #endif /* COMMON_H_ */

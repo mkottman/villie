@@ -37,6 +37,7 @@ void VNode::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
             
             VElement *ve = qgraphicsitem_cast<VElement*>(gi);
             if (ve) {
+                // TODO: merge nodes
                 qDebug() << ve->name();
             }
         }
@@ -48,6 +49,8 @@ void VNode::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
 #define SIZE 10
 
 void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    UNUSED(option);
+    UNUSED(widget);
     painter->setBrush(*gradient);
     if (isSelected()) {
         painter->setPen(QPen(Qt::black, 2));
