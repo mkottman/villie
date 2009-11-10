@@ -32,7 +32,7 @@ void Edge::connect(Node* node, const QString& name, IncidenceDirection dir) {
 NodeList Edge::gather(IncidenceDirection dir) {
     QVector<Node*> ret(_nodes.count());
     for (NodeIterator i = _nodes.constBegin(); i != _nodes.constEnd(); i++) {
-        if (i.key().dir == IN) {
+        if (i.key().dir == dir) {
             ret.append(i.value());
         }
     }
