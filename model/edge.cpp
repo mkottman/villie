@@ -6,10 +6,11 @@
  */
 
 #include "edge.h"
-#include "gui/connector.h"
+#include "node.h"
 
 #include <qalgorithms.h>
 #include <QVector>
+#include <QDebug>
 
 #include <lua.hpp>
 
@@ -23,10 +24,27 @@ NodeList Edge::connectedNodes()
 }
 
 void Edge::connect(Node* node, const QString& name, IncidenceDirection dir) {
+    if (node->_edges.contains(this)) {
+        qDebug() << "Already connected!";
+        return;
+    }
     QString key = name;
     if (name.isEmpty())
         key = QString("%1").arg(++_unnamedCounter);
     _nodes.insert(Incidence(key, dir), node);
+    node->_edges.append(this);
+}
+
+Incidence Edge::disconnect(Node *node) {
+    Incidence key;
+    for (NodeIterator i = _nodes.constBegin(); i != _nodes.constEnd(); i++) {
+        if (i.value() == node) {
+            key = i.key();
+            break;
+        }
+    }
+    _nodes.remove(key);
+    return key;
 }
 
 NodeList Edge::gather(IncidenceDirection dir) {
@@ -65,5 +83,6 @@ QString Edge::type() {
 }
 
 int Edge::registerMethods(lua_State *L) {
-
+    // TODO:
+    return 0;
 }

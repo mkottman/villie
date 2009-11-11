@@ -50,4 +50,6 @@ public:
     bool _ignored;
 };
 
+extern VElement * asElement(QGraphicsItem *item);
+
 #endif // VELEMENT_H

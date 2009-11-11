@@ -15,8 +15,7 @@
 class Connector : public QGraphicsLineItem {
 public:
 
-    Connector(VElement *startItem, VElement *endItem,
-            QGraphicsItem *parent = 0, QGraphicsScene *scene = 0);
+    Connector(VElement *startItem, VElement *endItem);
 
     QRectF boundingRect() const;
 
@@ -32,8 +31,16 @@ public:
         return myEndItem;
     }
 
+    void setStartItem(VElement *e) {
+        myStartItem = e;
+    }
+
+    void setEndItem(VElement *e) {
+        myEndItem = e;
+    }
+
     enum {
-        Type = UserType + 2
+        Type = UserType + 4
     };
 
     int type() const {

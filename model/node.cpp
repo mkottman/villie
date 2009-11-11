@@ -26,3 +26,7 @@ void Node::setValue(Value * val) {
 bool Node::ready() {
     return _value != NULL;
 }
+
+const EdgeList Node::connectedEdges() {
+    return _edges;
+}

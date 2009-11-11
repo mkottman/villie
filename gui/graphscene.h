@@ -12,7 +12,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include "../model/graph.h"
 #include "velement.h"
-
+#include "vedge.h"
+#include "vnode.h"
 
 
 class GraphScene : public QGraphicsScene {
@@ -34,6 +35,13 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *e);
     void itemChanged();
+
+    void createVisualNode(Node *n);
+    void createVisualEdge(Edge *e);
+    Node * removeVisualNode(VNode *n);
+    Edge * removeVisualEdge(VEdge *e);
+    void reloadEdge(VEdge *e);
+
     VElement * createItemByType(int type);
     friend class VElement;
     

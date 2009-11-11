@@ -18,6 +18,8 @@ public:
     Node(lua_State *L) : Element(L), _value(0) {}
     virtual ~Node() {}
 
+    const EdgeList connectedEdges();
+
     QString name();
     QString type();
 
@@ -25,8 +27,11 @@ public:
     virtual void setValue(Value *val);
     virtual bool ready();
 
+    friend class Edge;
+
 private:
     Value * _value;
+    EdgeList _edges;
 };
 
 #endif /* NODE_H_ */

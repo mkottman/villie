@@ -22,3 +22,11 @@ void VElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
     QGraphicsItem::mouseReleaseEvent(e);
 }
 
+extern VElement * asElement(QGraphicsItem *item) {
+    // not nice
+    int type = item->type() - QGraphicsItem::UserType;
+    if (type == 2 || type == 3) {
+        return static_cast<VElement*>(item);
+    }
+    return 0;
+}

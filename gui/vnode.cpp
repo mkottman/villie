@@ -1,6 +1,6 @@
 #include <QPainter>
 #include <QPen>
-#include <qt4/QtGui/qgraphicsscene.h>
+#include <QGraphicsScene>
 
 #include "vnode.h"
 
@@ -19,33 +19,6 @@ VNode::VNode(GraphScene *scene, Node* n) : VElement(scene), _node(n) {
     }
 }
 
-#define TOLERANCE 5
-
-void VNode::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
-    QPointF pos = e->scenePos();
-    pos -= QPointF(TOLERANCE, TOLERANCE);
-
-    VElement *current = qgraphicsitem_cast<VElement*>(scene()->mouseGrabberItem());
-
-    if (current) {
-        QRectF rectf(pos, QSizeF(TOLERANCE*2, TOLERANCE*2));
-        QList<QGraphicsItem*> items = scene()->items(rectf, Qt::IntersectsItemBoundingRect);
-
-        foreach (QGraphicsItem *gi, items) {
-            if (gi == current)
-                continue;
-            
-            VElement *ve = qgraphicsitem_cast<VElement*>(gi);
-            if (ve) {
-                // TODO: merge nodes
-                qDebug() << ve->name();
-            }
-        }
-    }
-    VElement::mouseReleaseEvent(e);
-}
-
-
 #define SIZE 10
 
 void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
@@ -62,4 +35,8 @@ void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
 inline QRectF VNode::boundingRect() const {
     float border = isSelected() ? 2 : 1;
     return QRectF(-SIZE/2 - border, -SIZE/2 - border, SIZE + 2*border, SIZE + 2*border);
+}
+
+VNode * asNode(QGraphicsItem *item) {
+    return qgraphicsitem_cast<VNode*>(item);
 }

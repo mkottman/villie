@@ -1,6 +1,7 @@
 #include "vedge.h"
 
 #include <QRadialGradient>
+#include "connector.h"
 
 static QRadialGradient *gradient = NULL;
 
@@ -30,4 +31,16 @@ inline QRectF VEdge::boundingRect() const {
 void VEdge::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e) {
     // TODO: config
     VElement::mouseDoubleClickEvent(e);
+}
+
+void VEdge::moveConnector(VNode *from, VNode *to) {
+    foreach (Connector *c, _connectors) {
+        if (c->endItem() == from) {
+            c->setEndItem(to);
+        }
+    }
+}
+
+VEdge * asEdge(QGraphicsItem *item) {
+    return qgraphicsitem_cast<VEdge*>(item);
 }

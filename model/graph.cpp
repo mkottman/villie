@@ -94,6 +94,15 @@ void Graph::removeNode(Node *node)
     _nodes.removeOne(node);
 }
 
+void Graph::mergeNode(Node *from, Node *to) {
+    foreach (Edge * e, from->connectedEdges()) {
+        Incidence i = e->disconnect(from);
+        qDebug() << "Disconnected" << from->name() << "from" << e->name() << "as" << i.name;
+        e->connect(to, i.name, i.dir);
+    }
+    removeNode(from);
+}
+
 int Graph::luaEdges(lua_State *L) {
     Graph *g = (Graph*) lua_touserdata(L, lua_upvalueindex(1));
     int len = g->_edges.size();

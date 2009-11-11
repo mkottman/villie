@@ -14,9 +14,7 @@
 
 const qreal Pi = 3.14;
 
-Connector::Connector(VElement *startItem, VElement *endItem,
-        QGraphicsItem *parent, QGraphicsScene *scene)
-: QGraphicsLineItem(parent, scene) {
+Connector::Connector(VElement *startItem, VElement *endItem) {
     myStartItem = startItem;
     myEndItem = endItem;
     //setFlag(QGraphicsItem::ItemIsSelectable, true);

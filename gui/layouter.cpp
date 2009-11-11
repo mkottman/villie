@@ -43,7 +43,7 @@ void Layouter::reloadLayouter() {
         stopLayouter();
 
     foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *ve = qgraphicsitem_cast<VElement*>(item);
+        VElement *ve = asElement(item);
         if (ve) {
             ve->_force = vector2(0, 0);
             ve->setPos(qrand() % 100, qrand() % 100);
@@ -116,7 +116,7 @@ void Layouter::initialize() {
     _centroid = vector2();
 
     foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *ve = qgraphicsitem_cast<VElement*>(item);
+        VElement *ve = asElement(item);
         if (ve) {
             ve->updatePos();
             _centroid += ve->_pos;
@@ -149,10 +149,10 @@ void Layouter::addAttractive() {
 
 void Layouter::addRepulsive() {
     foreach(QGraphicsItem *item1, _scene->items()) {
-        VElement *u = qgraphicsitem_cast<VElement*>(item1);
+        VElement *u = asElement(item1);
         if (u && !u->_ignored) {
             foreach(QGraphicsItem *item2, _scene->items()) {
-                VElement *v = qgraphicsitem_cast<VElement*>(item2);
+                VElement *v = asElement(item2);
                 if (v && !v->_ignored) {
                     if (u != v)
                         u->_force += repulsive(u, v);
@@ -171,7 +171,7 @@ void Layouter::moveElements() {
     int moved=0;
     int total=0;
     foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *v = qgraphicsitem_cast<VElement*>(item);
+        VElement *v = asElement(item);
         if (v && !v->_ignored) {
             total++;
             v->_force *= ALPHA;
@@ -195,7 +195,7 @@ void Layouter::moveElements() {
 
 void Layouter::updatePositions() {
     foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *v = qgraphicsitem_cast<VElement*>(item);
+        VElement *v = asElement(item);
         if (v && !v->_ignored) {
             v->applyPos();
         }

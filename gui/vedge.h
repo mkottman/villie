@@ -3,13 +3,22 @@
 
 #include "velement.h"
 #include "../model/edge.h"
+#include "vnode.h"
+#include "connector.h"
 
 class VEdge : public VElement {
 public:
 
     VEdge(GraphScene *scene, Edge *e);
 
-    enum { ItemType = 2 };
+    enum {
+        Type = UserType + 3
+    };
+
+    int type() const {
+        return Type;
+    }
+
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;
@@ -19,8 +28,13 @@ public:
     }
 
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e);
-private:
+
+    void moveConnector(VNode *from, VNode *to);
+
     Edge * _edge;
+    QList<Connector*> _connectors;
 };
+
+extern VEdge * asEdge(QGraphicsItem *item);
 
 #endif // VEDGE_H

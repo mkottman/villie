@@ -9,7 +9,14 @@ public:
 
     VNode(GraphScene *scene, Node *n);
 
-    enum { ItemType = 1 };
+    enum {
+        Type = UserType + 2
+    };
+
+    int type() const {
+        return Type;
+    }
+
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;
@@ -18,11 +25,9 @@ public:
         return _node->name();
     }
 
-protected:
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
-
-private:
     Node * _node;
 };
+
+VNode * asNode(QGraphicsItem *item);
 
 #endif // VNODE_H

@@ -33,11 +33,11 @@ main_window::~main_window() {
 }
 
 void main_window::addNode() {
-    _graphScene.setType(VNode::ItemType);
+    _graphScene.setType(VNode::Type);
 }
 
 void main_window::addEdge() {
-    _graphScene.setType(VEdge::ItemType);
+    _graphScene.setType(VEdge::Type);
 }
 
 void main_window::connectElements() {

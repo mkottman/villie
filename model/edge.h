@@ -33,6 +33,7 @@ public:
     NodeList outNodes();
 
     void connect(Node *node, const QString &name, IncidenceDirection dir);
+    Incidence disconnect(Node *node);
 
     static int registerMethods(lua_State *L);
     
