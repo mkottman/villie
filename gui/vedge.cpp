@@ -26,3 +26,8 @@ void VEdge::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
 inline QRectF VEdge::boundingRect() const {
     return QRectF(-SIZE*2, -SIZE, SIZE*4, SIZE*2);
 }
+
+void VEdge::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e) {
+    // TODO: config
+    VElement::mouseDoubleClickEvent(e);
+}

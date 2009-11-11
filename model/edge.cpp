@@ -63,3 +63,7 @@ QString Edge::name() {
 QString Edge::type() {
     return "generic edge";
 }
+
+int Edge::registerMethods(lua_State *L) {
+
+}

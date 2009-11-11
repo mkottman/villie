@@ -44,7 +44,6 @@ public:
     void mousePressEvent(QGraphicsSceneMouseEvent *e);
 
 public:
-    double _FRspeed;
     vector2 _force;
     vector2 _pos;
     GraphScene * _scene;

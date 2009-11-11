@@ -20,7 +20,7 @@ class Layouter : public QObject {
     Q_OBJECT
 
 public:
-    Layouter(GraphScene *scene) :  _scene(scene), _layoutTimer(0), _running(false) {}
+    Layouter(GraphScene *scene) :  _scene(scene), _layoutTimer(0), _running(false), _paused(false) {}
 
     bool isRunning() {
         return _running;
@@ -33,6 +33,8 @@ public slots:
     void startLayouter();
     void stopLayouter();
     void reloadLayouter();
+    void pause();
+    void cont();
 
 protected:
     void initialize();
@@ -47,6 +49,7 @@ protected:
     int _layoutTimer;
     bool _running;
     vector2 _centroid;
+    bool _paused;
 };
 
 #endif	/* _LAYOUTER_H */

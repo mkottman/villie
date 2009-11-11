@@ -15,7 +15,7 @@ class Value;
 class Node : public Element
 {
 public:
-    Node() : _value(0) {}
+    Node(lua_State *L) : Element(L), _value(0) {}
     virtual ~Node() {}
 
     QString name();

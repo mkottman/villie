@@ -21,3 +21,4 @@ void VElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
     _ignored = false;
     QGraphicsItem::mouseReleaseEvent(e);
 }
+

@@ -19,7 +19,7 @@
 class Edge : public Element
 {
 public:
-    Edge() : _unnamedCounter(0), _typeRef(0), _nameRef(0), _runRef(0), _configRef(0) {}
+    Edge(lua_State *L) : Element(L), _unnamedCounter(0), _typeRef(0), _nameRef(0), _runRef(0), _configRef(0) {}
     virtual ~Edge() {}
 
 public:
@@ -33,6 +33,8 @@ public:
     NodeList outNodes();
 
     void connect(Node *node, const QString &name, IncidenceDirection dir);
+
+    static int registerMethods(lua_State *L);
     
 private:
     NodeList gather(IncidenceDirection dir);

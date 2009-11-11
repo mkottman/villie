@@ -17,12 +17,18 @@ public:
 public:
 
     void setGraph(Graph *graph);
-    
+
+    void keyPressEvent ( QKeyEvent * keyEvent );
+    void keyReleaseEvent ( QKeyEvent * keyEvent );
+
 public slots:
     void reloadGraph();
     void addNode();
     void addEdge();
     void connectElements();
+    void randomize();
+    void graphPrint(const QString &str);
+    void graphError(const QString &str);
 
 private:
     void createToolbar();

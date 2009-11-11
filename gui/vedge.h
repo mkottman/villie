@@ -18,6 +18,7 @@ public:
         return _edge->name();
     }
 
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e);
 private:
     Edge * _edge;
 };

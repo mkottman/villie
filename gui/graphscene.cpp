@@ -14,9 +14,6 @@
 #include <QDebug>
 
 void GraphScene::setGraph(Graph* g) {
-    if (g == _graph)
-        return;
-
     _graph = g;
 
     clear();
@@ -40,24 +37,21 @@ void GraphScene::setGraph(Graph* g) {
 VElement * GraphScene::createItemByType(int type) {
     switch (type) {
         case VNode::ItemType: {
-            Node *n = new Node();
-            _graph->addNode(n);
+            Node *n = _graph->createNode();
             VNode *vn = new VNode(this, n);
             addItem(vn);
             return vn;
         }
 
         case VEdge::ItemType: {
-            Edge *e = new Edge();
-            _graph->addEdge(e);
+            Edge *e = _graph->createEdge();
             VEdge *ve = new VEdge(this, e);
             addItem(ve);
 
             // create a few nodes around
             int cnt = rand() % 5 + 1;
             for (int i=0; i<cnt; i++) {
-                Node *n = new Node();
-                _graph->addNode(n);
+                Node *n = _graph->createNode();
                 VNode *vn = new VNode(this, n);
                 addItem(vn);
                 _graph->connect(n, e);

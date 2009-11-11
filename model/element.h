@@ -3,13 +3,15 @@
 
 class VElement;
 
+#include <QObject>
 #include <QString>
+#include <lua.hpp>
 
-class Element
-{
+class Element {
+
 public:
-    Element();
-    virtual ~Element() {}
+    Element(lua_State *L);
+    ~Element();
 
     virtual QString type() = 0;
     virtual QString name() = 0;
@@ -24,10 +26,14 @@ public:
     void setVisual(VElement * visual) {
         _visual = visual;
     }
+
+    void push();
     
 protected:
     VElement * _visual;
+    lua_State *L;
     int _id;
+    int _ref;
 };
 
 #endif // ELEMENT_H

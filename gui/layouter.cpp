@@ -17,7 +17,7 @@
 #define LAYOUT_STEPS 10
 
 void Layouter::startLayouter() {
-    if (!_running) {
+    if (!_running && _scene->graph() && !_paused) {
         _layoutTimer = startTimer(TIMER_INTERVAL);
         _running = true;
     }
@@ -28,6 +28,14 @@ void Layouter::stopLayouter() {
         killTimer(_layoutTimer);
         _running = false;
     }
+}
+
+void Layouter::pause() {
+    _paused = true;
+}
+
+void Layouter::cont() {
+    _paused = false;
 }
 
 void Layouter::reloadLayouter() {
@@ -46,6 +54,10 @@ void Layouter::reloadLayouter() {
 }
 
 void Layouter::timerEvent(QTimerEvent* e) {
+    if (!_scene->graph()) {
+        stopLayouter();
+        return;
+    }
     if (e->timerId() == _layoutTimer) {
         initialize();
         for (int i = 0; i < LAYOUT_STEPS; i++)
@@ -153,6 +165,7 @@ void Layouter::addRepulsive() {
 const double MAX_FORCE = 20;
 const double MIN_FORCE = 0.5;
 const double ALPHA = 0.05;
+const int MIN_PORTION = 25;
 
 void Layouter::moveElements() {
     int moved=0;
@@ -174,8 +187,8 @@ void Layouter::moveElements() {
             v->_force = vector2();
         }
     }
-    // stop if less than 10% of items moved
-    if (100*moved/total < 25) {
+    // stop if less than MIN_PORTION % of items moved
+    if (100*moved/total < MIN_PORTION) {
         stopLayouter();
     }
 }

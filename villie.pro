@@ -23,7 +23,8 @@ HEADERS += gui/main_window.h \
     gui/graphview.h \
     gui/connector.h \
     exec/executor.h \
-    exec/value.h
+    exec/value.h \
+    model/lunar.h
 SOURCES += gui/main_window.cpp \
     model/edge.cpp \
     model/graph.cpp \
@@ -44,7 +45,8 @@ SOURCES += gui/main_window.cpp \
 FORMS += gui/main_window.ui
 RESOURCES += 
 LIBS += -llua5.1 \
-    -lqscintilla2
+    -lqscintilla2 \
+    -lqtlua
 UI_DIR = gui/
 MOC_DIR = moc/
 OBJECTS_DIR = build/
