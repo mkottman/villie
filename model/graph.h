@@ -53,6 +53,7 @@ public:
 
     // Aux functions
     void registerFunctions();
+    void registerEdgeType(const QString &fileName);
 
 private:
     // Member variables

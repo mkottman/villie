@@ -36,6 +36,15 @@ void Layouter::pause() {
 
 void Layouter::cont() {
     _paused = false;
+    initialize();
+    startLayouter();
+}
+
+void Layouter::trigger() {
+    if (_paused)
+        cont();
+    else
+        pause();
 }
 
 void Layouter::reloadLayouter() {
@@ -60,7 +69,7 @@ void Layouter::timerEvent(QTimerEvent* e) {
     }
     if (e->timerId() == _layoutTimer) {
         initialize();
-        for (int i = 0; i < LAYOUT_STEPS; i++)
+        for (int i = 0; _running && i < LAYOUT_STEPS; i++)
             layoutStep();
         updatePositions();
     }
@@ -114,12 +123,14 @@ static vector2 attractive(const VElement *v1, const VElement *v2) {
 void Layouter::initialize() {
     int count = 0;
     _centroid = vector2();
+    _workingSet.clear();
 
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *ve = asElement(item);
         if (ve) {
             ve->updatePos();
             _centroid += ve->_pos;
+            _workingSet.append(ve);
             count++;
         }
     }
@@ -148,21 +159,18 @@ void Layouter::addAttractive() {
 }
 
 void Layouter::addRepulsive() {
-    foreach(QGraphicsItem *item1, _scene->items()) {
-        VElement *u = asElement(item1);
-        if (u && !u->_ignored) {
-            foreach(QGraphicsItem *item2, _scene->items()) {
-                VElement *v = asElement(item2);
-                if (v && !v->_ignored) {
-                    if (u != v)
-                        u->_force += repulsive(u, v);
+    foreach(VElement *u, _workingSet) {
+        if (!u->_ignored) {
+            foreach(VElement *v, _workingSet) {
+                if (!v->_ignored && u != v) {
+                    u->_force += repulsive(u, v);
                 }
             }
         }
     }
 }
 
-const double MAX_FORCE = 20;
+const double MAX_FORCE = 5;
 const double MIN_FORCE = 0.5;
 const double ALPHA = 0.05;
 const int MIN_PORTION = 25;
@@ -174,17 +182,20 @@ void Layouter::moveElements() {
         VElement *v = asElement(item);
         if (v && !v->_ignored) {
             total++;
-            v->_force *= ALPHA;
-            double len = v->_force.length();
+            vector2 *force = &(v->_force);
+
+            *force *= ALPHA;
+
+            double len = force->length();
             if (len > MAX_FORCE) {
-                v->_force.normalize();
-                v->_force *= MAX_FORCE;
+                force->normalize();
+                *force *= MAX_FORCE;
             }
             if (len > MIN_FORCE) {
-                v->_pos += v->_force;
+                v->_pos += *force;
                 moved++;
             }
-            v->_force = vector2();
+            *force = vector2();
         }
     }
     // stop if less than MIN_PORTION % of items moved

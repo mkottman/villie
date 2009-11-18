@@ -18,7 +18,6 @@ public:
 
     void setGraph(Graph *graph);
 
-    void keyPressEvent ( QKeyEvent * keyEvent );
     void keyReleaseEvent ( QKeyEvent * keyEvent );
 
 public slots:

@@ -24,7 +24,8 @@ HEADERS += gui/main_window.h \
     gui/connector.h \
     exec/executor.h \
     exec/value.h \
-    model/lunar.h
+    model/lunar.h \
+    model/edgetype.h
 SOURCES += gui/main_window.cpp \
     model/edge.cpp \
     model/graph.cpp \
@@ -41,7 +42,8 @@ SOURCES += gui/main_window.cpp \
     gui/graphview.cpp \
     gui/connector.cpp \
     exec/executor.cpp \
-    exec/value.cpp
+    exec/value.cpp \
+    model/edgetype.cpp
 FORMS += gui/main_window.ui
 RESOURCES += 
 LIBS += -llua5.1 \

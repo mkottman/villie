@@ -19,7 +19,7 @@
 class Edge : public Element
 {
 public:
-    Edge(lua_State *L) : Element(L), _unnamedCounter(0), _typeRef(0), _nameRef(0), _runRef(0), _configRef(0) {}
+    Edge(lua_State *L, EdgeType * type) : Element(L), _unnamedCounter(0), _type(type) {}
     virtual ~Edge() {}
 
 public:
@@ -28,6 +28,8 @@ public:
     
     QString name();
     QString type();
+
+    EdgeType * edgeType();
 
     NodeList inNodes();
     NodeList outNodes();
@@ -41,11 +43,7 @@ private:
     NodeList gather(IncidenceDirection dir);
     QHash<Incidence, Node*> _nodes;
     int _unnamedCounter;
-
-    int _typeRef;
-    int _nameRef;
-    int _runRef;
-    int _configRef;
+    EdgeType * _type;
 };
 
 #endif /* EDGE_H_ */

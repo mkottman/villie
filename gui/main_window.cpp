@@ -25,6 +25,8 @@ QMainWindow(parent) {
 
     connect(ui.actionRandomize, SIGNAL(triggered()), this, SLOT(randomize()));
 
+    ui.actionRandomize->trigger();
+
     createToolbar();
 }
 
@@ -108,19 +110,9 @@ void main_window::graphError(const QString &str) {
     ui.log->insertPlainText(str + "\n");
 }
 
-void main_window::keyPressEvent(QKeyEvent * e) {
-    if (e->modifiers() & Qt::ControlModifier) {
-        graphPrint("Pressed!");
-        _layouter->pause();
-    }
-    QMainWindow::keyPressEvent(e);
-}
-
 void main_window::keyReleaseEvent(QKeyEvent * e) {
-    // TODO: do it the right way
-    if (e->key() == 16777249 ) {
-        graphPrint("Released!");
-        _layouter->cont();
+    if (e->key() == Qt::Key_Space ) {
+        _layouter->trigger();
     }
     QMainWindow::keyReleaseEvent(e);
 }

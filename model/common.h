@@ -13,6 +13,7 @@
 
 #include <lua.hpp>
 
+#include "edgetype.h"
 #include "element.h"
 
 class Edge;

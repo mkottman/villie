@@ -29,21 +29,8 @@ Graph::Graph() {
     filters << "*.lua";
     foreach(QString file, lib.entryList(filters, QDir::Files)) {
         qDebug() << "Loading: " << file;
-
         file.prepend(OP_PATH "/");
-
-        int err = 0;
-
-        err = luaL_loadfile(L, qPrintable(file));
-
-        if (err != 0) {
-            QString err = "Error while loading definitions: ";
-            err += lua_tostring(L, -1);
-            if (receivers(SIGNAL(error(QString))) > 0)
-                emit error(err);
-            else
-                QMessageBox::warning(0, "Operations error", err);
-        }
+        registerEdgeType(file);
     }
 }
 
@@ -79,7 +66,7 @@ void Graph::removeEdge(Edge *edge) {
 
 Edge * Graph::createEdge(const QString &type) {
     // TODO: create custom edge by type
-    Edge * edge = new Edge(L);
+    Edge * edge = new Edge(L, 0);
     _edges.append(edge);
     return edge;
 }
@@ -144,14 +131,12 @@ int Graph::luaPrint(lua_State *L) {
     return 0;
 }
 
-typedef struct { const char *name; lua_CFunction mfunc; } RegType;
-
-const RegType globals[] = {
+const luaL_Reg globals[] = {
     {"print", &Graph::luaPrint},
     {0,0}
 };
 
-const RegType methods[] = {
+const luaL_Reg methods[] = {
     {"nodes", &Graph::luaNodes},
     {"edges", &Graph::luaEdges},
     {0,0}
@@ -161,20 +146,76 @@ void Graph::registerFunctions() {
     lua_createtable(L, 0, 0);
     int indexTable = lua_gettop(L);
 
-    const RegType *l;
+    const luaL_Reg *l;
 
     for (l = methods; l->name; l++) {
         lua_pushstring(L, l->name);
         lua_pushlightuserdata(L, (void*)this);
-        lua_pushcclosure(L, l->mfunc, 1);
+        lua_pushcclosure(L, l->func, 1);
         lua_settable(L, indexTable);
     }
 
     for (l = globals; l->name; l++) {
         lua_pushlightuserdata(L, (void*)this);
-        lua_pushcclosure(L, l->mfunc, 1);
+        lua_pushcclosure(L, l->func, 1);
         lua_setglobal(L, l->name);
     }
 }
 
 
+/** Registers an edge type from file.
+
+  \param fileName Name of file, which contains definitions of edge
+
+Assumes the source file is already loaded on top of Lua stack.
+Retrieves all relevant info from the return value of the Lua source. Handles errors by notifying through
+the error(QString) signal if there are any receivers, or by showing QMessageBox
+*/
+void Graph::registerEdgeType(const QString &fileName) {
+    int top = lua_gettop(L);
+
+    lua_getglobal(L, "debug");
+    lua_getfield(L, -1, "traceback");
+
+    int err = luaL_loadfile(L, qPrintable(fileName));
+    if (err == 0) {
+        err = lua_pcall(L, 0, 1, -2);
+        if (err == 0) {
+            if (lua_type(L, -1) == LUA_TTABLE) {
+                int table = lua_gettop(L);
+
+                lua_getfield(L, table, "name");
+                QString name = lua_tostring(L, -1);
+
+                lua_getfield(L, table, "color");
+                QColor color(lua_tostring(L, -1));
+
+                lua_getfield(L, table, "run");
+                int runref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+                lua_getfield(L, table, "config");
+                int configref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+                qDebug() << name << color << runref << configref;
+            } else {
+                err = 1;
+                lua_pushliteral(L, "Error while loading ");
+                lua_pushstring(L, qPrintable(fileName));
+                lua_pushliteral(L, ": table expected, got ");
+                lua_pushstring(L, lua_typename(L, lua_type(L, -1)));
+                lua_concat(L, 4);
+            }
+        }
+    }
+
+    if (err != 0) {
+        QString err = "Error while loading definitions: ";
+        err += lua_tostring(L, -1);
+        if (receivers(SIGNAL(error(QString))) > 0)
+            emit error(err);
+        else
+            QMessageBox::warning(0, "Operations error", err);
+    }
+
+    lua_settop(L, top);
+}

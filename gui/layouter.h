@@ -35,6 +35,7 @@ public slots:
     void reloadLayouter();
     void pause();
     void cont();
+    void trigger();
 
 protected:
     void initialize();
@@ -50,6 +51,7 @@ protected:
     bool _running;
     vector2 _centroid;
     bool _paused;
+    QList<VElement*> _workingSet;
 };
 
 #endif	/* _LAYOUTER_H */
