@@ -170,8 +170,8 @@ void Layouter::addRepulsive() {
     }
 }
 
-const double MAX_FORCE = 5;
-const double MIN_FORCE = 0.5;
+const double MAX_FORCE = 10;
+const double MIN_FORCE = 1;
 const double ALPHA = 0.05;
 const int MIN_PORTION = 25;
 

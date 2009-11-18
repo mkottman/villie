@@ -2,6 +2,7 @@
 
 #include <QRadialGradient>
 #include "connector.h"
+#include "graphscene.h"
 
 static QRadialGradient *gradient = NULL;
 
@@ -29,7 +30,7 @@ inline QRectF VEdge::boundingRect() const {
 }
 
 void VEdge::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e) {
-    // TODO: config
+    _scene->configEdge(this);
     VElement::mouseDoubleClickEvent(e);
 }
 

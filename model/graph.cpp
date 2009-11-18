@@ -11,12 +11,9 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QDebug>
+#include "configwindow.h"
 
 #define OP_PATH "ops"
-
-const char * loadingCode = "return function(name)\n"
-                           ""
-                           "end\n";
 
 Graph::Graph() {
     L = luaL_newstate();
@@ -66,7 +63,8 @@ void Graph::removeEdge(Edge *edge) {
 
 Edge * Graph::createEdge(const QString &type) {
     // TODO: create custom edge by type
-    Edge * edge = new Edge(L, 0);
+    EdgeType *tp = _types.value(type, _types.value("unknown"));
+    Edge * edge = new Edge(L, tp);
     _edges.append(edge);
     return edge;
 }
@@ -162,6 +160,16 @@ void Graph::registerFunctions() {
     }
 }
 
+void Graph::runConfig(Edge *e) {
+    EdgeType *type = e->edgeType();
+    lua_rawgeti(L, LUA_REGISTRYINDEX, type->configFunction());
+    e->push();
+    lua_pcall(L, 1, 2, 0);
+
+    ConfigWindow *conf = new ConfigWindow(type->name());
+    // TODO: fill config variables
+}
+
 
 /** Registers an edge type from file.
 
@@ -196,7 +204,10 @@ void Graph::registerEdgeType(const QString &fileName) {
                 lua_getfield(L, table, "config");
                 int configref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-                qDebug() << name << color << runref << configref;
+                qDebug() << "Registering type" << name << color << runref << configref;
+
+                EdgeType *type = new EdgeType(name, color, runref, configref);
+                _types.insert(name, type);
             } else {
                 err = 1;
                 lua_pushliteral(L, "Error while loading ");

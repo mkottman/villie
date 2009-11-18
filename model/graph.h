@@ -14,6 +14,7 @@
 #include "lunar.h"
 
 #include <QObject>
+#include <QMap>
 
 class Graph : public QObject {
     Q_OBJECT;
@@ -39,6 +40,8 @@ public:
     void save();
     void load();
 
+    void runConfig(Edge *e);
+
 signals:
     void printed(const QString &str);
     void error(const QString &err);
@@ -54,12 +57,16 @@ public:
     // Aux functions
     void registerFunctions();
     void registerEdgeType(const QString &fileName);
+    EdgeTypeMap types() {
+        return _types;
+    }
 
 private:
     // Member variables
     EdgeList _edges;
     NodeList _nodes;
     lua_State *L;
+    EdgeTypeMap _types;
 };
 
 #endif /* GRAPH_H_ */

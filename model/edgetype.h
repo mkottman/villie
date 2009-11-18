@@ -2,11 +2,15 @@
 #define EDGETYPE_H
 
 #include <QColor>
+#include <QList>
+#include <QMap>
 
 class EdgeType
 {
 public:
-    EdgeType();
+    EdgeType(const QString &name, const QColor &color, int runref, int configref) :
+            _typeName(name), _color(color), _runref(runref), _configref(configref)
+    {}
 
     void setName(const QString &name) {
         _typeName = name;
@@ -38,9 +42,12 @@ public:
 
 private:
     QString _typeName;
+    QColor _color;
     int _runref;
     int _configref;
-    QColor _color;
 };
+
+typedef QList<EdgeType*> EdgeTypeList;
+typedef QMap<QString, EdgeType*> EdgeTypeMap;
 
 #endif // EDGETYPE_H

@@ -156,3 +156,10 @@ void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
 void GraphScene::startConnector() {
 
 }
+
+void GraphScene::configEdge(VEdge *e) {
+    qDebug() << e->name();
+
+    _graph->runConfig(e->_edge);
+
+}

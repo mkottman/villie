@@ -27,7 +27,7 @@ public:
         _visual = visual;
     }
 
-    void push();
+    virtual void push();
     
 protected:
     VElement * _visual;

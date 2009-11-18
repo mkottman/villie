@@ -31,6 +31,8 @@ public:
 
     void startConnector();
 
+    void configEdge(VEdge *e);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *e);

@@ -29,7 +29,9 @@ public:
     QString name();
     QString type();
 
-    EdgeType * edgeType();
+    EdgeType * edgeType() {
+        return _type;
+    }
 
     NodeList inNodes();
     NodeList outNodes();
