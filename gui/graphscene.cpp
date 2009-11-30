@@ -19,32 +19,62 @@ void GraphScene::setGraph(Graph* g) {
     clear();
 
     foreach(Node *n, _graph->nodes()) {
-        createVisualNode(n);
+        createVisualNode(n, QPointF(0,0));
     }
 
     foreach(Edge *e, _graph->edges()) {
-        createVisualEdge(e);
+        createVisualEdge(e, QPointF(0,0));
     }
 }
 
-void GraphScene::createVisualNode(Node *n) {
+VNode * GraphScene::createVisualNode(Node *n, const QPointF &pos) {
     VNode *vn = new VNode(this, n);
+    vn->setPos(pos);
     addItem(vn);
+    return vn;
 }
 
-void GraphScene::createVisualEdge(Edge *e) {
+void GraphScene::addConnector(VEdge *edge, VNode *node) {
+    Incidence i = edge->_edge->incidenceToNode(node->_node);
+    QString name = i.name;
+    IncidenceDirection dir = i.dir;
+    Connector *conn = NULL;
+    if (dir == IN) {
+        conn = new Connector(node, edge, name);
+    } else if (dir == OUT) {
+        conn = new Connector(edge, node, name);
+    }
+    Q_ASSERT(conn);
+    edge->_connectors.append(conn);
+    addItem(conn);
+}
+
+VEdge * GraphScene::createVisualEdge(Edge *e, const QPointF &pos) {
     VEdge *ve = new VEdge(this, e);
+    ve->setPos(pos);
     addItem(ve);
 
     foreach(Node *n, e->connectedNodes()) {
-        Connector *conn = new Connector(e->visual(), n->visual());
-        addItem(conn);
-        ve->_connectors.append(conn);
+        VNode *vn = (VNode*) n->visual();
+        if (!vn) {
+            vn = createVisualNode(n, pos);
+        }
+        qDebug() << "Visual for " << n->name() << " is " << vn;
+        addConnector(ve, vn);
     }
+
+    return ve;
 }
 
 Node * GraphScene::removeVisualNode(VNode *n) {
     Node * ret = n->_node;
+    foreach (Edge * e, ret->connectedEdges()) {
+        VEdge *ve = asEdge(e->visual());
+        Q_ASSERT(ve);
+        Connector *c = ve->disconnect(n);
+        removeItem(c);
+        delete c;
+    }
     removeItem(n);
     delete n;
     return ret;
@@ -62,32 +92,21 @@ Edge * GraphScene::removeVisualEdge(VEdge *e) {
 }
 
 void GraphScene::reloadEdge(VEdge *e) {
-    createVisualEdge(removeVisualEdge(e));
+    QPointF pos = e->pos();
+    createVisualEdge(removeVisualEdge(e), pos);
 }
 
-VElement * GraphScene::createItemByType(int type) {
+VElement * GraphScene::createItemByType(int type, const QPointF &pos) {
     switch (type) {
-        case VNode::Type: {
+    case VNode::Type: {
             Node *n = _graph->createNode();
-            VNode *vn = new VNode(this, n);
-            addItem(vn);
-            return vn;
+            return createVisualNode(n, pos);
         }
 
-        case VEdge::Type: {
-            Edge *e = _graph->createEdge();
-            VEdge *ve = new VEdge(this, e);
-            addItem(ve);
-
-            // create a few nodes around
-            int cnt = rand() % 5 + 1;
-            for (int i=0; i<cnt; i++) {
-                Node *n = _graph->createNode();
-                VNode *vn = new VNode(this, n);
-                addItem(vn);
-                _graph->connect(n, e);
-            }
-
+    case VEdge::Type: {
+            Edge *e = _graph->createEdge(_typeName);
+            VEdge *ve = createVisualEdge(e, pos);
+            Q_ASSERT(ve);
             return ve;
         }
     }
@@ -96,17 +115,16 @@ VElement * GraphScene::createItemByType(int type) {
 
 void GraphScene::mousePressEvent(QGraphicsSceneMouseEvent *e) {
     if (e->button() == Qt::LeftButton && _type) {
-        VElement *item = createItemByType(_type);
+        VElement *item = createItemByType(_type, e->scenePos());
         if (item) {
-           _type = 0;
-            addItem(item);
-            item->setPos(e->scenePos());
             itemChanged();
         } else {
             qDebug() << "Unknown item type:" << _type;
         }
+        _type = 0;
+    } else {
+        QGraphicsScene::mousePressEvent(e);
     }
-    QGraphicsScene::mousePressEvent(e);
 }
 
 void GraphScene::itemChanged() {
@@ -149,7 +167,6 @@ void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
             }
         }
     }
-
     QGraphicsScene::mouseReleaseEvent(e);
 }
 
@@ -159,7 +176,28 @@ void GraphScene::startConnector() {
 
 void GraphScene::configEdge(VEdge *e) {
     qDebug() << e->name();
-
     _graph->runConfig(e->_edge);
+}
 
+void GraphScene::removeSelectedItems() {
+        foreach (QGraphicsItem *item, selectedItems()) {
+        VNode *node = asNode(item);
+        if (node) {
+            Node *n = removeVisualNode(node);
+            _graph->removeNode(n);
+            return;
+        }
+        VEdge *edge = asEdge(item);
+        if (edge) {
+            Edge *e = removeVisualEdge(edge);
+            _graph->removeEdge(e);
+            return;
+        }
+    }
+ }
+
+void GraphScene::keyPressEvent(QKeyEvent *e) {
+    if (e->key() == Qt::Key_Delete) {
+        removeSelectedItems();
+    }
 }

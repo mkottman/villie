@@ -1,15 +1,18 @@
 #ifndef EDGETYPE_H
 #define EDGETYPE_H
 
+#include <QObject>
 #include <QColor>
 #include <QList>
 #include <QMap>
 
-class EdgeType
+class EdgeType : public QObject
 {
+    Q_OBJECT
+
 public:
-    EdgeType(const QString &name, const QColor &color, int runref, int configref) :
-            _typeName(name), _color(color), _runref(runref), _configref(configref)
+    EdgeType(const QString &name, const QColor &color, int protoref, int runref, int configref) :
+            _typeName(name), _color(color), _protoref(protoref), _runref(runref), _configref(configref)
     {}
 
     void setName(const QString &name) {
@@ -40,9 +43,25 @@ public:
         return _color;
     }
 
+    void setProto(int proto) {
+        _protoref = proto;
+    }
+    int proto() {
+        return _protoref;
+    }
+
+public Q_SLOTS:
+    void trigger() {
+        emit activate(name());
+    }
+
+Q_SIGNALS:
+    void activate(const QString &name);
+
 private:
     QString _typeName;
     QColor _color;
+    int _protoref;
     int _runref;
     int _configref;
 };

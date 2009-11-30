@@ -31,6 +31,8 @@ public:
 
     void moveConnector(VNode *from, VNode *to);
 
+    Connector * disconnect(VNode *n);
+
     Edge * _edge;
     QList<Connector*> _connectors;
 };

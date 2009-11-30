@@ -1,6 +1,7 @@
 TEMPLATE = app
 TARGET = villie
 CONFIG -= release
+CONFIG += debug
 win32:INCLUDEPATH += C:\lua\include
 unix:INCLUDEPATH += /usr/include/lua5.1/
 QT += core \
@@ -23,10 +24,8 @@ HEADERS += gui/main_window.h \
     gui/graphview.h \
     gui/connector.h \
     exec/executor.h \
-    exec/value.h \
     model/lunar.h \
     model/edgetype.h \
-    exec/scheduler.h \
     gui/configwindow.h
 SOURCES += gui/main_window.cpp \
     model/edge.cpp \
@@ -44,15 +43,12 @@ SOURCES += gui/main_window.cpp \
     gui/graphview.cpp \
     gui/connector.cpp \
     exec/executor.cpp \
-    exec/value.cpp \
     model/edgetype.cpp \
-    exec/scheduler.cpp \
     gui/configwindow.cpp
 FORMS += gui/main_window.ui
 RESOURCES += 
 LIBS += -llua5.1 \
-    -lqscintilla2 \
-    -lqtlua
+    -lqscintilla2
 UI_DIR = gui/
 MOC_DIR = moc/
 OBJECTS_DIR = build/

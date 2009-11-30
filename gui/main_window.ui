@@ -67,7 +67,7 @@
      <x>0</x>
      <y>0</y>
      <width>931</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -105,8 +105,6 @@
     <property name="title">
      <string>Add</string>
     </property>
-    <addaction name="actionAdd_Node"/>
-    <addaction name="actionAdd_Edge"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -150,16 +148,6 @@
   <action name="actionReset">
    <property name="text">
     <string>Reset</string>
-   </property>
-  </action>
-  <action name="actionAdd_Node">
-   <property name="text">
-    <string>Add Node</string>
-   </property>
-  </action>
-  <action name="actionAdd_Edge">
-   <property name="text">
-    <string>Add Edge</string>
    </property>
   </action>
   <action name="actionRandomize">

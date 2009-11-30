@@ -10,6 +10,8 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
+
 #include "../model/graph.h"
 #include "velement.h"
 #include "vedge.h"
@@ -28,23 +30,28 @@ public:
     Graph *graph() { return _graph; }
 
     void setType(int type) { _type = type; }
+    void setTypeName(const QString &name) { _typeName = name; }
 
     void startConnector();
 
     void configEdge(VEdge *e);
+    void keyPressEvent(QKeyEvent *e);
+
+    void removeSelectedItems();
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *e);
     void itemChanged();
 
-    void createVisualNode(Node *n);
-    void createVisualEdge(Edge *e);
+    VNode * createVisualNode(Node *n, const QPointF &pos);
+    VEdge * createVisualEdge(Edge *e, const QPointF &pos);
     Node * removeVisualNode(VNode *n);
     Edge * removeVisualEdge(VEdge *e);
     void reloadEdge(VEdge *e);
+    void addConnector(VEdge *edge, VNode *node);
 
-    VElement * createItemByType(int type);
+    VElement * createItemByType(int type, const QPointF &pos);
     friend class VElement;
     
 signals:
@@ -52,6 +59,7 @@ signals:
 
 private:
     int _type;
+    QString _typeName;
     Graph * _graph;
     bool _moved;
 };

@@ -12,7 +12,7 @@
 #include <QHash>
 
 enum IncidenceDirection {
-    IN, OUT
+    ERROR=0, IN=1, OUT=2
 };
 
 class Incidence {
@@ -25,7 +25,7 @@ public:
 };
 
 inline uint qHash(const Incidence &i) {
-    return qHash(i.name);
+    return qHash(i.name) ^ i.dir;
 }
 
 inline bool operator ==(const Incidence &i1, const Incidence &i2) {

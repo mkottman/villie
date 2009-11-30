@@ -1,7 +1,7 @@
 #ifndef VILLIE_H
 #define VILLIE_H
 
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 #include "ui_main_window.h"
 
 #include "../model/graph.h"
@@ -20,10 +20,10 @@ public:
 
     void keyReleaseEvent ( QKeyEvent * keyEvent );
 
-public slots:
+public Q_SLOTS:
     void reloadGraph();
     void addNode();
-    void addEdge();
+    void addEdge(const QString &type);
     void connectElements();
     void randomize();
     void graphPrint(const QString &str);

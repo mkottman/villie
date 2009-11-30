@@ -16,6 +16,7 @@ public:
 
 public:
     void wheelEvent(QWheelEvent *e);
+    void keyPressEvent(QKeyEvent *e);
 
 private:
     double _zoom;

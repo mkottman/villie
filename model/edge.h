@@ -25,6 +25,7 @@ public:
 public:
     NodeList connectedNodes();
     Node * nodeByName(const QString & name);
+    Incidence incidenceToNode(Node *node);
     
     QString name();
     QString type();
@@ -41,7 +42,7 @@ public:
 
     static int registerMethods(lua_State *L);
     
-private:
+public:
     NodeList gather(IncidenceDirection dir);
     QHash<Incidence, Node*> _nodes;
     int _unnamedCounter;

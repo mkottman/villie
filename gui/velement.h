@@ -16,6 +16,7 @@ public:
         QGraphicsItem(parent), _scene(scene), _ignored(false)
     {
         setZValue(1);
+        setVisible(true);
         setFlag(QGraphicsItem::ItemIsSelectable, true);
         setFlag(QGraphicsItem::ItemIsMovable, true);
     }

@@ -15,7 +15,7 @@
 class Connector : public QGraphicsLineItem {
 public:
 
-    Connector(VElement *startItem, VElement *endItem);
+    Connector(VElement *startItem, VElement *endItem, const QString &name);
 
     QRectF boundingRect() const;
 
@@ -40,7 +40,7 @@ public:
     }
 
     enum {
-        Type = UserType + 4
+        Type = UserType + 999
     };
 
     int type() const {
@@ -61,6 +61,7 @@ private:
     VElement *myEndItem;
     QColor myColor;
     QPolygonF arrowHead;
+    QString _name;
 };
 #endif	/* _CONNECTOR_H */
 

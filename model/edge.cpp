@@ -32,6 +32,7 @@ void Edge::connect(Node* node, const QString& name, IncidenceDirection dir) {
     if (name.isEmpty())
         key = QString("%1").arg(++_unnamedCounter);
     _nodes.insert(Incidence(key, dir), node);
+    Q_ASSERT(_nodes.contains(Incidence(key, dir)));
     node->_edges.append(this);
 }
 
@@ -85,4 +86,8 @@ QString Edge::type() {
 int Edge::registerMethods(lua_State *L) {
     // TODO:
     return 0;
+}
+
+Incidence Edge::incidenceToNode(Node *node) {
+    return _nodes.key(node);
 }

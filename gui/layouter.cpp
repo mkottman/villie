@@ -51,9 +51,11 @@ void Layouter::reloadLayouter() {
     if (_running)
         stopLayouter();
 
+    _workingSet.clear();
     foreach(QGraphicsItem *item, _scene->items()) {
         VElement *ve = asElement(item);
         if (ve) {
+            _workingSet.append(ve);
             ve->_force = vector2(0, 0);
             ve->setPos(qrand() % 100, qrand() % 100);
         }
@@ -85,7 +87,7 @@ static void computeCalm(int nElements) {
     UNUSED(nElements);
     // double R = 50;
     // K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
-    K = 30;
+    K = 50;
 }
 
 static inline float rep(double distance) {
@@ -178,9 +180,8 @@ const int MIN_PORTION = 25;
 void Layouter::moveElements() {
     int moved=0;
     int total=0;
-    foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *v = asElement(item);
-        if (v && !v->_ignored) {
+    foreach(VElement *v, _workingSet) {
+        if (!v->_ignored) {
             total++;
             vector2 *force = &(v->_force);
 
@@ -199,15 +200,14 @@ void Layouter::moveElements() {
         }
     }
     // stop if less than MIN_PORTION % of items moved
-    if (100*moved/total < MIN_PORTION) {
+    if (total == 0 || 100*moved/total < MIN_PORTION) {
         stopLayouter();
     }
 }
 
 void Layouter::updatePositions() {
-    foreach(QGraphicsItem *item, _scene->items()) {
-        VElement *v = asElement(item);
-        if (v && !v->_ignored) {
+    foreach(VElement *v, _workingSet) {
+        if (!v->_ignored) {
             v->applyPos();
         }
     }

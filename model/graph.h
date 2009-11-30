@@ -62,6 +62,9 @@ public:
     }
 
 private:
+    void createNodesForEdge(Edge *edge, EdgeType *type);
+    void emitError(const QString &err);
+
     // Member variables
     EdgeList _edges;
     NodeList _nodes;

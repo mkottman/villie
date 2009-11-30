@@ -6,6 +6,7 @@
 #include "vedge.h"
 
 #include <QKeyEvent>
+#include <QDebug>
 
 main_window::main_window(QWidget *parent) :
 QMainWindow(parent) {
@@ -20,14 +21,9 @@ QMainWindow(parent) {
 
     connect(&_graphScene, SIGNAL(needsUpdate()), _layouter, SLOT(startLayouter()));
 
-    connect(ui.actionAdd_Node, SIGNAL(triggered()), this, SLOT(addNode()));
-    connect(ui.actionAdd_Edge, SIGNAL(triggered()), this, SLOT(addEdge()));
-
-    connect(ui.actionRandomize, SIGNAL(triggered()), this, SLOT(randomize()));
+    connect(ui.actionRandomize, SIGNAL(triggered()), SLOT(randomize()));
 
     ui.actionRandomize->trigger();
-
-    createToolbar();
 }
 
 main_window::~main_window() {
@@ -38,7 +34,9 @@ void main_window::addNode() {
     _graphScene.setType(VNode::Type);
 }
 
-void main_window::addEdge() {
+void main_window::addEdge(const QString &type) {
+    qDebug() << "About to create edge: " << type;
+    _graphScene.setTypeName(type);
     _graphScene.setType(VEdge::Type);
 }
 
@@ -49,17 +47,23 @@ void main_window::connectElements() {
 void main_window::reloadGraph() {
     _graphScene.setGraph(_graph);
     _layouter->reloadLayouter();
+    createToolbar();
 }
 
 void main_window::randomize() {
     Graph *g = new Graph();
-
     setGraph(g);
+
+/*
+    EdgeTypeMap typeMap = g->types();
+    int typeCount = typeMap.count();
 
     srand(time(0));
     Edge *lastEdge = 0;
     for (int i = 0; i < 10; i++) {
-        Edge *e = g->createEdge();
+        QString typeStr = (typeMap.begin() + (rand() % typeCount)).value()->name();
+        qDebug() << "Creating new edge:" << typeStr;
+        Edge *e = g->createEdge(typeStr);
         int nodes = rand() % 5 + 1;
         for (int j = 0; j < nodes; j++) {
             Node *n = g->createNode();
@@ -70,6 +74,7 @@ void main_window::randomize() {
         }
         lastEdge = e;
     }
+*/
 
     reloadGraph();
 }
@@ -92,8 +97,15 @@ void main_window::setGraph(Graph* graph) {
 }
 
 void main_window::createToolbar() {
-    ui.toolBar->addAction(ui.actionAdd_Node);
-    ui.toolBar->addAction(ui.actionAdd_Edge);
+    if (_graph) {
+        ui.toolBar->clear();
+        foreach (EdgeType * t, _graph->types()) {
+            QAction *act = new QAction(t->name(), this);
+            connect(act, SIGNAL(triggered()), t, SLOT(trigger()));
+            connect(t, SIGNAL(activate(QString)), this, SLOT(addEdge(QString)));
+            ui.toolBar->addAction(act);
+        }
+    }
 }
 
 void main_window::graphPrint(const QString &str) {

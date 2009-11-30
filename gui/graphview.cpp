@@ -9,6 +9,8 @@
 #include <QWheelEvent>
 #include <QDebug>
 
+#include "graphscene.h"
+
 #define ZOOM_FACTOR 1.5
 
 void GraphView::wheelEvent(QWheelEvent* e) {
@@ -21,4 +23,9 @@ void GraphView::wheelEvent(QWheelEvent* e) {
         
     }
     QGraphicsView::wheelEvent(e);
+}
+
+void GraphView::keyPressEvent(QKeyEvent *e) {
+    ((GraphScene*)scene())->keyPressEvent(e);
+    QGraphicsView::keyPressEvent(e);
 }

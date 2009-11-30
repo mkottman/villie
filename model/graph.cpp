@@ -57,15 +57,69 @@ EdgeList Graph::edges() {
 }
 
 void Graph::removeEdge(Edge *edge) {
-    // TODO
-    UNUSED(edge);
+    _edges.removeOne(edge);
+}
+
+
+void dumpStack(lua_State *L) {
+    int top = lua_gettop(L);
+    for (int i=1; i<=top; i++) {
+        qDebug() << i << " : " << luaL_typename(L, i) << " = " << lua_topointer(L, i);
+    }
+}
+
+
+
+void Graph::createNodesForEdge(Edge *edge, EdgeType *type) {
+    qDebug() << "createNodesForEdge" << edge->name() << type->name();
+
+    int top = lua_gettop(L);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, type->proto());
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        // dumpStack(L);
+        int tab = lua_gettop(L);
+
+        lua_rawgeti(L, tab, 1);
+        size_t len = 0;
+        const char *pName = lua_tolstring(L, -1, &len);
+        QString name = QString::fromUtf8(pName, len);
+
+
+        lua_rawgeti(L, tab, 2);
+        int d = lua_tonumber(L, -1);
+        IncidenceDirection dir;
+        if (d == 1) {
+            dir = IN;
+        } else {
+            dir = OUT;
+        }
+
+        qDebug() << "Creating node " << name << " in direction: " << dir;
+        Node *n = createNode("");
+        edge->connect(n, name, dir);
+
+        lua_settop(L, tab - 1);
+    }
+
+#define IT QHash<Incidence,Node*>
+    for (IT::const_iterator it = edge->_nodes.constBegin(); it != edge->_nodes.constEnd(); it++) {
+        qDebug() << it.key().name << " : " << it.value();
+    }
+
+    lua_settop(L, top);
 }
 
 Edge * Graph::createEdge(const QString &type) {
-    // TODO: create custom edge by type
+    qDebug() << "createEdge" << type;
+
     EdgeType *tp = _types.value(type, _types.value("unknown"));
     Edge * edge = new Edge(L, tp);
     _edges.append(edge);
+
+    createNodesForEdge(edge, tp);
+
     return edge;
 }
 
@@ -76,6 +130,9 @@ NodeList Graph::nodes()
 
 void Graph::removeNode(Node *node)
 {
+    foreach (Edge *e, node->connectedEdges()) {
+        e->disconnect(node);
+    }
     _nodes.removeOne(node);
 }
 
@@ -158,6 +215,12 @@ void Graph::registerFunctions() {
         lua_pushcclosure(L, l->func, 1);
         lua_setglobal(L, l->name);
     }
+
+    lua_pushnumber(L, 1);
+    lua_setfield(L, LUA_GLOBALSINDEX, "IN");
+
+    lua_pushnumber(L, 2);
+    lua_setfield(L, LUA_GLOBALSINDEX, "OUT");
 }
 
 void Graph::runConfig(Edge *e) {
@@ -166,8 +229,23 @@ void Graph::runConfig(Edge *e) {
     e->push();
     lua_pcall(L, 1, 2, 0);
 
-    ConfigWindow *conf = new ConfigWindow(type->name());
-    // TODO: fill config variables
+    // 1 - hodnoty a ich typy
+    // 2 - navratova funkcia
+
+    if (lua_type(L, -2) != LUA_TTABLE) {
+        emitError(QString("Config: Table expected as result 1, got %1").arg(lua_typename(L, -2)));
+    } else {
+        ConfigWindow *conf = new ConfigWindow(type->name());
+        lua_pushnil(L);
+        while (lua_next(L, -3)) {
+            size_t len = 0;
+            QString name = QString::fromUtf8(lua_tolstring(L, -2, &len), len);
+            QString type = QString::fromUtf8(lua_tolstring(L, -1, &len), len);
+            conf->addVariable(name, type);
+            lua_pop(L, 1);
+        }
+        conf->exec();
+    }
 }
 
 
@@ -204,9 +282,12 @@ void Graph::registerEdgeType(const QString &fileName) {
                 lua_getfield(L, table, "config");
                 int configref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-                qDebug() << "Registering type" << name << color << runref << configref;
+                lua_getfield(L, table, "proto");
+                int protoref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-                EdgeType *type = new EdgeType(name, color, runref, configref);
+                qDebug() << "Registering type" << name << color << protoref << runref << configref;
+
+                EdgeType *type = new EdgeType(name, color, protoref, runref, configref);
                 _types.insert(name, type);
             } else {
                 err = 1;
@@ -222,11 +303,16 @@ void Graph::registerEdgeType(const QString &fileName) {
     if (err != 0) {
         QString err = "Error while loading definitions: ";
         err += lua_tostring(L, -1);
-        if (receivers(SIGNAL(error(QString))) > 0)
-            emit error(err);
-        else
-            QMessageBox::warning(0, "Operations error", err);
+        emitError(err);
     }
 
     lua_settop(L, top);
+}
+
+
+void Graph::emitError(const QString &err) {
+    if (receivers(SIGNAL(error(QString))) > 0)
+        emit error(err);
+    else
+        QMessageBox::warning(0, "Operations error", err);
 }
