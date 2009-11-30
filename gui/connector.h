@@ -48,10 +48,6 @@ public:
     }
 
     QPainterPath shape() const;
-
-public slots:
-    void updatePosition();
-
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
             QWidget *widget = 0);
@@ -59,9 +55,14 @@ protected:
 private:
     VElement *myStartItem;
     VElement *myEndItem;
+    QGraphicsSimpleTextItem *text;
     QColor myColor;
     QPolygonF arrowHead;
     QString _name;
+    QPainterPath sh;
+    QRectF br;
+    QPointF center;
+    QFont font;
 };
 #endif	/* _CONNECTOR_H */
 

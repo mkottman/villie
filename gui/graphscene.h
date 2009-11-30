@@ -39,6 +39,9 @@ public:
 
     void removeSelectedItems();
 
+public slots:
+    void dump();
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *e);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *e);

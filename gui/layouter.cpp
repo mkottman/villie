@@ -87,7 +87,7 @@ static void computeCalm(int nElements) {
     UNUSED(nElements);
     // double R = 50;
     // K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
-    K = 50;
+    K = 80;
 }
 
 static inline float rep(double distance) {
@@ -98,8 +98,13 @@ static vector2 repulsive(VElement *v1, VElement *v2) {
     vector2 force = v2->_pos - v1->_pos;
     double dist = force.length();
     if (dist < 5) {
-        v2->_pos += vector2(rand() % 10, rand() % 10);
+        double dx = rand() % 10, dy = rand() % 10;
+        while (dx == 0 && dy == 0) {
+            dx = rand() % 10; dy = rand() % 10;
+        }
+        v2->_pos += vector2(dx, dy);
         force = v2->_pos - v1->_pos;
+        dist = force.length();
     } else if (dist > MAX_DISTANCE) {
         return vector2();
     }
@@ -131,6 +136,7 @@ void Layouter::initialize() {
         VElement *ve = asElement(item);
         if (ve) {
             ve->updatePos();
+            ve->_force = vector2(0, 0);
             _centroid += ve->_pos;
             _workingSet.append(ve);
             count++;
@@ -138,7 +144,6 @@ void Layouter::initialize() {
     }
 
     _centroid /= count;
-
     computeCalm(count);
 }
 
@@ -149,13 +154,15 @@ void Layouter::layoutStep() {
 }
 
 void Layouter::addAttractive() {
-    foreach(Edge *e, _scene->graph()->edges()) {
-        VElement *v = e->visual();
-        foreach(Node *n, e->connectedNodes()) {
-            VElement *u = n->visual();
-            vector2 force = attractive(v, u);
-            v->_force += force;
-            u->_force -= force;
+    foreach(VElement *v, _workingSet) {
+        VEdge *ve = asEdge(v);
+        if (ve) {
+            foreach(Node *n, ve->_edge->connectedNodes()) {
+                VElement *u = n->visual();
+                vector2 force = attractive(v, u);
+                v->_force += force;
+                u->_force -= force;
+            }
         }
     }
 }

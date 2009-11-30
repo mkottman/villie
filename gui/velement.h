@@ -13,7 +13,7 @@ class VElement : public QGraphicsItem {
 public:
 
     VElement(GraphScene* scene, QGraphicsItem *parent = 0) :
-        QGraphicsItem(parent), _scene(scene), _ignored(false)
+        QGraphicsItem(parent), _force(vector2(0,0)), _pos(vector2(0,0)), _scene(scene), _ignored(false)
     {
         setZValue(1);
         setVisible(true);

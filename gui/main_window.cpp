@@ -19,6 +19,8 @@ QMainWindow(parent) {
     connect(ui.actionStop, SIGNAL(triggered()), _layouter, SLOT(stopLayouter()));
     connect(ui.actionReset, SIGNAL(triggered()), _layouter, SLOT(reloadLayouter()));
 
+    connect(ui.actionDump, SIGNAL(triggered()), &_graphScene, SLOT(dump()));
+
     connect(&_graphScene, SIGNAL(needsUpdate()), _layouter, SLOT(startLayouter()));
 
     connect(ui.actionRandomize, SIGNAL(triggered()), SLOT(randomize()));
@@ -106,6 +108,7 @@ void main_window::createToolbar() {
             ui.toolBar->addAction(act);
         }
     }
+    ui.toolBar->addAction(ui.actionDump);
 }
 
 void main_window::graphPrint(const QString &str) {
