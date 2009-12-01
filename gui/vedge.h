@@ -35,6 +35,9 @@ public:
 
     Edge * _edge;
     QList<Connector*> _connectors;
+
+private:
+    QRadialGradient *gradient;
 };
 
 extern VEdge * asEdge(QGraphicsItem *item);

@@ -6,15 +6,11 @@
 
 #include <QDebug>
 
-static QRadialGradient *gradient = NULL;
-
 VEdge::VEdge(GraphScene *scene, Edge* e) : VElement(scene), _edge(e) {
     e->setVisual(this);
-    if (!gradient) {
-        gradient = new QRadialGradient(QPointF(0,0), boundingRect().height(), QPointF(0,0));
-        gradient->setColorAt(0, Qt::white);
-        gradient->setColorAt(1, e->edgeType()->color());
-    }
+    gradient = new QRadialGradient(QPointF(0,0), boundingRect().height(), QPointF(0,0));
+    gradient->setColorAt(0, Qt::white);
+    gradient->setColorAt(1, e->edgeType()->color());
 }
 
 void VEdge::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
