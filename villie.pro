@@ -26,7 +26,8 @@ HEADERS += gui/main_window.h \
     exec/executor.h \
     model/lunar.h \
     model/edgetype.h \
-    gui/configwindow.h
+    gui/configwindow.h \
+    gui/nodeconfig.h
 SOURCES += gui/main_window.cpp \
     model/edge.cpp \
     model/graph.cpp \
@@ -44,8 +45,10 @@ SOURCES += gui/main_window.cpp \
     gui/connector.cpp \
     exec/executor.cpp \
     model/edgetype.cpp \
-    gui/configwindow.cpp
-FORMS += gui/main_window.ui
+    gui/configwindow.cpp \
+    gui/nodeconfig.cpp
+FORMS += gui/main_window.ui \
+    gui/nodeconfig.ui
 RESOURCES += 
 LIBS += -llua5.1 \
     -lqscintilla2

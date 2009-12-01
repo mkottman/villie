@@ -334,11 +334,16 @@ void Graph::save(const QString &fileName) {
 "     http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n"
 "  <graph id=\"G\" edgedefault=\"directed\">\n"
 "<key id=\"type\" for=\"node\" attr.name=\"type\" attr.type=\"string\"/>\n"
+"<key id=\"const\" for=\"node\" attr.name=\"const\" attr.type=\"string\"/>\n"
+"<key id=\"val\" for=\"node\" attr.name=\"val\" attr.type=\"string\"/>\n"
 "<key id=\"name\" for=\"edge\" attr.name=\"name\" attr.type=\"string\"/>\n"
 );
 
     foreach (Node* n, _nodes) {
-        f.write(QString("<node id=\"node_%1\" />\n").arg(n->id()).toUtf8());
+        f.write(QString("<node id=\"node_%1\">\n").arg(n->id()).toUtf8());
+        f.write(QString(" <data key=\"val\">%1</data>\n").arg(n->value().toString()).toUtf8());
+        f.write(QString(" <data key=\"const\">%1</data>\n").arg(n->isConst()).toUtf8());
+        f.write("</node>\n");
     }
 
     foreach (Edge* e, _edges) {
@@ -404,13 +409,23 @@ void Graph::load(const QString &fileName) {
             QString name = e.attribute("id");
             if (name.startsWith("node")) {
                 Node *nn = new Node(L);
+                QDomNodeList nl = e.childNodes();
+                for (int j=0; j<nl.count(); j++) {
+                    QDomNode data = nl.at(j);
+                    if (data.isElement()) {
+                        QString type = data.toElement().attribute("key");
+                        if (type == "val") {
+                            nn->setValue(Value::parse(data.firstChild().toText().data()));
+                        } else if (type == "const") {
+                            nn->setConst(data.firstChild().toText().data() == "1");
+                        }
+                    }
+                }
                 _nodes.append(nn);
                 nodeMap[name] = nn;
             } else if (name.startsWith("edge")) {
                 QDomNode fc = e.firstChild();
-                qDebug() << "first" << fc.nodeName() << fc.nodeValue();
                 QDomNode sc = fc.firstChild();
-                qDebug() << "second" << sc.nodeName() << fc.nodeValue();
                 QString type = sc.toText().data();
                 Edge *ee = new Edge(L, _types[type]);
                 _edges.append(ee);

@@ -138,14 +138,14 @@ void main_window::keyReleaseEvent(QKeyEvent * e) {
 
 
 void main_window::save() {
-    QString fn = QFileDialog::getSaveFileName(this, "Save graph", ".", "*.xml");
+    QString fn = QFileDialog::getSaveFileName(this, "Save graph", ".", "*.graphml");
     if (!fn.isEmpty()) {
         _graph->save(fn);
     }
 }
 
 void main_window::load() {
-    QString fn = QFileDialog::getOpenFileName(this, "Load graph", ".", "*.xml");
+    QString fn = QFileDialog::getOpenFileName(this, "Load graph", ".", "*.graphml");
     if (!fn.isEmpty()) {
         Graph *g = new Graph();
         g->load(fn);

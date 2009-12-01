@@ -35,6 +35,7 @@ public:
     void startConnector();
 
     void configEdge(VEdge *e);
+    void configNode(VNode *vn);
     void keyPressEvent(QKeyEvent *e);
 
     void removeSelectedItems();

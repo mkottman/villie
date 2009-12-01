@@ -17,6 +17,8 @@ public:
         return Type;
     }
 
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+
 public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
     QRectF boundingRect() const;

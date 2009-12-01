@@ -15,16 +15,19 @@ QString Node::type() {
     return "Generic node";
 }
 
-Value * Node::value() {
+Value Node::takeValue() {
+    if (!_constant)
+        _valueGiven = false;
     return _value;
 }
 
-void Node::setValue(Value * val) {
+void Node::setValue(const Value &val) {
     _value = val;
+    _valueGiven = true;
 }
 
 bool Node::ready() {
-    return _value != NULL;
+    return _constant || _valueGiven;
 }
 
 const EdgeList Node::connectedEdges() {
