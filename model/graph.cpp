@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QDir>
 #include <QMessageBox>
+#include <QDomDocument>
 #include <QDebug>
 #include "configwindow.h"
 
@@ -314,5 +315,130 @@ void Graph::emitError(const QString &err) {
     if (receivers(SIGNAL(error(QString))) > 0)
         emit error(err);
     else
-        QMessageBox::warning(0, "Operations error", err);
+        QMessageBox::warning(0, "Error", err);
+}
+
+
+void Graph::save(const QString &fileName) {
+    QFile f(fileName);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        emitError(QString("Failed to save file %1").arg(fileName));
+        return;
+    }
+
+    f.write(
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+"<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n"
+"    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+"    xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n"
+"     http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n"
+"  <graph id=\"G\" edgedefault=\"directed\">\n"
+"<key id=\"type\" for=\"node\" attr.name=\"type\" attr.type=\"string\"/>\n"
+"<key id=\"name\" for=\"edge\" attr.name=\"name\" attr.type=\"string\"/>\n"
+);
+
+    foreach (Node* n, _nodes) {
+        f.write(QString("<node id=\"node_%1\" />\n").arg(n->id()).toUtf8());
+    }
+
+    foreach (Edge* e, _edges) {
+        f.write(QString("<node id=\"edge_%1\">").arg(e->id()).toUtf8());
+        f.write(QString("<data key=\"type\">%1</data>\n").arg(e->edgeType()->name()).toUtf8());
+        f.write("</node>\n");
+
+        foreach (Node* n, e->inNodes()) {
+            Incidence i = e->incidenceToNode(n);
+            f.write(QString("<edge source=\"node_%1\" target=\"edge_%2\">\n").arg(n->id()).arg(e->id()).toUtf8());
+            f.write(QString(" <data key=\"name\">%1</data>\n").arg(i.name).toUtf8());
+            f.write("</edge>\n");
+        }
+        foreach (Node* n, e->outNodes()) {
+            Incidence i = e->incidenceToNode(n);
+            f.write(QString("<edge source=\"edge_%1\" target=\"node_%2\">\n").arg(e->id()).arg(n->id()).toUtf8());
+            f.write(QString(" <data key=\"name\">%1</data>\n").arg(i.name).toUtf8());
+            f.write("</edge>\n");
+        }
+    }
+
+    f.write(
+"  </graph>\n"
+"</graphml>\n"
+);
+
+    f.close();
+}
+
+void Graph::load(const QString &fileName) {
+    QFile *f = new QFile(fileName);
+    if (!f->open(QIODevice::ReadOnly | QIODevice::Text)) {
+        emitError(QString("Failed to load file %1").arg(fileName));
+        return;
+    }
+
+    QString errorStr;
+    int errorLine;
+    int errorColumn;
+
+    QDomDocument domDocument;
+    if (!domDocument.setContent(f, true, &errorStr, &errorLine,
+                                &errorColumn)) {
+        emitError(tr("Parse error at line %1, column %2:\n%3")
+                                 .arg(errorLine)
+                                 .arg(errorColumn)
+                                 .arg(errorStr));
+        return;
+    }
+
+    QHash<QString, Edge*> edgeMap;
+    QHash<QString, Node*> nodeMap;
+    QDomElement root = domDocument.documentElement();
+    QDomNode graph = root.firstChild();
+
+    QDomNodeList children = graph.childNodes();
+
+    // 1st step - gather nodes and edges
+    for (int i=0; i<children.count(); i++) {
+        QDomNode n = children.at(i);
+        if (n.isElement() && n.nodeName().startsWith("node")) {
+            QDomElement e = n.toElement();
+            QString name = e.attribute("id");
+            if (name.startsWith("node")) {
+                Node *nn = new Node(L);
+                _nodes.append(nn);
+                nodeMap[name] = nn;
+            } else if (name.startsWith("edge")) {
+                QDomNode fc = e.firstChild();
+                qDebug() << "first" << fc.nodeName() << fc.nodeValue();
+                QDomNode sc = fc.firstChild();
+                qDebug() << "second" << sc.nodeName() << fc.nodeValue();
+                QString type = sc.toText().data();
+                Edge *ee = new Edge(L, _types[type]);
+                _edges.append(ee);
+                edgeMap[name] = ee;
+            }
+        }
+    }
+
+    // 2nd step - connect them
+    for (int i=0; i<children.count(); i++) {
+        QDomNode n = children.at(i);
+        if (n.isElement() && n.nodeName().startsWith("edge")) {
+            QDomElement e = n.toElement();            
+            QString source = e.attribute("source");
+            QString target = e.attribute("target");
+            QString name = e.firstChild().firstChild().toText().data();
+            qDebug() << source << target;
+            if (source.startsWith("node")) {
+                Node *n = nodeMap[source];
+                Edge *e = edgeMap[target];
+                e->connect(n,name, IN);
+            } else {
+                Edge *e = edgeMap[source];
+                Node *n = nodeMap[target];
+                e->connect(n, name, OUT);
+            }
+        }
+    }
+
+    delete f;
 }

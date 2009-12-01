@@ -14,12 +14,10 @@ function op:config()
 	end
 end
 
-op.name = 'plus'
-op.color = 'yellow'
+op.name = 'print'
+op.color = 'green'
 op.proto = {
-	{"in1", IN},
-	{"in2", IN},
-	{"out", OUT}
+	{"input", IN},
 }
 
 return op

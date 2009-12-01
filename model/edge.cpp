@@ -49,7 +49,7 @@ Incidence Edge::disconnect(Node *node) {
 }
 
 NodeList Edge::gather(IncidenceDirection dir) {
-    QVector<Node*> ret(_nodes.count());
+    QVector<Node*> ret;
     for (NodeIterator i = _nodes.constBegin(); i != _nodes.constEnd(); i++) {
         if (i.key().dir == dir) {
             ret.append(i.value());
@@ -76,7 +76,7 @@ Node * Edge::nodeByName(const QString &name) {
 }
 
 QString Edge::name() {
-    return QString("edge %1").arg(_id);
+    return QString("%1 (_%2)").arg(_type->name()).arg(_id);
 }
 
 QString Edge::type() {

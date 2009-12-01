@@ -37,8 +37,8 @@ public:
     void mergeNode(Node *from, Node* to);
 
     // Graph serialization
-    void save();
-    void load();
+    void save(const QString &fileName);
+    void load(const QString &fileName);
 
     void runConfig(Edge *e);
 

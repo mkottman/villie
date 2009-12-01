@@ -29,6 +29,9 @@ public Q_SLOTS:
     void graphPrint(const QString &str);
     void graphError(const QString &str);
 
+    void save();
+    void load();
+
 private:
     void createToolbar();
 

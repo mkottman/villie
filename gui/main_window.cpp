@@ -7,6 +7,7 @@
 
 #include <QKeyEvent>
 #include <QDebug>
+#include <QFileDialog>
 
 main_window::main_window(QWidget *parent) :
 QMainWindow(parent) {
@@ -24,6 +25,9 @@ QMainWindow(parent) {
     connect(&_graphScene, SIGNAL(needsUpdate()), _layouter, SLOT(startLayouter()));
 
     connect(ui.actionRandomize, SIGNAL(triggered()), SLOT(randomize()));
+
+    connect(ui.actionLoad, SIGNAL(triggered()), SLOT(load()));
+    connect(ui.actionSave, SIGNAL(triggered()), SLOT(save()));
 
     ui.actionRandomize->trigger();
 }
@@ -130,4 +134,21 @@ void main_window::keyReleaseEvent(QKeyEvent * e) {
         _layouter->trigger();
     }
     QMainWindow::keyReleaseEvent(e);
+}
+
+
+void main_window::save() {
+    QString fn = QFileDialog::getSaveFileName(this, "Save graph", ".", "*.xml");
+    if (!fn.isEmpty()) {
+        _graph->save(fn);
+    }
+}
+
+void main_window::load() {
+    QString fn = QFileDialog::getOpenFileName(this, "Load graph", ".", "*.xml");
+    if (!fn.isEmpty()) {
+        Graph *g = new Graph();
+        g->load(fn);
+        setGraph(g);
+    }
 }
