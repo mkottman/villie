@@ -14,7 +14,49 @@
 
 #include <lua.hpp>
 
+#define EDGE_META "EdgeMeta"
+
 typedef QHash<Incidence, Node*>::const_iterator NodeIterator;
+
+
+const luaL_Reg methods[] = {
+    {"node", &Edge::luaNode},
+    {0,0}
+};
+
+int Edge::registerMethods(lua_State *L) {
+    luaL_newmetatable(L, EDGE_META);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -1, "__index");
+    luaL_register(L, NULL, methods);
+    return 0;
+}
+
+int Edge::luaNode(lua_State *L) {
+    dumpStack(L);
+    Edge **pe = (Edge**) lua_touserdata(L, 1);
+    Edge *e = *pe;
+
+    size_t len = 0;
+    const char *str = lua_tolstring(L, 2, &len);
+    QString key = QString::fromUtf8(str, len);
+    qDebug() << "LUA: edge::node" << key;
+
+    Node *n = e->nodeByName(key);
+    if (n) {
+        n->push();
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+Edge::Edge(lua_State *L, EdgeType *type) : Element(L), _unnamedCounter(0), _type(type) {
+    push();
+    luaL_getmetatable(L, EDGE_META);
+    lua_setmetatable(L, -2);
+}
 
 NodeList Edge::connectedNodes()
 {
@@ -83,10 +125,14 @@ QString Edge::type() {
     return "generic edge";
 }
 
-int Edge::registerMethods(lua_State *L) {
-    // TODO:
-    return 0;
+bool Edge::hasAllInputs() {
+    foreach (Node *n, gather(IN)) {
+        if (!n->ready())
+            return false;
+    }
+    return true;
 }
+
 
 Incidence Edge::incidenceToNode(Node *node) {
     return _nodes.key(node);

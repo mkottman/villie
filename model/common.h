@@ -13,6 +13,9 @@
 
 #include <lua.hpp>
 
+void dumpStackX(const char *func, lua_State *L);
+#define dumpStack(L) dumpStackX(__PRETTY_FUNCTION__, L)
+
 #include "edgetype.h"
 #include "element.h"
 

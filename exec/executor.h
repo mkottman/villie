@@ -10,12 +10,21 @@ class Executor : public QObject
 {
     Q_OBJECT
 
+public:
+    Executor(Graph *graph);
+
+    void initialRun();
+    void schedule(Edge *e);
+    bool isFinished();
+    void valueChanged(Node *n);
+
 public slots:
-    void run();
-    void stop();
+    void run(bool stepping = false);
     void pause();
+    void step();
 
 private:
+    Graph *graph;
     QLinkedList<Edge*> agenda;
 };
 

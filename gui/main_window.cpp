@@ -10,7 +10,7 @@
 #include <QFileDialog>
 
 main_window::main_window(QWidget *parent) :
-QMainWindow(parent) {
+QMainWindow(parent), _executor(0) {
     ui.setupUi(this);
     ui.graphView->setScene(&_graphScene);
 
@@ -30,6 +30,12 @@ QMainWindow(parent) {
     connect(ui.actionSave, SIGNAL(triggered()), SLOT(save()));
 
     ui.actionRandomize->trigger();
+
+    if (QFile::exists("graph.graphml")) {
+        Graph *g = new Graph();
+        g->load("graph.graphml");
+        setGraph(g);
+    }
 }
 
 main_window::~main_window() {
@@ -71,7 +77,7 @@ void main_window::randomize() {
         qDebug() << "Creating new edge:" << typeStr;
         Edge *e = g->createEdge(typeStr);
         int nodes = rand() % 5 + 1;
-        for (int j = 0; j < nodes; j++) {
+        for (int j = 0; j fn< nodes; j++) {
             Node *n = g->createNode();
             if (j == 0 && lastEdge) {
                 g->connect(n, lastEdge);
@@ -99,6 +105,14 @@ void main_window::setGraph(Graph* graph) {
     connect(graph, SIGNAL(printed(QString)), this, SLOT(graphPrint(QString)));
     connect(graph, SIGNAL(error(QString)), this, SLOT(graphError(QString)));
 
+    if (_executor) {
+        disconnect(0, _executor, 0);
+        delete _executor;
+    }
+
+    _executor = new Executor(graph);
+    connect(ui.actionRun, SIGNAL(triggered()), _executor, SLOT(run()));
+
     reloadGraph();
 }
 
@@ -112,7 +126,9 @@ void main_window::createToolbar() {
             ui.toolBar->addAction(act);
         }
     }
+    ui.toolBar->addSeparator();
     ui.toolBar->addAction(ui.actionDump);
+    ui.toolBar->addAction(ui.actionRun);
 }
 
 void main_window::graphPrint(const QString &str) {

@@ -24,6 +24,7 @@ struct Value {
         case NIL: return QString();
         case NUMBER: return QString("%1").arg(number);
         case STRING: return string;
+        default: return QString("TYPE ERROR");
         }
     }
 
@@ -46,10 +47,12 @@ struct Value {
 
 #include "common.h"
 
+class Executor;
+
 class Node : public Element
 {
 public:
-    Node(lua_State *L) : Element(L), _value(), _valueGiven(false), _constant(false) {}
+    Node(lua_State *L);
     virtual ~Node() {}
 
     const EdgeList connectedEdges();
@@ -65,6 +68,12 @@ public:
     bool ready();
     ValueType valueType() { return _value.type; }
 
+    void prepareFor(Executor * exec);
+
+    static int registerMethods(lua_State *L);
+    static int luaValue(lua_State *L);
+    static int luaSetValue(lua_State *L);
+
     friend class Edge;
 
 private:
@@ -72,6 +81,7 @@ private:
     EdgeList _edges;
     bool _valueGiven;
     bool _constant;
+    Executor * _exec;
 };
 
 #endif /* NODE_H_ */

@@ -93,6 +93,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionDump"/>
+    <addaction name="actionRun"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -184,6 +185,15 @@
     <string>New</string>
    </property>
   </action>
+  <action name="actionRun">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/icons/bug.png</normaloff>:/icons/icons/bug.png</iconset>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -192,7 +202,9 @@
    <header>gui/graphview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionExit</sender>

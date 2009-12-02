@@ -49,7 +49,7 @@ SOURCES += gui/main_window.cpp \
     gui/nodeconfig.cpp
 FORMS += gui/main_window.ui \
     gui/nodeconfig.ui
-RESOURCES += 
+RESOURCES += gui/resources.qrc
 LIBS += -llua5.1 \
     -lqscintilla2
 UI_DIR = gui/

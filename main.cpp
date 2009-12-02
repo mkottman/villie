@@ -11,6 +11,8 @@
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
+    srand(time(NULL));
+
     main_window w;
     w.show();
 

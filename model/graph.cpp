@@ -62,10 +62,19 @@ void Graph::removeEdge(Edge *edge) {
 }
 
 
-void dumpStack(lua_State *L) {
+void dumpStackX(const char *func, lua_State *L) {
+    qDebug() << "Stack for " << func;
     int top = lua_gettop(L);
     for (int i=1; i<=top; i++) {
-        qDebug() << i << " : " << luaL_typename(L, i) << " = " << lua_topointer(L, i);
+        QString val;
+        switch(lua_type(L, i)) {
+        case LUA_TNIL: val = "nil"; break;
+        case LUA_TNUMBER: val = QString("%1").arg(lua_tonumber(L, i)); break;
+        case LUA_TSTRING: val = lua_tostring(L, i); break;
+        default: val = QString("0x%1").arg((long)lua_topointer(L, i), 8, 16);
+        }
+
+        qDebug() << i << " : " << luaL_typename(L, i) << " = " << val;
     }
 }
 
@@ -115,7 +124,7 @@ void Graph::createNodesForEdge(Edge *edge, EdgeType *type) {
 Edge * Graph::createEdge(const QString &type) {
     qDebug() << "createEdge" << type;
 
-    EdgeType *tp = _types.value(type, _types.value("unknown"));
+    EdgeType *tp = _types.value(type);
     Edge * edge = new Edge(L, tp);
     _edges.append(edge);
 
@@ -174,11 +183,17 @@ int Graph::luaPrint(lua_State *L) {
     int top = lua_gettop(L);
 
     lua_getglobal(L, "tostring");
+
+    dumpStack(L);
+
     for (int i=1; i<=top; i++) {
         lua_pushvalue(L, -1);           // p1 p2 p3 tostring tostring
         lua_pushvalue(L, i);            // p1 p2 p3 tostring tostring pi
-        lua_call(L, 1, 1);              // p1 p2 p3 tostring si
+        dumpStack(L);
+        lua_pcall(L, 1, 1, 0);              // p1 p2 p3 tostring si
         str += lua_tostring(L, -1);
+        lua_pop(L, 1);
+        if (i<top) str += "\t";
     }
     lua_settop(L, top);
 
@@ -222,6 +237,9 @@ void Graph::registerFunctions() {
 
     lua_pushnumber(L, 2);
     lua_setfield(L, LUA_GLOBALSINDEX, "OUT");
+
+    Edge::registerMethods(L);
+    Node::registerMethods(L);
 }
 
 void Graph::runConfig(Edge *e) {
@@ -247,6 +265,13 @@ void Graph::runConfig(Edge *e) {
         }
         conf->exec();
     }
+}
+
+void Graph::execute(Edge *e) {
+    EdgeType *type = e->edgeType();
+    lua_rawgeti(L, LUA_REGISTRYINDEX, type->runFunction());
+    e->push();
+    lua_pcall(L, 1, 0, 0);
 }
 
 
@@ -393,6 +418,9 @@ void Graph::load(const QString &fileName) {
                                  .arg(errorStr));
         return;
     }
+
+    _nodes.clear();
+    _edges.clear();
 
     QHash<QString, Edge*> edgeMap;
     QHash<QString, Node*> nodeMap;

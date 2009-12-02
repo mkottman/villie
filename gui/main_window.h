@@ -6,6 +6,7 @@
 
 #include "../model/graph.h"
 #include "layouter.h"
+#include "../exec/executor.h"
 
 class main_window : public QMainWindow {
     Q_OBJECT
@@ -37,6 +38,7 @@ private:
 
 private:
     Graph * _graph;
+    Executor * _executor;
     Layouter * _layouter;
     GraphScene _graphScene;
     Ui::mainWindowClass ui;

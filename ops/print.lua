@@ -1,7 +1,8 @@
 local op = {}
 
 function op:run()
-	print('Running', self)
+	print('+Print', self)
+	print(self:node'input':value())
 end
 
 function op:config()

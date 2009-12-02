@@ -134,8 +134,6 @@ VElement * GraphScene::createItemByType(int type, const QPointF &pos) {
 }
 
 void GraphScene::mousePressEvent(QGraphicsSceneMouseEvent *e) {
-    LOG(e);
-
     if (e->button() == Qt::LeftButton && _type) {
         VElement *item = createItemByType(_type, e->scenePos());
         if (item) {
@@ -157,8 +155,6 @@ void GraphScene::itemChanged() {
 #define TOLERANCE 5
 
 void GraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *e) {
-    LOG(e);
-
     QPointF pos = e->scenePos();
     pos -= QPointF(TOLERANCE, TOLERANCE);
 

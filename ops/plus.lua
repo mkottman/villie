@@ -1,7 +1,11 @@
 local op = {}
 
 function op:run()
-	print('Running', self)
+	print('+Plus', self)
+	local a = self:node'in1':value()
+	local b = self:node'in2':value()
+	print('Got', a, b)
+	self:node'out':setValue(a + b)
 end
 
 function op:config()

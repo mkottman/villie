@@ -19,7 +19,7 @@
 class Edge : public Element
 {
 public:
-    Edge(lua_State *L, EdgeType * type) : Element(L), _unnamedCounter(0), _type(type) {}
+    Edge(lua_State *L, EdgeType * type);
     virtual ~Edge() {}
 
 public:
@@ -37,10 +37,13 @@ public:
     NodeList inNodes();
     NodeList outNodes();
 
+    bool hasAllInputs();
+
     void connect(Node *node, const QString &name, IncidenceDirection dir);
     Incidence disconnect(Node *node);
 
     static int registerMethods(lua_State *L);
+    static int luaNode(lua_State *L);
     
 public:
     NodeList gather(IncidenceDirection dir);

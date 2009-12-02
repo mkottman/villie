@@ -24,8 +24,8 @@ public:
     virtual ~Graph();
 
 public:
-    NodeList nodes();
-    EdgeList edges();
+    QList<Node*> nodes();
+    QList<Edge*> edges();
 
     Node * createNode(const QString &type = "");
     void removeNode(Node *node);
@@ -41,6 +41,7 @@ public:
     void load(const QString &fileName);
 
     void runConfig(Edge *e);
+    void execute(Edge *e);
 
 signals:
     void printed(const QString &str);
@@ -66,8 +67,8 @@ private:
     void emitError(const QString &err);
 
     // Member variables
-    EdgeList _edges;
-    NodeList _nodes;
+    QList<Edge*> _edges;
+    QList<Node*> _nodes;
     lua_State *L;
     EdgeTypeMap _types;
 };
