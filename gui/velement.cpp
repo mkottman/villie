@@ -3,6 +3,15 @@
 
 #include "graphscene.h"
 
+VElement::VElement(GraphScene *scene, QGraphicsItem *parent) :
+        QGraphicsItem(parent), _force(vector2(0,0)), _pos(vector2(0,0)), _scene(scene), _ignored(false)
+{
+    setZValue(100);
+    setVisible(true);
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+}
+
 QVariant VElement::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == ItemPositionHasChanged) {
         _pos = value.toPointF();

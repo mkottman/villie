@@ -118,7 +118,7 @@ Node * Edge::nodeByName(const QString &name) {
 }
 
 QString Edge::name() {
-    return QString("%1 (_%2)").arg(_type->name()).arg(_id);
+    return QString("%1").arg(_type->name());
 }
 
 QString Edge::type() {
