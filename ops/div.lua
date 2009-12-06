@@ -1,11 +1,11 @@
 local op = {}
 
 function op:run()
-	print('+Plus', self)
-	local a = self:node'in1':value()
-	local b = self:node'in2':value()
+	print('+Div', self)
+	local a = self:node'a':value()
+	local b = self:node'b':value()
 	print('Got', a, b)
-	self:node'out':setValue(a + b)
+	self:node'result':setValue(a/b)
 end
 
 function op:config()
@@ -18,12 +18,12 @@ function op:config()
 	end
 end
 
-op.name = 'plus'
-op.color = 'yellow'
+op.name = 'div'
+op.color = 'red'
 op.proto = {
-	{"in1", IN},
-	{"in2", IN},
-	{"out", OUT}
+	{"a", IN},
+	{"b", IN},
+	{"result", OUT}
 }
 
 return op
