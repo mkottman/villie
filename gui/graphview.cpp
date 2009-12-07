@@ -13,6 +13,10 @@
 
 #define ZOOM_FACTOR 1.5
 
+GraphView::GraphView(QWidget *parent)  : QGraphicsView(parent), _zoom(1) {
+    setRenderHint(QPainter::Antialiasing);
+}
+
 void GraphView::wheelEvent(QWheelEvent* e) {
     if (e->modifiers() & Qt::ControlModifier) {
         if (e->delta() > 0) {

@@ -26,6 +26,7 @@ QMainWindow(parent), _executor(0) {
 
     connect(ui.actionRandomize, SIGNAL(triggered()), SLOT(randomize()));
 
+    connect(ui.actionNew, SIGNAL(triggered()), SLOT(newGraph()));
     connect(ui.actionLoad, SIGNAL(triggered()), SLOT(load()));
     connect(ui.actionSave, SIGNAL(triggered()), SLOT(save()));
 
@@ -152,6 +153,13 @@ void main_window::keyReleaseEvent(QKeyEvent * e) {
     QMainWindow::keyReleaseEvent(e);
 }
 
+void main_window::newGraph() {
+    if (_graph) {
+        Graph * old = _graph;
+        setGraph(new Graph());
+        delete old;
+    }
+}
 
 void main_window::save() {
     QString fn = QFileDialog::getSaveFileName(this, "Save graph", ".", "*.graphml");

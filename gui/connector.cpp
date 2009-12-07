@@ -23,7 +23,7 @@ Connector::Connector(VElement *startItem, VElement *endItem, const QString &name
     myColor = Qt::black;
     setZValue(1);
     setPen(QPen(myColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    // text = new QGraphicsSimpleTextItem(name, this);
+    text = new QGraphicsSimpleTextItem(name, this);
 }
 
 QRectF Connector::boundingRect() const {
@@ -56,6 +56,7 @@ void Connector::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
     float dx = abs(myEndItem->pos().x() - myStartItem->pos().x());
     float dy = abs(myEndItem->pos().y() - myStartItem->pos().y());
 
+    text->setPos(center.x() + 15, center.y()-5);
     /*
     if (dx > dy) {
         text->setPos(center.x(), center.y() - 15);

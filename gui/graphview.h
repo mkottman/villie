@@ -12,7 +12,7 @@
 
 class GraphView : public QGraphicsView {
 public:
-    GraphView(QWidget *parent = 0) : QGraphicsView(parent), _zoom(1) {}
+    GraphView(QWidget *parent = 0);
 
 public:
     void wheelEvent(QWheelEvent *e);

@@ -30,6 +30,7 @@ public Q_SLOTS:
     void graphPrint(const QString &str);
     void graphError(const QString &str);
 
+    void newGraph();
     void save();
     void load();
 
