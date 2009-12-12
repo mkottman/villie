@@ -1,11 +1,10 @@
 local op = {}
 
 function op:run()
-	print('+Sub', self)
 	local a = self:node'a':value()
 	local b = self:node'b':value()
-	print('Got', a, b)
-	self:node'result':setValue(a-b)
+	print('+Sub', a, b)
+	self:node'result':setValue(a - b)
 end
 
 function op:config()

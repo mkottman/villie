@@ -3,6 +3,7 @@
 
 #include "velement.h"
 #include "../model/node.h"
+#include <QGraphicsSimpleTextItem>
 
 class VNode : public VElement {
 public:
@@ -28,6 +29,9 @@ public:
     }
 
     Node * _node;
+
+private:
+    QGraphicsSimpleTextItem *text;
 };
 
 VNode * asNode(QGraphicsItem *item);

@@ -87,7 +87,7 @@ static void computeCalm(int nElements) {
     UNUSED(nElements);
     // double R = 50;
     // K = pow((4.0 * R * R * R * M_PI) / (nElements * 3), 1.0 / 3);
-    K = 70;
+    K = 50;
 }
 
 static inline float rep(double distance) {

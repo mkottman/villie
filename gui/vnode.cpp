@@ -16,6 +16,8 @@ VNode::VNode(GraphScene *scene, Node* n) : VElement(scene), _node(n) {
     n->setVisual(this);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemIsMovable, true);
+    text = new QGraphicsSimpleTextItem(this, scene);
+    text->setPos(10, -5);
     if (!nilGradient) {
         nilGradient = new QRadialGradient(QPointF(0,0), boundingRect().height(), QPointF(0,0));
         nilGradient->setColorAt(0, Qt::white);
@@ -43,6 +45,7 @@ void VNode::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
     case NUMBER: painter->setBrush(*numGradient); break;
     case STRING: painter->setBrush(*stringGradient); break;
     }
+    text->setText(_node->value().toString());
     if (isSelected()) {
         painter->setPen(QPen(Qt::black, 2));
     }

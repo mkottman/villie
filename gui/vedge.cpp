@@ -28,7 +28,8 @@ inline QRectF VEdge::boundingRect() const {
 }
 
 void VEdge::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *e) {
-    _scene->configEdge(this);
+    // TODO:
+    // _scene->configEdge(this);
     VElement::mouseDoubleClickEvent(e);
 }
 

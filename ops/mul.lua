@@ -1,11 +1,10 @@
 local op = {}
 
 function op:run()
-	print('+Minus', self)
 	local a = self:node'a':value()
 	local b = self:node'b':value()
-	print('Got', a, b)
-	self:node'result':setValue(a*b)
+	print('+Mul', a, b)
+	self:node'result':setValue(a * b)
 end
 
 function op:config()
@@ -18,7 +17,7 @@ function op:config()
 	end
 end
 
-op.name = 'mult'
+op.name = 'mul'
 op.color = 'blue'
 op.proto = {
 	{"a", IN},

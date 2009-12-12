@@ -1,7 +1,7 @@
 local op = {}
 
 function op:run()
-	print('+Print', self)
+	print('+Print', self:node'input':value())
 	print(self:node'input':value())
 end
 

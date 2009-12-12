@@ -1,11 +1,10 @@
 local op = {}
 
 function op:run()
-	print('+Add', self)
-	local a = self:node'in1':value()
-	local b = self:node'in2':value()
-	print('Got', a, b)
-	self:node'out':setValue(a + b)
+	local a = self:node'a':value()
+	local b = self:node'b':value()
+	print('+Add', a, b)
+	self:node'result':setValue(a + b)
 end
 
 function op:config()
@@ -21,8 +20,8 @@ end
 op.name = 'add'
 op.color = 'yellow'
 op.proto = {
-	{"in1", IN},
-	{"in2", IN},
+    {"a", IN},
+    {"b ", IN},
 	{"out", OUT}
 }
 
