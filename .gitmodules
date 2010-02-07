@@ -1,0 +1,3 @@
+[submodule "lqt"]
+	path = lqt
+	url = git://repo.or.cz/lqt.git
