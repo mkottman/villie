@@ -28,6 +28,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --]]
 
+require 'repr'
+
 local osseparator = package.config:sub(1,1)
 
 local path = string.match(arg[0], '(.*'..osseparator..')[^%'..osseparator..']+') or ''
@@ -355,6 +357,8 @@ local distinguish_methods = function(index)
 					and (not f.xarg.member_template_parameters)
 					and (not f.xarg.friend) then
 					table.insert(normal, f)
+				else
+					debug('Ignoring: ' .. n .. '::' .. f.xarg.name)
 				end
 			end
 		end
@@ -484,7 +488,10 @@ local fill_wrapper_code = function(f, types)
 	local wrap, line = '  int oldtop = lua_gettop(L);\n', ''
 	if f.xarg.abstract then return nil end
 	if f.xarg.member_of_class and f.xarg.static~='1' then
-		if not types[f.xarg.member_of_class..'*'] then return nil end -- print(f.xarg.member_of_class) return nil end
+		if not types[f.xarg.member_of_class..'*'] then
+			debug('Ignoring(member of class):' .. f.xarg.member_of_class .. '::' .. f.xarg.name)
+			return nil
+		end
 		stack_args = stack_args .. types[f.xarg.member_of_class..'*'].onstack
 		defects = defects + 7 -- FIXME: arbitrary
 		if f.xarg.constant=='1' then
@@ -514,7 +521,18 @@ local fill_wrapper_code = function(f, types)
 		line = f.xarg.fullname..'('
 	end
 	for i, a in ipairs(f.arguments) do
-		if not types[a.xarg.type_name] then return nil end
+		if not types[a.xarg.type_name] then
+			local ap, fp = a.parent, f.parent
+			a.parent, f.parent = nil, nil
+			debug('Ignoring(arg): ' .. repr({func = f, args = a}, "problem"))
+
+			local fo = io.open('types.txt', 'w')
+			fo:write(repr(types, 'types'))
+			fo:close()
+
+			a.parent, f.parent = ap, fp
+			return nil
+		end
 		local aget, an, arg_as = types[a.xarg.type_name].get(stackn)
 		stack_args = stack_args .. types[a.xarg.type_name].onstack
 		if types[a.xarg.type_name].defect then defects = defects + types[a.xarg.type_name].defect end
@@ -1192,6 +1210,11 @@ local functions = fix_functions(functions) -- fixes name and fullname and fills 
 
 local enums = copy_enums(idindex) -- picks enums if public
 local enums = fill_enums(enums) -- fills field "values"
+
+if filename=='/dev/shm/lqt/qtcore_src/qtcore.xml' then
+	require 'remdebug.engine'
+	remdebug.engine.start()
+end
 
 local classes = copy_classes(idindex) -- picks classes if not private and not blacklisted
 local classes = fill_virtuals(classes) -- does that, destructor ("~") excluded

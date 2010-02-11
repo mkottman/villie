@@ -41,7 +41,29 @@ function package.strict(t)
 end
 
 
---- Returns a new QString
+--- Returns a new QString.
+-- Uses UTF8.
+-- @param s Lua string to be converted to QString
+-- @usage Q"Hello World!" -- returns QString containing "Hello World!"
+-- @return
 function Q(s)
-	return QString.fromUtf8(s, #s)
+  return QString.fromUtf8(s, #s)
+end
+
+--- Returns a Lua string from QString.
+-- Uses UTF8.
+-- @param q QString to be converted
+-- @return Lua string represented by argument q
+function S(q)
+  return q:toUtf8()
+end
+
+--- Marks a Todo point
+function TODO(s)
+  local f = debug.getinfo(2)
+  if f then
+    log("TODO: '%s' in %s %s:%d", s, f.name, f.source, f.linedefined)
+  else
+    log("TODO: '%s' (cannot find source)", s)
+  end
 end
