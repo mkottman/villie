@@ -2,32 +2,38 @@
 class.Graph()
 
 function Graph:_init()
-    self._nodes = List()
-    self._edges = List()
-end
-
-function Graph:nodes()
-
+    self.nodes = List()
+    self.edges = List()
 end
 
 
-function Graph:edges()
-
+local next_id = 0
+local function gen_id()
+    next_id = next_id + 1
+    return next_id
 end
 
 
 function Graph:createNode(type)
-
+    local n = Node(gen_id(), type)
+    self.nodes:append(n)
+    return n
 end
 
 
 function Graph:createEdge(type)
-
+    local e = Edge(gen_id(), type)
+    self.edges:append(e)
+    return e
 end
 
 function Graph:connect(node, edge, name, dir)
-    log("[GRAPH] connecting '%s' into '%s' as '%s' (%s)", tostring(node), tostring(edge), name, dir)
-	assert(node:is_a(Node) and edge:is_a(Edge))
+	assert(node and node:is_a(Node), "node is nil or not a Node")
+	assert(edge and edge:is_a(Edge), "edge is nil or not an Edge")
+	assert(type(name) == "string", "name is nil or not a string")
+	assert(type(dir) == "string", "dir is nil or not a string")
+    trace("[GRAPH] connecting '%s' into '%s' as '%s' (%s)", tostring(node), tostring(edge), name, dir)
+
 end
 
 function Graph:disconnect(node, edge)
@@ -43,7 +49,7 @@ function Graph:load(filename)
 		return nil, "failed to open file"
 	end
 
-	local doc = QDomDocument.new_local();
+	local doc = QDomDocument.new_local()
 	if not doc:setContent(f, true) then
 		return nil, "parse error"
 	end
@@ -61,7 +67,8 @@ function Graph:load(filename)
             local e = n:toElement()
             local name = e:attribute(Q"id")
             if name:startsWith(Q"node") then
-                local n = Node()
+                local n = self:createNode()
+
                 TODO "Handle attributes" --[[
                 QDomNodeList nl = e.childNodes();
                 for (int j=0; j<nl.count(); j++) {
@@ -77,10 +84,10 @@ function Graph:load(filename)
                 }
                 ]]
 
-                self._nodes:append(nn)
-                nodeMap[name] = n
+                self.nodes:append(nn)
+                nodeMap[S(name)] = n
             elseif name:startsWith(Q"edge") then
-                local e = Edge()
+                local e = self:createEdge()
 
                 TODO "Determine edge type" --[[
                 QDomNode fc = e.firstChild();
@@ -88,8 +95,8 @@ function Graph:load(filename)
                 QString type = sc.toText().data();
                 ]]
 
-                self._edges:append(ee)
-                edgeMap[name] = e
+                self.edges:append(ee)
+                edgeMap[S(name)] = e
             end
         end
     end
@@ -104,11 +111,12 @@ function Graph:load(filename)
 
             local n, e, d
             if source:startsWith(Q"node") then
-                n, e, d = nodeMap[source], nodeMap[target], 'in'
+                n, e, d = nodeMap[S(source)], edgeMap[S(target)], 'in'
             else
-                n, e, d = nodeMap[target], nodeMap[source], 'out'
+                n, e, d = nodeMap[S(target)], edgeMap[S(source)], 'out'
             end
-            self:connect(n, e, name, d)
+
+            self:connect(n, e, S(name), d)
         end
     end
 
@@ -122,7 +130,7 @@ function Graph:save(filename)
 end
 
 function Graph:dump()
-    log("Graph:")
-    self._nodes:foreach(function(n) log(" N %s", tostring(n)) end)
-    self._edges:foreach(function(e) log(" E %s", tostring(e)) end)
+    trace("Graph:")
+    self.nodes:foreach(function(n) trace(" N %s", tostring(n)) end)
+    self.edges:foreach(function(e) trace(" E %s", tostring(e)) end)
 end

@@ -21,11 +21,12 @@ end
 -- Original Julio Manuel Fernandez-Diaz, January 12, 2007
 function repr(t, name, maxlevel)
 	local cart = {}     -- a container
+	local id = 1
 
-	local function p(s) table.insert(cart, s) end
+	local function p(s) cart[id]=s; id=id+1 end
 	local function isemptytable(t)
 		local mt = getmetatable(t)
-		return next(t) == nil and (not mt or mt.__index)
+		return next(t) == nil and (not mt or not mt.__index)
 	end
 	local function basicSerialize (o)
 		local so = tostring(o)
@@ -35,10 +36,23 @@ function repr(t, name, maxlevel)
 		   if info.what == "C" then
 		      return string.format("%q", so .. ", C function")
 		   else
+		   		local src = info.source
+		   		if src:match('^@') then
+		   			local f = assert(io.open(src:sub(2)))
+		   			if f then
+		   				local line = 1
+		   				for l in f:lines() do
+		   					if line == info.linedefined then
+		   						return "function"..l:match("%b()").." -- "..info.source .. ":" .. info.linedefined
+		   					end
+		   					line = line + 1
+		   				end
+		   			end
+		   		end
 		      -- the information is defined through lines
 		      return string.format("%q", so .. ", defined in (" ..
 		          info.linedefined .. "-" .. info.lastlinedefined ..
-		          ") " .. info.source:sub(1, 64))
+		          ") " .. src)
 		   end
 		elseif type(o) == "number" then
 		   return so
@@ -87,11 +101,11 @@ function repr(t, name, maxlevel)
 							field = k
 							addtocart(v, fname, indent+1, field)
 						end
-
-						p(ind)
+						if not mt then p(ind) end
 					end
 					if mt then
 						addtocart(mt, name .. "_metatable", indent+1, "metatable")
+						p(ind)
 					end
 					p "};\n"
 				end
@@ -129,15 +143,75 @@ local function getlocals()
 end
 
 function dumpstate()
-	return print(repr({
+	return dump({
 		locals = getlocals(),
 		globals = _G,
-	}, 'state'))
+	}, 'state')
 end
 
 function dump(x, name)
-	local mt = getmetatable(x)
-	return print(repr(x, name), mt and repr(mt, "metatable"))
+	if type(x) ~= "userdata" and type(x) ~= "table" then
+		return QMessageBox.information(nil, Q(tostring(x)))
+	end
+
+	local items = {}
+	local tree = QTreeWidget.new_local()
+	tree:setWindowTitle(Q'Dump')
+	tree:setColumnCount(3)
+
+	local headers = QStringList.new_local()
+	headers:append(Q'name')
+	headers:append(Q'type')
+	headers:append(Q'value')
+	tree:setHeaderLabels(headers)
+
+	local nf = QFont.new_local(Q'Helvetica', 10, 50)
+	local bf = QFont.new_local(Q'Helvetica', 10, 75)
+
+	local addChildren
+	local function addValue(v, name, parent, expand)
+		local item = QTreeWidgetItem.new_local(parent, values) -- adds to parent
+		item:setText(0, Q(name))
+		item:setText(1, Q(type(v)))
+		item:setText(2, Q(tostring(v)))
+		item:setFont(0, nf)
+		item.name = name
+		item.value = v
+		items[item] = true
+		if expand then
+			addChildren(v, item)
+		end
+	end
+	addChildren = function(value, item)
+		if item:childCount() > 0 then return end
+		if type(value) == "table" then
+			for k, c in sortedpairs(value) do
+				addValue(c, k, item, false)
+			end
+		end
+		if type(value) == "table" or type(value) == "userdata" then
+			local mt = debug.getmetatable(value)
+			local env = debug.getfenv(value)
+			if mt then
+				addValue(mt, "__metatable", item, false)
+			end
+			if env then
+				addValue(env, "__env", item, false)
+			end
+		end
+		if item:childCount() > 0 then
+			item:setExpanded(true)
+			item:setFont(0, bf)
+		end
+	end
+
+	tree:__addmethod('expand(QTreeWidgetItem*,int)', function(self, item, col)
+		addChildren(item.value, item)
+	end)
+	tree:connect('2itemClicked(QTreeWidgetItem*,int)', tree, '1expand(QTreeWidgetItem*,int)')
+
+	addValue(x, name or 'root', tree, true)
+	tree:show()
 end
 
 return repr

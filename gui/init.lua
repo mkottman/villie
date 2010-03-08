@@ -9,7 +9,6 @@ local toolbar
 
 local central
 local errlog
-local sceneview
 local scene
 
 local function createMenus()
@@ -45,13 +44,14 @@ local function createActions()
 	actions = {}
 
 	local function makeAction(name, func)
-		local action = QAction.new(Q(name), mainWindow)
+		local icon = QIcon.new(Q("gui/icons/"..name..".png"))
+		local action = QAction.new(icon, Q(name), mainWindow)
 		local aname = 'action'..name..'()'
 		mainWindow:__addmethod(aname, function()
 			-- log('Action: %s', name)
 			local ok, err = xpcall(func, debug.traceback)
 			if not ok then
-				errlog:append(Q(string.format("error in action handler for '%s': %s", name, tostring(err))))
+				fatal("error in action handler for '%s': %s", name, tostring(err))
 			end
 		end)
 		action:connect('2triggered()', mainWindow, '1'..aname)
@@ -66,6 +66,7 @@ local function createActions()
 		local g = Graph()
 		TODO "Load - file select dialog"
 		g:load('graph.graphml')
+		scene:reload(g)
 	end)
 
 	makeAction("Save", function()
@@ -90,13 +91,17 @@ local function createWindow()
 end
 
 local function createToolbar()
-
+	local toolbar = QToolBar.new(mainWindow)
+	toolbar:addAction(actions['New'])
+	toolbar:addAction(actions['Load'])
+	toolbar:addAction(actions['Save'])
+	
+	mainWindow:addToolBar(toolbar)
 end
 
 local function createScene()
-	scene = QGraphicsScene.new(mainWindow)
-	sceneview = QGraphicsView.new(scene)
-	central:addWidget(sceneview)
+	scene = View(mainWindow)
+	central:addWidget(scene.view)
 end
 
 local function createLog()
@@ -105,13 +110,27 @@ local function createLog()
 
 	local font = QFont.new_local(Q"DejaVu Sans Mono", 8)
 	errlog:setFont(font)
+	errlog:setLineWrapMode('NoWrap')
+	errlog:setTabStopWidth(20)
 
 	central:addWidget(errlog)
 
-	-- overwrite the global 'log' function
-	base.log = function(...)
-		errlog:append(Q(string.format(...)))
-	end
+	-- setup a new logger
+	local colors = {
+		DEBUG = QColor.new_local(Q'blue'),
+		INFO  = QColor.new_local(Q'green'),
+		WARN  = QColor.new_local(Q'orange'),
+		ERROR = QColor.new_local(Q'red'),
+		FATAL = QColor.new_local(Q'red'),
+	}
+	base.setlogger(function(self, level, message)
+		local s = logging.prepareLogMsg('[%level] %message', os.date(), level, message)
+		local oldcol = errlog:textColor()
+		errlog:setTextColor(colors[level])
+		errlog:append(Q(s))
+		errlog:setTextColor(oldcol)
+		return true
+	end)
 end
 
 function run(...)
