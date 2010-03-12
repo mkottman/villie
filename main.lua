@@ -10,7 +10,7 @@ require 'qtxml'
 require 'pl'
 require 'util'
 
--- model
+-- MVC
 require 'model'
 require 'view'
 require 'gui'

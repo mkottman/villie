@@ -1,17 +1,21 @@
-
-local function newGraphicsItem(baseClass, paintFunc)
-	log(STR, baseClass, paintFunc)
-	local item = baseClass.new_local()
-	item.paint = paintFunc
-end
-
 class.VEdge()
 
 function VEdge:_init(edge)
-	self.item = newGraphicsItem(QGraphicsItem, function(...)
-		log(STR, 'edge.paint', ...)
-	end)
-	log(repr(self))
+	local size = QRectF.new_local(-25, -10, 50, 20)
+	local item = QGraphicsItem.new_local()
+	
+	item:setFlag('ItemIsSelectable', true);
+	item:setFlag('ItemIsMovable', true);
+	
+	local str = Q(edge)
+	function item:boundingRect()
+		return size
+	end
+	function item:paint(painter)
+		painter:drawRect(size)
+		painter:drawText(size, str)
+	end
+	self.item = item
 	edge.visual = self
 end
 
@@ -19,9 +23,21 @@ end
 class.VNode()
 
 function VNode:_init(node)
-	self.item = newGraphicsItem(QGraphicsItem, function(...)
-		log(STR, 'node.paint', ...)
-	end)
+	local size = QRectF.new_local(-25, -10, 50, 20)
+	local item = QGraphicsItem.new_local()
+	
+	item:setFlag('ItemIsSelectable', true);
+	item:setFlag('ItemIsMovable', true);
+	
+	local str = Q(edge)
+	function item:boundingRect()
+		return size
+	end
+	function item:paint(painter)
+		painter:drawRect(size)
+		painter:drawText(size, str)
+	end
+	self.item = item
 	node.visual = self
 end
 
@@ -58,8 +74,8 @@ function View:reload(graph)
 		self.items:append(vn)
 	end
 	
-	local it = self.scene:items()
-	print(it, it.__type, it:size())
+	--local it = self.scene:items()
+	--print(it, it.__type, it:size())
 	
 	self:scramble()
 end
