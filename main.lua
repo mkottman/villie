@@ -1,5 +1,5 @@
 -- setup package path to include 'init.lua'
-package.path = './?/init.lua;'..package.path
+package.path = './?.lua;./?/?.lua;./lang/?/?.lua;'..package.path
 
 -- lqt
 require 'qtcore'
