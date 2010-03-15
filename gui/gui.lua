@@ -20,6 +20,9 @@ local function createMenus()
 	file:addAction(actions["Load"])
 	file:addAction(actions["Save"])
 	file:addSeparator()
+	file:addAction(actions["Import"])
+	file:addAction(actions["Export"])
+	file:addSeparator()
 	file:addAction(actions["Quit"])
 
 	local edit = QMenu.new(Q"Edit")
@@ -73,7 +76,16 @@ local function createActions()
 		TODO "Save - file select dialog"
 		g:save('graph.graphml')
 	end)
-
+	
+	makeAction("Import", function()
+		local g = base.language.import(scene.graph)
+		scene:reload(g)
+	end)
+	
+	makeAction("Export", function()
+		base.language.export(scene.graph)
+	end)
+	
 	makeAction("Quit", function()
 		app.exit()
 	end)
@@ -95,6 +107,9 @@ local function createToolbar()
 	toolbar:addAction(actions['New'])
 	toolbar:addAction(actions['Load'])
 	toolbar:addAction(actions['Save'])
+	toolbar:addSeparator()
+	toolbar:addAction(actions['Import'])
+	toolbar:addAction(actions['Export'])
 	
 	mainWindow:addToolBar(toolbar)
 end
@@ -131,6 +146,33 @@ local function createLog()
 		errlog:setTextColor(oldcol)
 		return true
 	end)
+end
+
+function selectLanguage()
+--[[
+	local dir = QDir.new_local(Q"lang")
+	local langs = dir:entryList({'Dirs','NoDotAndDotDot'})
+	
+	local dlg = QDialog.new_local()
+	dlg:setWindowTitle(Q"Select language")
+	
+	local combo = QComboBox.new_local()
+	combo:addItems(langs)
+	
+	local ok = QPushButton.new_local(Q"Ok")
+	ok:connect('2pressed()', dlg, '1accept()')
+	
+	local layout = QHBoxLayout.new_local()
+	layout:addWidget(combo)
+	layout:addWidget(ok)
+	dlg:setLayout(layout)
+	
+	if dlg:exec() then
+		local sel = S(combo:currentText())
+		base.language = require(sel)
+	end
+]]
+	base.language = require('vlua')
 end
 
 function run(...)

@@ -18,6 +18,8 @@ require 'gui'
 
 app = QApplication.new(1 + select('#', ...), {arg[0], ...})
 
+gui.selectLanguage()
+
 gui.run(...)
 
 app.exec()

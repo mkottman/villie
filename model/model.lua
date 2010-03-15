@@ -21,8 +21,5 @@ function handle(event, handler)
 	table.insert(hooks[event], handler)
 end
 
-module(..., package.clean)
-
 require 'model.graph'
-require 'model.node'
-require 'model.edge'
+

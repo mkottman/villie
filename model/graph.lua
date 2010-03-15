@@ -1,17 +1,55 @@
 
+-------------------------------------------------
+-- Node class
+-------------------------------------------------
+
+class.Node()
+
+function Node:_init(id, type)
+	self.id = id
+	self.type = type
+	self.edges = {}
+end
+
+-------------------------------------------------
+-- Edge class
+-------------------------------------------------
+
+class.Edge()
+
+function Edge:_init(id, type)
+	self.id = id
+	self.type = type
+	self.nodes = {}
+end
+
+-------------------------------------------------
+-- Incidence class
+-------------------------------------------------
+
+class.Incidence()
+
+function Incidence:_init(name, dir)
+	self.name = name
+	self.dir = dir
+end
+
+-------------------------------------------------
+-- Graph class
+-------------------------------------------------
+
 class.Graph()
 
 local evCreated         = event "graphCreated"
 local evLoaded          = event "graphLoaded"
 local evSaved           = event "graphSaved"
 
-local evNodeAdded       = event "nodeAdded"
-local evNodeDeleted     = event "nodeDeleted"
-local evEdgeAdded       = event "edgeAdded"
-local evEdgeDeleted     = event "edgeDeleted"
+local evAdded           = event "added"
+local evRemoved         = event "removed"
 
 local evConnected       = event "connected"
 local evDisconnected    = event "disconnected"
+
 
 function Graph:_init()
 	self.nodes = List()
@@ -30,15 +68,16 @@ end
 function Graph:createNode(type)
 	local n = Node(gen_id(), type)
 	self.nodes:append(n)
-	evNodeAdded(self, n)
+	evAdded(self, n)
 	return n
 end
 
 
 function Graph:createEdge(type)
 	local e = Edge(gen_id(), type)
+	print(repr(e, 'edge'))
 	self.edges:append(e)
-	evEdgeAdded(self, e)
+	evAdded(self, e)
 	return e
 end
 
@@ -48,9 +87,13 @@ function Graph:connect(node, edge, name, dir)
 	assert(type(name) == "string", "name is nil or not a string")
 	assert(type(dir) == "string", "dir is nil or not a string")
 	
-	TODO "connect node and edge"
+	local inc = Incidence(name, dir)
+	node.edges[inc] = edge
+	node.edges[name] = edge -- shortcut
+	edge.nodes[inc] = node
+	edge.nodes[name] = node -- shortcut
 	
-	evConnected(self, node, edge, name, dir)
+	evConnected(self, node, edge, inc)
 end
 
 function Graph:disconnect(node, edge)
@@ -102,8 +145,7 @@ function Graph:load(filename)
 					}
 				}
 				]]
-
-				self.nodes:append(nn)
+				
 				nodeMap[S(name)] = n
 			elseif name:startsWith(Q"edge") then
 				local e = self:createEdge()
@@ -113,8 +155,7 @@ function Graph:load(filename)
 				QDomNode sc = fc.firstChild();
 				QString type = sc.toText().data();
 				]]
-
-				self.edges:append(ee)
+				
 				edgeMap[S(name)] = e
 			end
 		end
