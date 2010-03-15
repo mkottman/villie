@@ -75,7 +75,6 @@ end
 
 function Graph:createEdge(type)
 	local e = Edge(gen_id(), type)
-	print(repr(e, 'edge'))
 	self.edges:append(e)
 	evAdded(self, e)
 	return e

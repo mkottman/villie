@@ -88,8 +88,9 @@ function VConnector:_init(node, edge, inc)
 	local nv = node.visual.item
 	local ev = edge.visual.item
 	
-	function item:paint()
-		self:setLine(nv:pos(), ev:pos())
+	function item:paint(...)
+		self:setLine(QLineF.new_local(nv:pos(), ev:pos()))
+		QGraphicsLineItem.paint(self, ...)
 	end
 	
 	self.item = item
