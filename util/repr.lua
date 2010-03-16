@@ -17,16 +17,22 @@ function sortedpairs(t)
   end
 end
 
--- Modified version of table serialization from http://lua-users.org/wiki/TableSerialization
--- Original Julio Manuel Fernandez-Diaz, January 12, 2007
-function repr(t, name, maxlevel)
+function repr(t, name, opts)
 	local cart = {}     -- a container
 	local id = 1
-
+	local autoref = {} -- for self references
+	opts = setmetatable(opts or {}, {__index={
+		indent = "  ",
+		ignore = {"parent"},
+		nometa = false,
+		maxlevel = 2
+	}})
+	
 	local function p(s) cart[id]=s; id=id+1 end
+	local function ar(s) table.insert(autoref, s) end
 	local function isemptytable(t)
 		local mt = getmetatable(t)
-		return next(t) == nil and (not mt or not mt.__index)
+		return next(t) == nil and (not mt or mt.__index)
 	end
 	local function basicSerialize (o)
 		local so = tostring(o)
@@ -35,24 +41,11 @@ function repr(t, name, maxlevel)
 		   -- info.name is nil because o is not a calling level
 		   if info.what == "C" then
 		      return string.format("%q", so .. ", C function")
-		   else
-		   		local src = info.source
-		   		if src:match('^@') then
-		   			local f = assert(io.open(src:sub(2)))
-		   			if f then
-		   				local line = 1
-		   				for l in f:lines() do
-		   					if line == info.linedefined then
-		   						return "function"..l:match("%b()").." -- "..info.source .. ":" .. info.linedefined
-		   					end
-		   					line = line + 1
-		   				end
-		   			end
-		   		end
+		   else 
 		      -- the information is defined through lines
 		      return string.format("%q", so .. ", defined in (" ..
 		          info.linedefined .. "-" .. info.lastlinedefined ..
-		          ") " .. src)
+		          ") " .. info.source:sub(1, 64))
 		   end
 		elseif type(o) == "number" then
 		   return so
@@ -62,72 +55,63 @@ function repr(t, name, maxlevel)
 	end
 	local function key(o)
 		if type(o)=="string" and o:match("^[%w_]+$") then
-			return o
+			return o, '.'
 		else
 			return "["..basicSerialize(o).."]"
 		end
 	end
 
-	local saved = {}
-	local function addtocart (value, name, indent, field)
+	local function addtocart (value, name, ind, saved, field)
+		local indent = opts.indent:rep(ind)
+		saved = saved or {}
 		field = field or name
-		local ind = ("  "):rep(indent)
-		local mt = getmetatable(value)
-
-		p(ind .. field)
+	 
+		p(indent .. field)
 
 		if type(value) ~= "table" then
 			p " = "
 			p(basicSerialize(value))
 			p ";\n"
+			if not opts.nometa and type(value) == "userdata" then
+				if getmetatable(value) then addtocart(getmetatable(value), "metatable", ind) end
+				if debug.getfenv(value) then addtocart(debug.getfenv(value), "env", ind) end
+			end
 		else
 			if saved[value] then
 				p " = {}; -- "
 				p(saved[value])
 				p(" (self reference)\n")
+				ar(name .. " = " .. saved[value] .. ";\n")
 			else
 				saved[value] = name
 				if isemptytable(value) then
 					p " = {};\n"
 				else
 					p " = {"
-					if maxlevel and indent > maxlevel then
+					if ind > opts.maxlevel then
 						p " ... "
 					else
 						p "\n"
 						for k, v in sortedpairs(value) do
-							k = key(k)
-							local fname = string.format("%s.%s", name, k)
+							k, kk = key(k)
+							local fname = string.format("%s%s%s", name, kk or '', k)
 							field = k
-							addtocart(v, fname, indent+1, field)
+							if not opts.ignore[k] then
+								addtocart(v, fname, ind+1, saved, field)
+							end
 						end
-						if not mt then p(ind) end
-					end
-					if mt then
-						addtocart(mt, name .. "_metatable", indent+1, "metatable")
-						p(ind)
+						p(indent)
 					end
 					p "};\n"
 				end
 			end
 		end
-
-		if type(value) == "userdata" and mt then
-			addtocart(mt, "metatable(" .. field .. ")", indent)
-		end
 	end
 
 	name = name or "x"
-	--[[
-	if type(t) ~= "table" then
-		return name .. " = " .. basicSerialize(t)
-	end
-	]]
-
 	local ok, err = xpcall(function() addtocart(t, name, 0) end, debug.traceback)
 	if not ok then p(' Error:' .. tostring(err)) end
-
-	return table.concat(cart)
+	return table.concat(cart) .. table.concat(autoref)
 end
 
 local function getlocals()
