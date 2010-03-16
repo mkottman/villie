@@ -1,3 +1,5 @@
+require 'view.layout'
+
 local center_text = QTextOption.new_local({'AlignHCenter', 'AlignVCenter'})
 local center_point = QPointF.new_local(0,0)
 
@@ -89,6 +91,7 @@ function VConnector:_init(node, edge, inc)
 	local ev = edge.visual.item
 	
 	function item:paint(...)
+		if nv:collidesWithItem(ev) then return end
 		self:setLine(QLineF.new_local(nv:pos(), ev:pos()))
 		QGraphicsLineItem.paint(self, ...)
 	end
@@ -107,6 +110,7 @@ function View:_init(parent)
 	self.scene = QGraphicsScene.new(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
 	self.items = List()
+	self.layouter = Layouter(self.items)
 	
 	handle("added", function(g, x)
 		self:added(x)
@@ -124,11 +128,11 @@ function View:added(x)
 	if x:is_a(Node) then
 		local vn = VNode(x)
 		self.scene:addItem(vn.item)
-		self.items:append(vn)
+		self.items:append(x)
 	elseif x:is_a(Edge) then
 		local ve = VEdge(x)
 		self.scene:addItem(ve.item)
-		self.items:append(ve)
+		self.items:append(x)
 	else
 		error("added item is not a Node or Edge")
 	end
@@ -152,7 +156,7 @@ end
 
 function View:scramble()
 	for i in self.items:iter() do
-		i.item:setPos(math.random(-100,100), math.random(-100, 100))
+		i.visual.item:setPos(math.random(-100,100), math.random(-100, 100))
 	end
 end
 
@@ -160,6 +164,7 @@ function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
 	self:scramble()
+	self.layouter:start()
 end
 
 
