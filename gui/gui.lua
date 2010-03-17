@@ -95,10 +95,12 @@ local function createWindow()
 	mainWindow = QMainWindow.new()
 	mainWindow:setWindowTitle(Q"Villie")
 	mainWindow:setMinimumSize(640, 480)
+	mainWindow:resize(800,600)
 
 	central = QSplitter.new('Horizontal', mainWindow)
 
 	mainWindow:setCentralWidget(central)
+	--mainWindow:setWindowState({'WindowMaximized'})
 	mainWindow:show()
 end
 
@@ -120,15 +122,21 @@ local function createScene()
 end
 
 local function createLog()
-	errlog = QTextEdit.new(mainWindow)
+	errlog = QTextEdit.new()
 	errlog:setReadOnly(true)
 
 	local font = QFont.new_local(Q"DejaVu Sans Mono", 8)
 	errlog:setFont(font)
 	errlog:setLineWrapMode('NoWrap')
 	errlog:setTabStopWidth(20)
-
-	central:addWidget(errlog)
+	--errlog:setWindowFlags({'Tool', 'WindowStaysOnTopHint'})
+	errlog:show()
+	errlog:raise()
+	
+	local p = mainWindow:pos()
+	p:setX(p:x() + mainWindow:width())
+	errlog:move(p:x(), p:y())
+	--central:addWidget(errlog)
 
 	-- setup a new logger
 	local colors = {
