@@ -180,7 +180,9 @@ end
 
 function Layouter:updatePositions()
 	for i in self.items:iter() do
-		i.visual.item:setPos(i.pos:unpack())
+		if not i.ignored then
+			i.visual.item:setPos(i.pos:unpack())
+		end
 	end
 end
 

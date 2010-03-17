@@ -106,6 +106,8 @@ end
 
 class.View()
 
+local evChanged = event "itemChanged"
+
 function View:_init(parent)
 	self.scene = QGraphicsScene.new(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
@@ -121,21 +123,38 @@ function View:_init(parent)
 	handle("connected", function(g, n, e, i)
 		self:connected(n, e, i)
 	end)
+	handle("itemChanged", function(e)
+		self.layouter:start()
+	end)
 end
 
 function View:added(x)
 	warn(STR, 'Added', x)
-	if x:is_a(Node) then
-		local vn = VNode(x)
-		self.scene:addItem(vn.item)
-		self.items:append(x)
-	elseif x:is_a(Edge) then
-		local ve = VEdge(x)
-		self.scene:addItem(ve.item)
-		self.items:append(x)
-	else
-		error("added item is not a Node or Edge")
+	if not x:is_a(Node) and not x:is_a(Edge) then
+		error("added item is not a Node or Edge: "..STR(x))
 	end
+	
+	local visual
+	if x:is_a(Node) then
+		visual = VNode(x)
+	elseif x:is_a(Edge) then
+		visual = VEdge(x)
+	end
+	local item = visual.item
+	
+	function item:mouseMoveEvent(e)
+		evChanged(x)
+		x.ignored = true
+		super()
+	end
+	
+	function item:mouseReleaseEvent(e)
+		x.ignored = false
+		super()
+	end
+	
+	self.scene:addItem(item)
+	self.items:append(x)
 end
 
 function View:removed(x)
@@ -163,6 +182,7 @@ end
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
+	self:clear()
 	self:scramble()
 	self.layouter:start()
 end
