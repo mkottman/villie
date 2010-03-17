@@ -57,6 +57,10 @@ function Graph:_init()
 	evCreated(self)
 end
 
+function Graph:registerTypes(types)
+	self.node_types = types.nodes
+	self.edge_types = types.edges
+end
 
 local next_id = 0
 local function gen_id()
@@ -80,6 +84,11 @@ function Graph:createEdge(type)
 	return e
 end
 
+--- Connects a <code>node</code> with an <code>edge</code> with incidence named <code>name</code> and
+-- direction <code>dir</code>. Direction is always in relation to <code>edge</code> and can have value
+-- either 'in' or 'out'. Creates and Incidence object from <code>name</code> and <code>dir</code> and
+-- uses it as a key for <code>node.edges</code> and <code>edge.nodes</code>. As a shortcut,
+-- <code>name</code> is also used as a key in <code>edge.nodes</code>. Fires the "connected" event with
 function Graph:connect(node, edge, name, dir)
 	assert(node and node:is_a(Node), "node is nil or not a Node")
 	assert(edge and edge:is_a(Edge), "edge is nil or not an Edge")
@@ -88,7 +97,6 @@ function Graph:connect(node, edge, name, dir)
 	
 	local inc = Incidence(name, dir)
 	node.edges[inc] = edge
-	node.edges[name] = edge -- shortcut
 	edge.nodes[inc] = node
 	edge.nodes[name] = node -- shortcut
 	

@@ -61,6 +61,12 @@ function S(q)
   return q:toUtf8()
 end
 
+
+function super()
+	error(SUPER)
+end
+
+
 local logger = logging.console()
 function setlogger(appender)
 	logger = logging.new(appender)
