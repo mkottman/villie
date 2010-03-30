@@ -15,6 +15,7 @@ require 'model'
 require 'view'
 require 'gui'
 
+DEBUG=1
 
 app = QApplication.new(1 + select('#', ...), {arg[0], ...})
 

@@ -6,6 +6,7 @@ local mainWindow
 local actions
 local menu
 local toolbar
+local desktopSize
 
 local central
 local errlog
@@ -66,6 +67,7 @@ local function createActions()
 	end)
 
 	makeAction("Load", function()
+		scene:clear()
 		local g = Graph()
 		TODO "Load - file select dialog"
 		g:load('graph.graphml')
@@ -78,6 +80,7 @@ local function createActions()
 	end)
 	
 	makeAction("Import", function()
+		scene:clear()
 		local g = base.language.import(scene.graph)
 		scene:reload(g)
 	end)
@@ -95,7 +98,8 @@ local function createWindow()
 	mainWindow = QMainWindow.new()
 	mainWindow:setWindowTitle(Q"Villie")
 	mainWindow:setMinimumSize(640, 480)
-	mainWindow:resize(800,600)
+	mainWindow:resize(800,desktopSize:height())
+	mainWindow:move(0, 0)
 
 	central = QSplitter.new('Horizontal', mainWindow)
 
@@ -118,6 +122,9 @@ end
 
 local function createScene()
 	scene = View(mainWindow)
+	function mainWindow:keyPressEvent(e)
+		log(e:key())
+	end
 	central:addWidget(scene.view)
 end
 
@@ -132,6 +139,8 @@ local function createLog()
 	--errlog:setWindowFlags({'Tool', 'WindowStaysOnTopHint'})
 	errlog:show()
 	errlog:raise()
+	
+	errlog:resize(desktopSize:width() - 800, desktopSize:height())
 	
 	local p = mainWindow:pos()
 	p:setX(p:x() + mainWindow:width())
@@ -184,6 +193,9 @@ function selectLanguage()
 end
 
 function run(...)
+	local desktop = app.desktop()
+	desktopSize = desktop:availableGeometry()
+
 	createWindow()
 	createActions()
 	createMenus()

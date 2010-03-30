@@ -1,6 +1,6 @@
 require 'view.layout'
 
-local center_text = QTextOption.new_local({'AlignHCenter', 'AlignVCenter'})
+
 local center_point = QPointF.new_local(0,0)
 
 local colors = {
@@ -15,32 +15,17 @@ local colors = {
 -------------------------------------------------
 
 class.VEdge()
-do
-	local size = QRectF.new_local(-70, -15, 140, 30)
-	local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
-	gradient:setColorAt(0, colors.white);
-	gradient:setColorAt(1, colors.blue);
-	gradient = QBrush.new_local(gradient)
+function VEdge:_init(edge)
+	local item = QGraphicsItem.new_local()
 	
-	function VEdge:_init(edge)
-		local item = QGraphicsItem.new_local()
-		
-		item:setFlag('ItemIsSelectable', true)
-		item:setFlag('ItemIsMovable', true)
-		item:setZValue(1)
-		
-		local str = Q(edge)
-		function item:boundingRect()
-			return size
-		end
-		function item:paint(painter)
-			painter:setBrush(gradient)
-			painter:drawRoundedRect(size, 8, 8)
-			painter:drawText(size, str, center_text)
-		end
-		self.item = item
-		edge.visual = self
-	end
+	item:setFlag('ItemIsSelectable', true)
+	item:setFlag('ItemIsMovable', true)
+	item:setZValue(1)
+
+	language.setupEdgeRenderer(edge, item)
+	
+	self.item = item
+	edge.visual = self
 end
 
 -------------------------------------------------
@@ -48,32 +33,17 @@ end
 -------------------------------------------------
 
 class.VNode()
-do
-	local size = QRectF.new_local(-25, -10, 50, 20)
-	local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
-	gradient:setColorAt(0, colors.white);
-	gradient:setColorAt(1, colors.red);
-	gradient = QBrush.new_local(gradient)
+function VNode:_init(node)
+	local item = QGraphicsItem.new_local()
 	
-	function VNode:_init(node)
-		local item = QGraphicsItem.new_local()
-		
-		item:setFlag('ItemIsSelectable', true)
-		item:setFlag('ItemIsMovable', true)
-		item:setZValue(2)
-		
-		local str = Q(edge)
-		function item:boundingRect()
-			return size
-		end
-		function item:paint(painter)
-			painter:setBrush(gradient)
-			painter:drawRect(size)
-			painter:drawText(size, str)
-		end
-		self.item = item
-		node.visual = self
-	end
+	item:setFlag('ItemIsSelectable', true)
+	item:setFlag('ItemIsMovable', true)
+	item:setZValue(2)
+
+	language.setupNodeRenderer(node, item)
+
+	self.item = item
+	node.visual = self
 end
 
 -------------------------------------------------
@@ -90,12 +60,53 @@ function VConnector:_init(node, edge, inc)
 	local nv = node.visual.item
 	local ev = edge.visual.item
 	
+	local txt = QGraphicsTextItem.new_local(Q(inc.name))
+	
 	function item:paint(...)
 		if nv:collidesWithItem(ev) then return end
-		self:setLine(QLineF.new_local(nv:pos(), ev:pos()))
-		QGraphicsLineItem.paint(self, ...)
+		local line = QLineF.new_local(nv:pos(), ev:pos())
+		item:setLine(line)
+		
+		local center = (nv:pos() + ev:pos()) / 2
+		txt:setPos(center:x() + 15, center:y())
+		
+		super()
+--[[
+    QLineF centerLine(myStartItem->pos(), myEndItem->pos());
+    setLine(centerLine);
+
+    center = (myStartItem->pos() + myEndItem->pos()) / 2;
+    float dx = abs(myEndItem->pos().x() - myStartItem->pos().x());
+    float dy = abs(myEndItem->pos().y() - myStartItem->pos().y());
+
+    text->setPos(center.x(), center.y()-20);
+    /*
+    if (dx > dy) {
+        text->setPos(center.x(), center.y() - 15);
+    } else {
+        text->setPos(center.x() + 15, center.y());
+    }
+    */
+
+    double angle = ::acos(line().dx() / line().length());
+    if (line().dy() >= 0)
+        angle = (Pi * 2) - angle;
+
+    const double arrowSize = 10;
+
+    QPointF arrowP1 = center - QPointF(sin(angle + Pi / 3) * arrowSize,
+                                            cos(angle + Pi / 3) * arrowSize);
+    QPointF arrowP2 = center - QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
+                                            cos(angle + Pi - Pi / 3) * arrowSize);
+
+    QPolygonF arrowHead;
+    arrowHead << center << arrowP1 << arrowP2;
+    painter->drawPolygon(arrowHead);
+    painter->drawLine(line());
+]]
 	end
 	
+	self.txt = txt
 	self.item = item
 	inc.visual = self
 end
@@ -114,6 +125,11 @@ function View:_init(parent)
 	self.items = List()
 	self.layouter = Layouter(self.items)
 	
+	function self.view:wheelEvent(e)
+		local scale = e:delta() > 0 and 1.25 or 0.8
+		self:scale(scale, scale)
+	end
+	
 	handle("added", function(g, x)
 		self:added(x)
 	end)
@@ -124,12 +140,12 @@ function View:_init(parent)
 		self:connected(n, e, i)
 	end)
 	handle("itemChanged", function(e)
-		self.layouter:start()
+		self.layouter:start(self.items)
 	end)
 end
 
 function View:added(x)
-	warn(STR, 'Added', x)
+	log(STR, 'View - added', x)
 	if not x:is_a(Node) and not x:is_a(Edge) then
 		error("added item is not a Node or Edge: "..STR(x))
 	end
@@ -141,7 +157,9 @@ function View:added(x)
 		visual = VEdge(x)
 	end
 	local item = visual.item
-	
+	item:setPos(math.random(-100,100), math.random(-100, 100))
+
+	local view = self
 	function item:mouseMoveEvent(e)
 		evChanged(x)
 		x.ignored = true
@@ -166,9 +184,11 @@ end
 function View:connected(n, e, i)
 	local conn = VConnector(n, e, i)
 	self.scene:addItem(conn.item)
+	self.scene:addItem(conn.txt)
 end
 
 function View:clear()
+	self.layouter:stop()
 	self.scene:clear()
 	self.items = List()
 end
@@ -182,12 +202,8 @@ end
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
-	self:clear()
 	self:scramble()
-	self.layouter:start()
+	self.layouter:start(self.items)
 end
-
-
-
 
 return View

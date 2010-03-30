@@ -59,7 +59,13 @@ end
 
 function Graph:registerTypes(types)
 	self.node_types = types.nodes
+	for k, v in pairs(self.node_types) do
+		v.name = k
+	end
 	self.edge_types = types.edges
+	for k, v in pairs(self.edge_types) do
+		v.name = k
+	end
 end
 
 local next_id = 0
@@ -69,16 +75,24 @@ local function gen_id()
 end
 
 
-function Graph:createNode(type)
-	local n = Node(gen_id(), type)
+local function resolveType(typ, where)
+	if not where[typ] then fatal("Trying to create unknown type: %s", typ)
+	else return where[typ]
+	end
+end
+
+function Graph:createNode(typ)
+	if type(typ) == "string" then typ = resolveType(typ, self.node_types) end
+	local n = Node(gen_id(), typ)
 	self.nodes:append(n)
 	evAdded(self, n)
 	return n
 end
 
 
-function Graph:createEdge(type)
-	local e = Edge(gen_id(), type)
+function Graph:createEdge(typ)
+	if type(typ) == "string" then typ = resolveType(typ, self.edge_types) end
+	local e = Edge(gen_id(), typ)
 	self.edges:append(e)
 	evAdded(self, e)
 	return e
@@ -90,8 +104,8 @@ end
 -- uses it as a key for <code>node.edges</code> and <code>edge.nodes</code>. As a shortcut,
 -- <code>name</code> is also used as a key in <code>edge.nodes</code>. Fires the "connected" event with
 function Graph:connect(node, edge, name, dir)
-	assert(node and node:is_a(Node), "node is nil or not a Node")
-	assert(edge and edge:is_a(Edge), "edge is nil or not an Edge")
+	assert(node and node:is_a(Node), type(node) .. " is nil or not a Node")
+	assert(edge and edge:is_a(Edge), type(edge) .. " is nil or not an Edge")
 	assert(type(name) == "string", "name is nil or not a string")
 	assert(type(dir) == "string", "dir is nil or not a string")
 	
@@ -203,6 +217,31 @@ end
 
 function Graph:dump()
 	trace("Graph:")
-	self.nodes:foreach(function(n) trace(" N %s", tostring(n)) end)
-	self.edges:foreach(function(e) trace(" E %s", tostring(e)) end)
+
+	local f = io.open('graph.dot', 'w')
+	f:write('digraph g {\n')
+	f:write('edge [len=2]\n')
+
+	for n in self.nodes:iter() do
+		trace(" N %s", tostring(n))
+		f:write(' n', n.id, ' [label="', n.value or '?', ':', n.type.name, '"]\n')
+	end
+	for e in self.edges:iter() do
+		trace(" E %s", tostring(e))
+		f:write(' e', e.id, ' [label="', e.type.name, '"]\n')
+	end
+	
+	for e in self.edges:iter() do
+		for i, n in pairs(e.nodes) do
+			if type(i) ~= "string" then
+				if i.dir == "out" then
+					f:write(' e', e.id, ' -> n', n.id, ' [label=', i.name,']\n')
+				else
+					f:write(' n', n.id, ' -> e', e.id, ' [label=', i.name,']\n')
+				end
+			end
+		end
+	end
+	
+	f:write('}\n')
 end

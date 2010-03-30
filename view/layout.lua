@@ -82,7 +82,7 @@ end
 
 -- some parameters
 
-local K = 50
+local K = 60
 local MAX_DIST = 300
 
 -- repulsive force
@@ -129,31 +129,35 @@ class.Layouter()
 local TIMER_INTERVAL = 50
 local LAYOUT_STEPS = 10
 
-function Layouter:_init(items)
+function Layouter:_init()
 	local obj = QObject.new_local()
 	local layouter = self
 	
 	function obj:timerEvent(e)
 		if e:timerId() == layouter.timerId then
-			layouter:initialize()
-			for i=1,LAYOUT_STEPS do
-				layouter:layoutStep()
+			if layouter:initialize() then
+				for i=1,LAYOUT_STEPS do
+					layouter:layoutStep()
+				end
+				layouter:updatePositions()
+			else
+				trace('Could not init layouter')
 			end
-			layouter:updatePositions()
 		end
 	end
 	
 	self.obj = obj
 	self.running = false
-	self.items = items
 end
 
 
-function Layouter:start()
+function Layouter:start(items)
+	log(STR, 'Starting layouter with', items)
 	if self.running then return end
 	local tid = self.obj:startTimer(TIMER_INTERVAL)
 	self.timerId = tid
 	self.running = true
+	self.items = items
 end
 
 function Layouter:stop()
@@ -171,11 +175,13 @@ end
 
 
 function Layouter:initialize()
+	if not self.items then return false end
 	for i in self.items:iter() do
 		local p = i.visual.item:pos()
 		i.pos = Vector.new(p:x(), p:y())
 		i.force = Vector.new()
 	end
+	return true
 end
 
 function Layouter:updatePositions()
@@ -236,6 +242,7 @@ function Layouter:moveElements()
 	end
 	
 	if total == 0 or moved/total < MIN_PORTION then
+		trace('Stopping layouter, too little to move')
 		self:stop()
 	end
 end

@@ -68,9 +68,13 @@ end
 
 
 local logger = logging.console()
+if not DEBUG then logger:setLevel(logging.WARN) end
+
 function setlogger(appender)
 	logger = logging.new(appender)
+	if not DEBUG then logger:setLevel(logging.WARN) end
 end
+
 
 local function preplog(first, ...)
 	if select('#', ...) == 0 then
