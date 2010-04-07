@@ -14,42 +14,30 @@ local center_point = QPointF.new_local(0,0)
 do
 	local size = QRectF.new_local(-40, -10, 80, 20)
 	local small = QRectF.new_local(-5, -5, 10, 10)
-	local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
-	gradient:setColorAt(0, to_color"white")
-	
-	function vlua.setupNodeRenderer(node, item)
-		item.isPlaceholder = node.type.name == "Exp" or node.type.name == "Stat"
-		item.lstr = node.type.name
-		item.str = Q(item.lstr)
-		
-		item.refresh = function()
-			local curstr
-			if node.value then
-				curstr = node.value
-			else
-				curstr = node.type.name .. ' ' .. node.id
-			end
-			if item.lstr ~= curstr then
-				item.lstr = curstr
-				item.str = Q(item.lstr)
-			end
-		end
-				
-		function item:boundingRect()
-			return self.isPlaceholder and small or size
-		end
+	--local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
+	--gradient:setColorAt(0, to_color"white")
 
-		function item:paint(painter)
-			gradient:setColorAt(1, to_color(node.type.color))
-			if not self.isPlaceholder then
-				self:refresh()
+	function vlua.setupNodeRenderer(node, item)
+		local item
+		if node.type.name == "Expression" then
+			item = QGraphicsSimpleTextItem.new_local(Q(node.value))
+		elseif node.type.name == "Exp" or node.type.name == "Stat" then
+			item = QGraphicsRectItem.new_local(small)
+		else
+			item = QGraphicsItem.new_local()
+			item.str = Q(node.type.name .. ": " .. node.id)
+			function item:boundingRect()
+				return size
+			end
+			function item:paint(painter)
+				gradient:setColorAt(1, to_color(node.type.color))
 				painter:setBrush(QBrush.new_local(gradient))
 				painter:drawRect(size)
-				painter:drawText(size, self.str)
-			else
-				painter:drawRect(small)
+				painter:drawText(center_point, self.str)
 			end
 		end
+
+		return item
 	end
 end
 
@@ -59,13 +47,15 @@ do
 	local size = QRectF.new_local(-70, -15, 140, 30)
 	local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
 	gradient:setColorAt(0, to_color"white");
-	
-	function vlua.setupEdgeRenderer(edge, item)
+
+	function vlua.setupEdgeRenderer(edge)
+		local item = QGraphicsItem.new_local()
+
 		local str
 		if edge.type.name == "Op" then str = Q(edge.op)
 		else str = Q((edge.type and edge.type.name or 'unknown') .. edge.id)
 		end
-		
+
 		function item:boundingRect()
 			return size
 		end
@@ -76,5 +66,7 @@ do
 			painter:drawRoundedRect(size, 8, 8)
 			painter:drawText(size, str, center_text)
 		end
+
+		return item
 	end
 end

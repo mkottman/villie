@@ -16,14 +16,12 @@ local colors = {
 
 class.VEdge()
 function VEdge:_init(edge)
-	local item = QGraphicsItem.new_local()
-	
+	local item = language.setupEdgeRenderer(edge)
+
 	item:setFlag('ItemIsSelectable', true)
 	item:setFlag('ItemIsMovable', true)
 	item:setZValue(1)
 
-	language.setupEdgeRenderer(edge, item)
-	
 	self.item = item
 	edge.visual = self
 end
@@ -34,13 +32,11 @@ end
 
 class.VNode()
 function VNode:_init(node)
-	local item = QGraphicsItem.new_local()
-	
+	local item = language.setupNodeRenderer(node, item)
+
 	item:setFlag('ItemIsSelectable', true)
 	item:setFlag('ItemIsMovable', true)
 	item:setZValue(2)
-
-	language.setupNodeRenderer(node, item)
 
 	self.item = item
 	node.visual = self
