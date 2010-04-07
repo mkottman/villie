@@ -14,7 +14,8 @@ local vlua_types = {
 		Id = { color = "green" };
 		Nil = { color = "white" };
 		Dots = { color = "purple" };
-		
+		Expression = { color = "orange" };
+
 		Exp = { color = "black" };
 		Stat = { color = "white" };
 	};
