@@ -140,7 +140,11 @@ function View:_init(parent)
 		self:connected(n, e, i)
 	end)
 	handle("itemChanged", function(e)
-		self.layouter:start(self.items)
+		local items = List({e})
+		for k,v in pairs(e.nodes or e.edges) do
+			if type(k) == "string" then table.insert(items, v) end
+		end
+		self.layouter:start(items)
 	end)
 end
 
@@ -199,11 +203,15 @@ function View:scramble()
 	end
 end
 
+function View:fullLayout()
+	self.layouter:start(self.items, true)
+end
+
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
 	self:scramble()
-	self.layouter:start(self.items)
+	-- self.layouter:start(self.items)
 end
 
 return View

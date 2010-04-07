@@ -29,6 +29,7 @@ local function createMenus()
 	local edit = QMenu.new(Q"Edit")
 
 	local layout = QMenu.new(Q"Layout")
+	layout:addAction(actions["Layout"])
 
 	local tools = QMenu.new(Q"Tools")
 
@@ -92,6 +93,10 @@ local function createActions()
 	makeAction("Quit", function()
 		app.exit()
 	end)
+
+	makeAction("Layout", function()
+		scene:fullLayout()
+	end)
 end
 
 local function createWindow()
@@ -116,14 +121,18 @@ local function createToolbar()
 	toolbar:addSeparator()
 	toolbar:addAction(actions['Import'])
 	toolbar:addAction(actions['Export'])
-	
+	toolbar:addSeparator()
+	toolbar:addAction(actions['Layout'])
+
 	mainWindow:addToolBar(toolbar)
 end
 
 local function createScene()
 	scene = View(mainWindow)
 	function mainWindow:keyPressEvent(e)
-		log(e:key())
+		if e:key() == 32 then
+			scene.layouter:stop()
+		end
 	end
 	central:addWidget(scene.view)
 end

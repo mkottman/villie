@@ -127,37 +127,50 @@ end
 class.Layouter()
 
 local TIMER_INTERVAL = 50
-local LAYOUT_STEPS = 10
+local LAYOUT_STEPS = 30
 
 function Layouter:_init()
 	local obj = QObject.new_local()
+	local progress = QProgressDialog.new_local(Q"Layouting", Q"Cancel", 0, LAYOUT_STEPS)
+	progress:setMinimumDuration(1000)
+	self.progress = progress
+
 	local layouter = self
-	
+
 	function obj:timerEvent(e)
 		if e:timerId() == layouter.timerId then
-			if layouter:initialize() then
-				for i=1,LAYOUT_STEPS do
-					layouter:layoutStep()
-				end
-				layouter:updatePositions()
-			else
-				trace('Could not init layouter')
-			end
+			layouter:run()
 		end
 	end
-	
+
 	self.obj = obj
 	self.running = false
 end
 
-
-function Layouter:start(items)
-	log(STR, 'Starting layouter with', items)
+function Layouter:start(items, manual)
 	if self.running then return end
-	local tid = self.obj:startTimer(TIMER_INTERVAL)
-	self.timerId = tid
-	self.running = true
 	self.items = items
+	if manual then
+		self:run()
+	else
+		self.running = true
+		local tid = self.obj:startTimer(TIMER_INTERVAL)
+		self.timerId = tid
+	end
+end
+
+function Layouter:run()
+	if self:initialize() then
+		self.progress:setValue(0)
+		for i=1,LAYOUT_STEPS do
+			self:layoutStep()
+			self.progress:setValue(i)
+			if self.progress:wasCanceled() then break end
+		end
+		self:updatePositions()
+	else
+		warn('Could not init layouter')
+	end
 end
 
 function Layouter:stop()
