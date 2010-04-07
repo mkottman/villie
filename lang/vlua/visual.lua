@@ -20,20 +20,24 @@ do
 	function vlua.setupNodeRenderer(node, item)
 		local item
 		if node.type.name == "Expression" then
-			item = QGraphicsSimpleTextItem.new_local(Q(node.value))
+			item = QGraphicsTextItem.new_local(Q(node.value))
+			if item:document():textWidth() > 200 then
+				item:setTextWidth(200)
+			end
 		elseif node.type.name == "Exp" or node.type.name == "Stat" then
 			item = QGraphicsRectItem.new_local(small)
+			item:setBrush(QBrush.new_local(to_color"black"))
 		else
 			item = QGraphicsItem.new_local()
-			item.str = Q(node.type.name .. ": " .. node.id)
+			item.str = Q(node.value)
 			function item:boundingRect()
 				return size
 			end
 			function item:paint(painter)
-				gradient:setColorAt(1, to_color(node.type.color))
-				painter:setBrush(QBrush.new_local(gradient))
+				--gradient:setColorAt(1, to_color(node.type.color))
+				--painter:setBrush(QBrush.new_local(gradient))
 				painter:drawRect(size)
-				painter:drawText(center_point, self.str)
+				painter:drawText(size, self.str)
 			end
 		end
 

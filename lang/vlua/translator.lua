@@ -2,14 +2,25 @@ local AST = ast
 
 module('vlua.translator', package.seeall)
 
-
+local simpleNode = {Number=true, String=true, Id=true, Dots="...", True="true", False="false", Nil="nil"}
+function isSimpleNode(tag)
+	return simpleNode[tag]
+end
 
 function translate(ast, graph)
 	local processBlock, processExpression, processStatement, handleFunctionDefinition
 
 	function handleFunctionDefinition(s)
-		if #s[2] == 1 and s[2][1].tag == "Function" then
+		print(repr(s))
+		if s[1] and s[2] and #s[1] == 1 and #s[2] == 1 and s[2][1].tag == "Function" then
+			local f = s[2][1]
+			log('Handling function')
+			local name = AST.decompile(s[1][1])
 			local func = graph:createEdge("Function")
+			local body = processBlock(f[#f])
+			graph:connect(body, func, "body", "out")
+			
+			graph.elements[name] = func
 			return true
 		end
 	end
@@ -20,7 +31,7 @@ function translate(ast, graph)
 
 		local edge
 		if tag == "Set" then
-			if handleFunctionDefinition(graph, s) then
+			if handleFunctionDefinition(s) then
 				return
 			else
 				edge = graph:createEdge("Set")
@@ -35,7 +46,21 @@ function translate(ast, graph)
 			end
 		elseif tag == "If" then
 			edge = graph:createEdge("If")
-			local cond = processExpression
+			local cond = processExpression(s[1])
+			local body = processBlock(s[2])
+			TODO "Handle rest of conditions"
+			graph:connect(cond, edge, "condition", "in")
+			graph:connect(body, edge, "body", "out")
+		elseif tag == "Fornum" then
+			edge = graph:createEdge("Fornum")
+			local var = processExpression(s[1])
+			local from = processExpression(s[2])
+			local to = processExpression(s[3])
+			local body = processBlock(s[4])
+			graph:connect(var, edge, "variable", "in")			
+			graph:connect(from, edge, "from", "in")			
+			graph:connect(to, edge, "to", "in")			
+			graph:connect(body, edge, "body", "out")			
 		elseif tag == "Call" then
 			edge = graph:createEdge("Call")
 			local func = processExpression(s[1])
@@ -54,19 +79,17 @@ function translate(ast, graph)
 		return ndo
 	end
 	
-	local simpleNode = {Number=true, String=true, Id=true, Dots="...", True="true", False="false", Nil="nil"}
-	
 	function processExpression(e)
 		local tag = e.tag
 		if not tag then error(STR("Error in processing expression", repr(e))) end
-		if simpleNode[tag] then
+		local simple = isSimpleNode(tag)
+		if simple then
 			local n = graph:createNode(tag)
-			n.value = type(simpleNode[tag]) == "string" and simpleNode[tag] or e[1]
+			n.value = type(simple) == "string" and simple or e[1]
 			return n
 		else
 			local n = graph:createNode("Expression")
 			n.value = AST.decompile(e)
-			log(STR, e.tag, n.value)
 			return n
 		end
 	end

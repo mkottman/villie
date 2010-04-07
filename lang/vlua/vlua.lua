@@ -22,6 +22,11 @@ local vlua_types = {
 	edges = {
 		Index = { color = "white" };
 		Function = { color = "blue" };
+		If = { color = "blue" };
+		Fornum = { color = "yellow" };
+		Forin = { color = "orange" };
+		While = { color = "brown" };
+
 		Op = { color = "green" };
 		
 		Block = { color = "green" };
@@ -39,7 +44,7 @@ end
 
 function import(graph)
 --	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
-	local name = Q("main.lua")
+	local name = Q("model/graph.lua")
 	if not name:isEmpty() then
 		graph = Graph()
 		initialize(graph)
