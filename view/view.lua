@@ -121,11 +121,16 @@ function View:_init(parent)
 	self.items = List()
 	self.layouter = Layouter(self.items)
 	
+	local this = self
+	function self.view:contextMenuEvent(e)
+		this:showPopup(e:globalPos())
+	end
 	function self.view:wheelEvent(e)
 		local scale = e:delta() > 0 and 1.25 or 0.8
 		self:scale(scale, scale)
 	end
 	
+--[[
 	handle("added", function(g, x)
 		self:added(x)
 	end)
@@ -135,10 +140,11 @@ function View:_init(parent)
 	handle("connected", function(g, n, e, i)
 		self:connected(n, e, i)
 	end)
+--]]
 	handle("itemChanged", function(e)
 		local items = List({e})
 		for k,v in pairs(e.nodes or e.edges) do
-			if type(k) == "string" then table.insert(items, v) end
+			items:append(v)
 		end
 		self.layouter:start(items)
 	end)
@@ -195,7 +201,7 @@ end
 
 function View:scramble()
 	for i in self.items:iter() do
-		i.visual.item:setPos(math.random(-100,100), math.random(-100, 100))
+		i.visual.item:setPos(math.random(-200,200), math.random(-200, 200))
 	end
 end
 
@@ -203,9 +209,51 @@ function View:fullLayout()
 	self.layouter:start(self.items, true)
 end
 
+function View:display(start)
+	self:clear()
+	local done = {}
+	local function add(x)
+		if done[x] then return end
+		done[x] = true
+		self:added(x)
+		if x:is_a(Node) then
+			for inc,edge in pairs(x.edges) do
+				add(edge)
+				self:connected(x, edge, inc)
+			end
+		elseif x:is_a(Edge) then
+			for inc,node in pairs(x.nodes) do
+				add(node)
+				self:connected(node, x, inc)
+			end		
+		else
+			fatal(STR, "Unexpected element for display", x)
+		end
+	end
+	add(start)
+	self:fullLayout()
+end
+
+function View:showPopup(point)
+	if not self.graph then return end
+	local this = self
+	local menu = QMenu.new()
+	menu:connect('2aboutToHide()', menu, '1deleteLater()')
+	for name, item in pairs(self.graph.elements) do
+		local action = QAction.new(Q(name), menu)
+		menu:__addmethod(name..'()', function()
+			this:display(item)
+		end)
+		action:connect('2triggered()', menu, '1'..name..'()')
+		menu:addAction(action)
+	end
+	menu:popup(point)
+end
+
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
+	self:display(graph.elements.Main)
 	self:scramble()
 	-- self.layouter:start(self.items)
 end

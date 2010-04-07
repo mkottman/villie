@@ -84,5 +84,5 @@ function translate(ast, graph)
 		return ndo
 	end
 
-	processBlock(ast)
+	graph.elements.Main = processBlock(ast)
 end

@@ -54,6 +54,7 @@ local evDisconnected    = event "disconnected"
 function Graph:_init()
 	self.nodes = List()
 	self.edges = List()
+	self.elements = {}
 	evCreated(self)
 end
 
