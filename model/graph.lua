@@ -1,4 +1,14 @@
 
+
+local function shortcutTable()
+	return setmetatable({}, {__index = function(t,key)
+		for k,v in pairs(t) do
+			if k.name == key then return v end
+		end
+	end})
+end
+
+
 -------------------------------------------------
 -- Node class
 -------------------------------------------------
@@ -8,7 +18,7 @@ class.Node()
 function Node:_init(id, type)
 	self.id = id
 	self.type = type
-	self.edges = {}
+	self.edges = shortcutTable()
 end
 
 -------------------------------------------------
@@ -20,7 +30,7 @@ class.Edge()
 function Edge:_init(id, type)
 	self.id = id
 	self.type = type
-	self.nodes = {}
+	self.nodes = shortcutTable()
 end
 
 -------------------------------------------------
@@ -49,7 +59,6 @@ local evRemoved         = event "removed"
 
 local evConnected       = event "connected"
 local evDisconnected    = event "disconnected"
-
 
 function Graph:_init()
 	self.nodes = List()
@@ -103,7 +112,8 @@ end
 -- direction <code>dir</code>. Direction is always in relation to <code>edge</code> and can have value
 -- either 'in' or 'out'. Creates and Incidence object from <code>name</code> and <code>dir</code> and
 -- uses it as a key for <code>node.edges</code> and <code>edge.nodes</code>. As a shortcut,
--- <code>name</code> is also used as a key in <code>edge.nodes</code>. Fires the "connected" event with
+-- <code>name</code> can also be used as a key in <code>edge.nodes</code> and <code>node.edges</code>.
+-- Fires the "connected" event.
 function Graph:connect(node, edge, name, dir)
 	assert(node and node:is_a(Node), type(node) .. " is nil or not a Node")
 	assert(edge and edge:is_a(Edge), type(edge) .. " is nil or not an Edge")
@@ -113,7 +123,6 @@ function Graph:connect(node, edge, name, dir)
 	local inc = Incidence(name, dir)
 	node.edges[inc] = edge
 	edge.nodes[inc] = node
-	edge.nodes[name] = node -- shortcut
 	
 	evConnected(self, node, edge, inc)
 end
