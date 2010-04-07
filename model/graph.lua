@@ -234,11 +234,11 @@ function Graph:dump()
 
 	for n in self.nodes:iter() do
 		trace(" N %s", tostring(n))
-		f:write(' n', n.id, ' [label="', n.value or '?', ':', n.type.name, '"]\n')
+		f:write(' n', n.id, ' [label=', string.format("%q", (n.value or '?') .. ':' .. n.type.name), ']\n')
 	end
 	for e in self.edges:iter() do
 		trace(" E %s", tostring(e))
-		f:write(' e', e.id, ' [label="', e.type.name, '"]\n')
+		f:write(' e', e.id, ' [label="', e.type and e.type.name or 'unknown', '"]\n')
 	end
 	
 	for e in self.edges:iter() do

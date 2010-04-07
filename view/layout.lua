@@ -127,7 +127,7 @@ end
 class.Layouter()
 
 local TIMER_INTERVAL = 50
-local LAYOUT_STEPS = 30
+local LAYOUT_STEPS = 50
 
 function Layouter:_init()
 	local obj = QObject.new_local()
@@ -190,6 +190,7 @@ end
 function Layouter:initialize()
 	if not self.items then return false end
 	for i in self.items:iter() do
+		if not i.visual then fatal(STR, 'Item is missing visual', i) return false end
 		local p = i.visual.item:pos()
 		i.pos = Vector.new(p:x(), p:y())
 		i.force = Vector.new()
@@ -255,7 +256,6 @@ function Layouter:moveElements()
 	end
 	
 	if total == 0 or moved/total < MIN_PORTION then
-		trace('Stopping layouter, too little to move')
 		self:stop()
 	end
 end
