@@ -204,4 +204,8 @@ function run(...)
 
 	createScene()
 	createLog()
+	
+	scene:clear()
+	local g = base.language.import(scene.graph)
+	scene:reload(g)
 end

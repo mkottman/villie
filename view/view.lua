@@ -8,6 +8,7 @@ local colors = {
 	red = QColor.new_local(Q'red'):lighter();
 	green = QColor.new_local(Q'green'):lighter();
 	blue = QColor.new_local(Q'blue'):lighter();
+	black = QColor.new_local(Q'black');
 }
 
 -------------------------------------------------
@@ -15,15 +16,10 @@ local colors = {
 -------------------------------------------------
 
 class.VEdge()
-function VEdge:_init(edge)
-	local item = language.setupEdgeRenderer(edge)
-
-	item:setFlag('ItemIsSelectable', true)
-	item:setFlag('ItemIsMovable', true)
-	item:setZValue(1)
-
-	self.item = item
+function VEdge:_init(view, edge)
 	edge.visual = self
+	local item = language.setupEdgeRenderer(view, edge)
+	self.item = item
 end
 
 -------------------------------------------------
@@ -31,15 +27,10 @@ end
 -------------------------------------------------
 
 class.VNode()
-function VNode:_init(node)
-	local item = language.setupNodeRenderer(node, item)
-
-	item:setFlag('ItemIsSelectable', true)
-	item:setFlag('ItemIsMovable', true)
-	item:setZValue(2)
-
-	self.item = item
+function VNode:_init(view, node)
 	node.visual = self
+	local item = language.setupNodeRenderer(view, node)
+	self.item = item
 end
 
 -------------------------------------------------
@@ -47,64 +38,61 @@ end
 -------------------------------------------------
 
 class.VConnector()
+do
+	local ARROWSIZE = 10
+	local blackBrush = QBrush.new_local(colors.black)
 
-function VConnector:_init(node, edge, inc)
+function VConnector:_init(from, to)
 	local item = QGraphicsLineItem.new_local()
 	
-	assert(node.visual, "node does not have it's visual representation")
-	assert(edge.visual, "edge does not have it's visual representation")
-	local nv = node.visual.item
-	local ev = edge.visual.item
+	log(STR, "Connecting", from.type.name, to.type.name)
+	assert(from.visual, "'from' does not have it's visual representation")
+	assert(to.visual, "'to' does not have it's visual representation")
 	
-	local txt = QGraphicsTextItem.new_local(Q(inc.name))
+	--local txt = QGraphicsTextItem.new_local(Q(inc.name))
+	--local pen = QPen.new_local(inc.ignored and colors.red or colors.black)
+	--item:setPen(pen)
+
+	item.from = from
+	item.to = to
+
+	function item:paint(painter)
+		local fromv = self.from.visual.item
+		local tov = self.to.visual.item	
 	
-	function item:paint(...)
-		if nv:collidesWithItem(ev) then return end
-		local line = QLineF.new_local(nv:pos(), ev:pos())
-		item:setLine(line)
+		if fromv:collidesWithItem(tov) then return end
 		
-		local center = (nv:pos() + ev:pos()) / 2
-		txt:setPos(center:x() + 15, center:y())
+		local startp = fromv:pos() + fromv:boundingRect():center()
+		local endp = tov:pos() + tov:boundingRect():center()
 		
-		super()
---[[
-    QLineF centerLine(myStartItem->pos(), myEndItem->pos());
-    setLine(centerLine);
+		local line = QLineF.new_local(startp, endp)
+		self:setLine(line)
+		
+		local center = (startp + endp) / 2
+		--txt:setPos(center:x() + 15, center:y())
+		
+		local angle = math.acos(line:dx() / line:length())
+		if line:dy() >=0 then angle = math.pi * 2 - angle end
+		
+		local arrowP1 = center - QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
+		local arrowP2 = center - QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
+		local arrowHead = QPolygonF.new_local()
+		arrowHead:IN(center):IN(arrowP1):IN(arrowP2)
 
-    center = (myStartItem->pos() + myEndItem->pos()) / 2;
-    float dx = abs(myEndItem->pos().x() - myStartItem->pos().x());
-    float dy = abs(myEndItem->pos().y() - myStartItem->pos().y());
-
-    text->setPos(center.x(), center.y()-20);
-    /*
-    if (dx > dy) {
-        text->setPos(center.x(), center.y() - 15);
-    } else {
-        text->setPos(center.x() + 15, center.y());
-    }
-    */
-
-    double angle = ::acos(line().dx() / line().length());
-    if (line().dy() >= 0)
-        angle = (Pi * 2) - angle;
-
-    const double arrowSize = 10;
-
-    QPointF arrowP1 = center - QPointF(sin(angle + Pi / 3) * arrowSize,
-                                            cos(angle + Pi / 3) * arrowSize);
-    QPointF arrowP2 = center - QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
-                                            cos(angle + Pi - Pi / 3) * arrowSize);
-
-    QPolygonF arrowHead;
-    arrowHead << center << arrowP1 << arrowP2;
-    painter->drawPolygon(arrowHead);
-    painter->drawLine(line());
-]]
+		painter:setBrush(blackBrush)
+		painter:drawPolygon(arrowHead)
+		painter:drawLine(line)
 	end
 	
-	self.txt = txt
 	self.item = item
-	inc.visual = self
+end
+
+end -- do
+
+function VConnector:other(x)
+	if x == self.item.from then return self.item.to
+	else return self.item.from
+	end
 end
 
 -------------------------------------------------
@@ -118,8 +106,15 @@ local evChanged = event "itemChanged"
 function View:_init(parent)
 	self.scene = QGraphicsScene.new(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
-	self.items = List()
-	self.layouter = Layouter(self.items)
+	
+	self.view:setTransformationAnchor('AnchorUnderMouse')
+	self.view:setViewportUpdateMode('SmartViewportUpdate')
+	self.view:setRenderHint('Antialiasing')
+	
+	self.items = {}
+	self.attract = {}
+	self.repulse = {}
+	self.layouter = Layouter()
 	
 	local this = self
 	function self.view:contextMenuEvent(e)
@@ -131,26 +126,26 @@ function View:_init(parent)
 	end
 	
 --[[
-	handle("added", function(g, x)
-		self:added(x)
-	end)
-	handle("removed", function(g, x)
-		self:removed(x)
-	end)
-	handle("connected", function(g, n, e, i)
-		self:connected(n, e, i)
-	end)
---]]
 	handle("itemChanged", function(e)
-		local items = List({e})
+		local items = {[e]=true}
+		local neighbours = {}
 		for k,v in pairs(e.nodes or e.edges) do
-			items:append(v)
+			v.ignored = false
+			items[v] = true
+			neighbours[v] = true
 		end
-		self.layouter:start(items)
+		for i in pairs(neighbours) do
+			for k,v in pairs(i.nodes or i.edges) do
+				v.ignored = true
+				items[v] = true
+			end
+		end
+		self.layouter:start(self.attract, self.repulse)
 	end)
+]]
 end
 
-function View:added(x)
+function View:addItem(x)
 	log(STR, 'View - added', x)
 	if not x:is_a(Node) and not x:is_a(Edge) then
 		error("added item is not a Node or Edge: "..STR(x))
@@ -158,80 +153,87 @@ function View:added(x)
 	
 	local visual
 	if x:is_a(Node) then
-		visual = VNode(x)
+		visual = VNode(self, x)
 	elseif x:is_a(Edge) then
-		visual = VEdge(x)
+		visual = VEdge(self, x)
 	end
+	visual.connectors = {}
+
 	local item = visual.item
 	item:setPos(math.random(-100,100), math.random(-100, 100))
 
 	local view = self
+	
 	function item:mouseMoveEvent(e)
-		evChanged(x)
 		x.ignored = true
+		evChanged(x)
 		super()
 	end
 	
 	function item:mouseReleaseEvent(e)
 		x.ignored = false
+		evChanged(x)
+		super()
+	end
+	
+	function item:mouseDoubleClickEvent(e)
+		language.toggle(view, x)
 		super()
 	end
 	
 	self.scene:addItem(item)
-	self.items:append(x)
+	self.items[x] = true
 end
 
-function View:removed(x)
-	local v = x.visual
-	assert(v, "removed item does not have visual")
-	self.scene:removeItem(v.item)
+function View:removeItem(x)
+	if not self.items[x] then warn('Trying to remove item that is not on scene') return end
+	
+	self.scene:removeItem(x.visual.item)
+	for c in pairs(x.visual.connectors) do
+		local other = c:other(x)
+		other.visual.connectors[c] = nil
+		self.scene:removeItem(c.item)
+	end
+	
+	x.visual = nil
+	self.items[x] = nil
+	self.attract[x] = nil
+	self.repulse[x] = nil
 end
 
-function View:connected(n, e, i)
-	local conn = VConnector(n, e, i)
+function View:connect(a, b)
+	local conn = VConnector(a, b)
+	
+	a.visual.connectors[conn] = true
+	b.visual.connectors[conn] = true
+	
 	self.scene:addItem(conn.item)
-	self.scene:addItem(conn.txt)
 end
 
 function View:clear()
 	self.layouter:stop()
 	self.scene:clear()
-	self.items = List()
+	self.attract = {}
+	self.repulse = {}
+	self.items = {}
 end
 
 function View:scramble()
-	for i in self.items:iter() do
+	for i in pairs(self.items) do
 		i.visual.item:setPos(math.random(-200,200), math.random(-200, 200))
 	end
 end
 
 function View:fullLayout()
-	self.layouter:start(self.items, true)
+	self.layouter:start(self.attract, self.repulse, true)
 end
 
 function View:display(start)
 	self:clear()
-	local done = {}
-	local function add(x)
-		if done[x] then return end
-		done[x] = true
-		self:added(x)
-		if x:is_a(Node) then
-			for inc,edge in pairs(x.edges) do
-				add(edge)
-				self:connected(x, edge, inc)
-			end
-		elseif x:is_a(Edge) then
-			for inc,node in pairs(x.nodes) do
-				add(node)
-				self:connected(node, x, inc)
-			end		
-		else
-			fatal(STR, "Unexpected element for display", x)
-		end
-	end
-	add(start)
-	self:fullLayout()
+	self:addItem(start)
+	self.repulse[start] = true
+	language.toggle(self, start)
+	start.visual.item:moveBy(1,1)
 end
 
 function View:showPopup(point)
@@ -239,7 +241,13 @@ function View:showPopup(point)
 	local this = self
 	local menu = QMenu.new()
 	menu:connect('2aboutToHide()', menu, '1deleteLater()')
-	for name, item in pairs(self.graph.elements) do
+	local names = {}
+	for name in pairs(self.graph.elements) do
+		table.insert(names, name)
+	end
+	table.sort(names)
+	for _,name in ipairs(names) do
+		local item = self.graph.elements[name]
 		local action = QAction.new(Q(name), menu)
 		menu:__addmethod(name..'()', function()
 			this:display(item)
@@ -254,8 +262,9 @@ function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
 	self:display(graph.elements.Main)
-	self:scramble()
-	-- self.layouter:start(self.items)
+	-- self:scramble()
+	-- self.layouter:start(self.attract, self.repulse, true)
+	io.open('reg', 'w'):write(repr(debug.getregistry()))
 end
 
 return View
