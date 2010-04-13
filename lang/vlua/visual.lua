@@ -153,18 +153,21 @@ do
 	local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
 	gradient:setColorAt(0, to_color"white")
 	
-	local if_poly = QPolygonF.new_local()
-		:IN(QPointF.new_local(-70, 0))
-		:IN(QPointF.new_local(0, -SIMPLE_HEIGHT/2))
-		:IN(QPointF.new_local(70, 0))
-		:IN(QPointF.new_local(0, SIMPLE_HEIGHT/2))
+	local custom_polys = {
+		If = QPolygonF.new_local()
+			:IN(QPointF.new_local(-70, 0))
+			:IN(QPointF.new_local(0, -SIMPLE_HEIGHT/2))
+			:IN(QPointF.new_local(70, 0))
+			:IN(QPointF.new_local(0, SIMPLE_HEIGHT/2));
 	
-	local call_poly = QPolygonF.new_local()
-		:IN(QPointF.new_local(-50, -SIMPLE_HEIGHT/2))
-		:IN(QPointF.new_local(70, -SIMPLE_HEIGHT/2))
-		:IN(QPointF.new_local(50, SIMPLE_HEIGHT/2))
-		:IN(QPointF.new_local(-70, SIMPLE_HEIGHT/2))
-	
+		Call = QPolygonF.new_local()
+			:IN(QPointF.new_local(-50, -SIMPLE_HEIGHT/2))
+			:IN(QPointF.new_local(70, -SIMPLE_HEIGHT/2))
+			:IN(QPointF.new_local(50, SIMPLE_HEIGHT/2))
+			:IN(QPointF.new_local(-70, SIMPLE_HEIGHT/2))
+	}
+	custom_polys.Invoke = custom_polys.Call
+
 	function vlua.setupEdgeRenderer(view, edge)
 		local item = QGraphicsItem.new_local()
 		
@@ -184,31 +187,20 @@ do
 		
 		if edge.type.name == "Block" then
 			createBlockRenderer(view, item, edge)
-		elseif edge.type.name == "If" then
-			function item:paint(painter)
-				local col = to_color(edge.type.color)
-				gradient:setColorAt(1, col)
-				painter:setBrush(QBrush.new_local(gradient))
-				painter:drawPolygon(if_poly)
-				painter:drawText(size, str, center_text)
-			end
-		elseif edge.type.name == "Call" or edge.type.name == "Invoke" then
-			function item:paint(painter)
-				local col = to_color(edge.type.color)
-				gradient:setColorAt(1, col)
-				painter:setBrush(QBrush.new_local(gradient))
-				painter:drawPolygon(call_poly)
-				painter:drawText(size, str, center_text)
-			end
 		else
 			if edge.type.icon then
 				item.icon = icon(edge.type.icon)
 			end
+			item.poly = custom_polys[edge.type.name]
 			function item:paint(painter)
 				local col = edge.type.color and to_color(edge.type.color) or to_color"pink"
 				gradient:setColorAt(1, col)
 				painter:setBrush(QBrush.new_local(gradient))
-				painter:drawRoundedRect(size, 8, 8)
+				if self.poly then
+					painter:drawPolygon(self.poly)
+				else
+					painter:drawRoundedRect(size, 8, 8)
+				end
 				painter:drawText(size, str, center_text)
 				if self.icon then
 					painter:drawPixmap(QPointF.new_local(-60, -8), self.icon)
