@@ -133,3 +133,89 @@ function TODO(s)
     log("TODO: '%s' (cannot find source)", s)
   end
 end
+
+
+
+
+----------------------------------------------------
+-- Vector class
+----------------------------------------------------
+
+Vector = {}
+Vector.__index = Vector
+
+function Vector.new(x,y)
+	local nx, ny = 0, 0
+	if x then
+		local t = type(x)
+		if t == "number" then
+			nx, ny = x, y
+		elseif t == "table" then
+			nx, ny = x.x, x.y
+		end
+	end
+	return setmetatable({x=nx,y=ny}, Vector)
+end
+
+function Vector:__tostring()
+	return '{'..self.x..','..self.y..'}'
+end
+
+function Vector.rand(n)
+	local x, y = math.random(n)-n/2, math.random(n)-n/2
+	return Vector.new(x, y)
+end
+
+function Vector.__add(a,b)
+	return Vector.new(a.x+b.x, a.y+b.y)
+end
+
+function Vector.__sub(a,b)
+	return Vector.new(a.x-b.x, a.y-b.y)
+end
+
+function Vector.__mul(a,b)
+	return Vector.new(a.x*b, a.y*b)
+end
+
+function Vector.__div(a,b)
+	return Vector.new(a.x/b, a.y/b)
+end
+
+function Vector.__unm(a)
+	return Vector.new(-a.x, -a.y)
+end
+
+function Vector:add(v)
+	self.x = self.x + v.x
+	self.y = self.y + v.y
+end
+
+function Vector:sub(v)
+	self.x = self.x - v.x
+	self.y = self.y - v.y
+end
+
+function Vector:mul(v)
+	self.x = self.x * v
+	self.y = self.y * v
+end
+
+function Vector:div(v)
+	self.x = self.x / v
+	self.y = self.y / v
+end
+
+function Vector:len()
+	return math.sqrt(self.x^2 + self.y^2)
+end
+
+function Vector:norm()
+	local len = self:len()
+	return self:div(len)
+end
+
+function Vector:unpack()
+	return self.x, self.y
+end
+
