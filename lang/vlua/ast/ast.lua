@@ -37,15 +37,16 @@ end
 
 --- Produces AST from Lua source.
 -- @param src - Either Lua string or a file. In case of file, everything is read and the file is closed
+-- @param expression - True, if src represents an expression, otherwise compile as chunk (default)
 -- @return AST of Lua source.
-function compile(src)
+function compile(src, expression)
 	if type(src) == "userdata" and src.read then
 		local f = src
 		src = src:read('*a')
 		f:close()
 	end
 	local lx = mlp.lexer:newstream(src)
-	local ast = mlp.chunk (lx)
+	local ast = expression and mlp.expr(lx) or mlp.chunk (lx)
 	return delete_line_info(ast)
 end
 
