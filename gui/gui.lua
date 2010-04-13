@@ -103,13 +103,12 @@ local function createWindow()
 	mainWindow = QMainWindow.new()
 	mainWindow:setWindowTitle(Q"Villie")
 	mainWindow:setMinimumSize(640, 480)
-	mainWindow:resize(800,desktopSize:height())
 	mainWindow:move(0, 0)
 
-	central = QSplitter.new('Horizontal', mainWindow)
+	central = QSplitter.new('Vertical', mainWindow)
 
 	mainWindow:setCentralWidget(central)
-	--mainWindow:setWindowState({'WindowMaximized'})
+	mainWindow:setWindowState({'WindowMaximized'})
 	mainWindow:show()
 end
 
@@ -145,16 +144,8 @@ local function createLog()
 	errlog:setFont(font)
 	errlog:setLineWrapMode('NoWrap')
 	errlog:setTabStopWidth(20)
-	--errlog:setWindowFlags({'Tool', 'WindowStaysOnTopHint'})
-	errlog:show()
-	errlog:raise()
-	
-	errlog:resize(desktopSize:width() - 800, desktopSize:height())
-	
-	local p = mainWindow:pos()
-	p:setX(p:x() + mainWindow:width())
-	errlog:move(p:x(), p:y())
-	--central:addWidget(errlog)
+	errlog:setMaximumHeight(150)
+	central:addWidget(errlog)
 
 	-- setup a new logger
 	local colors = {
@@ -166,6 +157,7 @@ local function createLog()
 	}
 	base.setlogger(function(self, level, message)
 		local s = logging.prepareLogMsg('[%level] %message', os.date(), level, message)
+		io.stderr:write(s, '\n')
 		local oldcol = errlog:textColor()
 		errlog:setTextColor(colors[level])
 		errlog:append(Q(s))
