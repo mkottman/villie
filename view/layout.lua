@@ -4,8 +4,8 @@
 
 -- some parameters
 
-local K = 60
-local MAX_DIST = 300
+local K = 200
+local MAX_DIST = 800
 
 -- repulsive force
 
@@ -14,12 +14,12 @@ local function rep(dist)
 end
 
 local function repulsive(v1, v2)
-	local force = v2.pos - v1.pos
+	local force = v2 - v1
 	local len = force:len()
 	if len < 1 then
 		local r = Vector.new(1, 1)
-		v2.pos:add(r)
-		force = v1.pos - v2.pos
+		v2:add(r)
+		force = v1 - v2
 		len = force:len()
 	elseif len > MAX_DIST then
 		return Vector.new()
@@ -36,7 +36,7 @@ function attr(dist)
 end
 
 function attractive(v1, v2)
-	local force = v2.pos - v1.pos
+	local force = v2 - v1
 	local len = force:len()
 	if len == 0 then return Vector.new() end
 	force:norm()
@@ -61,7 +61,11 @@ function Layouter:_init()
 
 	function obj:timerEvent(e)
 		if e:timerId() == layouter.timerId then
-			layouter:run()
+			local ok, err = xpcall(function() layouter:run() end, debug.traceback)
+			if not ok then
+				fatal(err)
+				layouter:stop()
+			end
 		end
 	end
 
@@ -69,11 +73,18 @@ function Layouter:_init()
 	self.running = false
 end
 
-function Layouter:start(items, manual)
+function Layouter:start(attract, repulse, manual)
 	if self.running then return end
-	self.items = items
+	self.attract = attract
+	self.repulse = repulse
+	
+	self.items = {}
+	for x in pairs(attract) do self.items[x] = true end
+	for x in pairs(repulse) do self.items[x] = true end
+	
 	if manual then
 		self:run()
+		self:dump()
 	else
 		self.running = true
 		local tid = self.obj:startTimer(TIMER_INTERVAL)
@@ -108,50 +119,94 @@ function Layouter:layoutStep()
 	self:moveElements()
 end
 
+function Layouter:dump()
+	local at = {}
+	local re = {}
+	for k in pairs(self.attract) do table.insert(at, k) end
+	for k in pairs(self.repulse) do table.insert(re, k) end
+	warn(repr({attractive = at, repulsive = re}, 'Layouter'))
+end
 
 function Layouter:initialize()
 	if not self.items then return false end
-	for i in self.items:iter() do
+	local count = 0
+	for i in pairs(self.items) do
 		if not i.visual then fatal(STR, 'Item is missing visual', i) return false end
 		local p = i.visual.item:pos()
 		i.pos = Vector.new(p:x(), p:y())
 		i.force = Vector.new()
+		if i.locked then i.ignored = true end
+		count = count + 1
 	end
+	warn('Moving %d objects', count)
 	return true
 end
 
+local function restrict(e)
+	local vi = e.visual.item
+	local br = vi:boundingRect()
+	local x = e.pos.x
+	local y = e.pos.y
+	local width = br:width()
+	local height = br:height()
+	local r = e.restrictTo
+	
+	if x < r.x then x = r.x end
+	if y < r.y then y = r.y end
+	
+	if x + width > r.x + r.width then
+		x = r.x + r.width - width
+	end
+	if y + height > r.y + r.height then
+		y = r.y + r.height - height
+	end
+	
+	return x, y
+end
+
 function Layouter:updatePositions()
-	for i in self.items:iter() do
+	for i in pairs(self.items) do
 		if not i.ignored then
-			i.visual.item:setPos(i.pos:unpack())
+			if not i.restrictTo then
+				i.visual.item:setPos(i.pos:unpack())
+			else
+				i.visual.item:setPos(restrict(i))
+			end
+		else
+			warn(STR, 'Ignoring', i)
 		end
 	end
 end
 
 function Layouter:addAttractive()
-	for e in self.items:iter() do
-		if e:is_a(Edge) then
-			for i, n in pairs(e.nodes) do
-				local force = attractive(e, n)
+	for e in pairs(self.attract) do
+		for conn in pairs(e.visual.connectors) do
+			local other = conn:other(e)
+			if self.attract[other] then
+				other = other.visual.parent or other
+				local force = attractive(e.pos, other.pos)
 				e.force:add(force)
-				n.force:sub(force)
+				other.force:sub(force)
+			else
+				warn(STR, 'Ignoring', other)
 			end
 		end
 	end
+
 end
 
 function Layouter:addRepulsive()
-	for u in self.items:iter() do
-		for v in self.items:iter() do
+	for u in pairs(self.repulse) do
+		for v in pairs(self.repulse) do
 			if u ~= v then
-				u.force:add(repulsive(u, v))
-				-- other force will be added in other iteration
+				u.force:add(repulsive(u.pos, v.pos))
+				-- opposite force will be added in other iteration
 			end
 		end
 	end
 end
 
-local MAX_FORCE = 100;
+local MAX_FORCE = 10;
 local MIN_FORCE = 1;
 local ALPHA = 0.05;
 local MIN_PORTION = 0.25;
@@ -160,7 +215,7 @@ function Layouter:moveElements()
 	local moved = 0
 	local total = 0
 	
-	for i in self.items:iter() do
+	for i in pairs(self.items) do
 		total = total + 1
 		
 		local force = i.force
