@@ -1,10 +1,12 @@
 
-
 local function shortcutTable()
 	return setmetatable({}, {__index = function(t,key)
+		local names = List()
 		for k,v in pairs(t) do
 			if k.name == key then return v end
+			names:append(k.name)
 		end
+		warn('Incidence %q not found, avaliable: %s', key, table.concat(names, ', '))
 	end})
 end
 
@@ -20,6 +22,9 @@ function Node:_init(id, type)
 	self.type = type
 	self.edges = shortcutTable()
 end
+function Node:__tostring()
+	return 'Node: ' .. self.type.name .. ' ' .. self.id
+end
 
 -------------------------------------------------
 -- Edge class
@@ -31,6 +36,9 @@ function Edge:_init(id, type)
 	self.id = id
 	self.type = type
 	self.nodes = shortcutTable()
+end
+function Edge:__tostring()
+	return 'Edge: '.. self.type.name .. ' ' .. self.id
 end
 
 -------------------------------------------------
@@ -234,7 +242,7 @@ function Graph:dump()
 
 	for n in self.nodes:iter() do
 		trace(" N %s", tostring(n))
-		f:write(' n', n.id, ' [label=', string.format("%q", (n.value or '?') .. ':' .. n.type.name), ']\n')
+		f:write(' n', n.id, ' [shape=box, label=', string.format("%q", (n.value or '?') .. ':' .. (n.type and n.type.name or '?')), ']\n')
 	end
 	for e in self.edges:iter() do
 		trace(" E %s", tostring(e))
