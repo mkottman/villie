@@ -67,6 +67,7 @@ do
 				view:connect(node, stat)
 				local pos = stat.visual.item:pos()
 				local x, y = pos:x(), pos:y()
+				log('Setting pos to %d, %d', x, y)
 				node.visual.item:setPos(x + 200, y)
 			end
 		end
@@ -75,14 +76,12 @@ do
 	local function createBlockRenderer(view, item, block)
 		local height = 20
 		local width = 150
-		local count = 0
 
 		-- prepare the values such as count and height
 		for inc, node in pairs(block.nodes) do
 			if inc.name ~= "do" then
 				local stat = node.edges["do"]
 				height = height + (stat.height or SIMPLE_HEIGHT) + 5
-				count = count + 1
 			end
 		end
 		
@@ -90,25 +89,29 @@ do
 		
 		local pos = item:pos()
 		local x, y = pos:x(), pos:y()
-		y = item:pos():y() - height/2 + SIMPLE_HEIGHT + 5
+		log('Block pos is: %d, %d', x, y)
+		y = item:pos():y() - height/2 + 20
 		
-		for inc, node in pairs(block.nodes) do
-			if inc.name ~= "do" then
-				local stat = node.edges["do"]
-				
-				view:addItem(stat)
-				stat.visual.item:setPos(x, y)
-				y = y + (stat.height or SIMPLE_HEIGHT) + 5				
-				
-				addExpressions(view, stat)
-				
-				-- disable moving for items in block
-				stat.visual.item:setFlag('ItemIsMovable', false)
-				stat.visual.item:setZValue(3)
-				
-				stat.visual.parent = block
-				stat.locked = true
-			end
+		print(repr(block))
+		
+		for i=1,block.count do
+			local node = block.nodes[tostring(i)]
+			local stat = node.edges["do"]
+			
+			local h = stat.height or SIMPLE_HEIGHT
+			y = y + h / 2
+			view:addItem(stat)
+			y = y + h / 2 + 5				
+			stat.visual.item:setPos(x, y)
+			
+			addExpressions(view, stat)
+			
+			-- disable moving for items in block
+			stat.visual.item:setFlag('ItemIsMovable', false)
+			stat.visual.item:setZValue(3)
+			
+			stat.visual.parent = block
+			stat.locked = true
 		end
 		
 		view.repulse[block] = true
@@ -121,13 +124,15 @@ do
 		
 		function item:updateChildPositions(pos)
 			local x, y = pos:x(), pos:y()
-			local y = y - height/2 + SIMPLE_HEIGHT + 5
-			for i=1,count do
+			local y = y - height/2 + 20
+			for i=1,block.count do
 				local stat = block.nodes[tostring(i)]
 				assert(stat, "cannot find statement "..i.." in block")
 				stat = stat.edges["do"]
+				local h = stat.height or SIMPLE_HEIGHT	
+				y = y + h / 2
 				stat.visual.item:setPos(x, y)
-				y = y + (stat.height or SIMPLE_HEIGHT) + 5
+				y = y + h / 2 + 5
 			end
 		end
 		function item:itemChange(typ, val)
@@ -138,13 +143,40 @@ do
 			return size
 		end
 		function item:paint(painter)
-			local x, y = self:x(), self:y()
 			painter:setBrush(brush)
 			painter:drawRoundedRect(size, 8, 8)
 			painter:setBrush(titleBrush)
 			painter:setPen('NoPen')
 			painter:drawRoundedRect(titleSize, 8, 8)
 			painter:drawRect(titleSubsize)
+		end
+	end
+	
+	
+	local function createSetRenderer(view, item, edge)
+		assert(edge.rhs and edge.lhs, repr(edge, 'edge'))
+		local count = math.max(#edge.lhs, #edge.rhs)
+		local width = 140
+		local height = 10 + count * SIMPLE_HEIGHT/2
+		edge.height = height
+		local size = QRectF.new_local(-width/2, -height/2, width, height)
+		local brush = QBrush.new_local(to_color(edge.type.color))
+
+		if edge.type.icon then item.icon = icon(edge.type.icon) end
+
+		function item:boundingRect()
+			return size
+		end
+		function item:paint(painter)
+			painter:setBrush(brush)
+			painter:drawRect(size)
+			local y = -height/2 + 15
+			for i=1,count do
+				painter:drawText(-width/2 + 32, math.floor(y), Q(edge.lhs[i]))
+				painter:drawText(width/2 + 32, math.floor(y), Q(edge.rhs[i]))
+				y = y + SIMPLE_HEIGHT/2
+			end
+			if self.icon then painter:drawPixmap(QPointF.new_local(-60, -8), self.icon) end
 		end
 	end
 	
@@ -187,10 +219,10 @@ do
 		
 		if edge.type.name == "Block" then
 			createBlockRenderer(view, item, edge)
+		elseif edge.type.name == "Set" or edge.type.name == "Local" then
+			createSetRenderer(view, item, edge)
 		else
-			if edge.type.icon then
-				item.icon = icon(edge.type.icon)
-			end
+			if edge.type.icon then item.icon = icon(edge.type.icon) end
 			item.poly = custom_polys[edge.type.name]
 			function item:paint(painter)
 				local col = edge.type.color and to_color(edge.type.color) or to_color"pink"

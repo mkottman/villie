@@ -62,8 +62,8 @@ function VConnector:_init(from, to)
 	
 		if fromv:collidesWithItem(tov) then return end
 		
-		local startp = fromv:pos() + fromv:boundingRect():center()
-		local endp = tov:pos() + tov:boundingRect():center()
+		local startp = fromv:pos() --+ fromv:boundingRect():center()
+		local endp = tov:pos() --+ tov:boundingRect():center()
 		
 		local line = QLineF.new_local(startp, endp)
 		self:setLine(line)
@@ -71,11 +71,13 @@ function VConnector:_init(from, to)
 		local center = (startp + endp) / 2
 		--txt:setPos(center:x() + 15, center:y())
 		
-		local angle = math.acos(line:dx() / line:length())
-		if line:dy() >=0 then angle = math.pi * 2 - angle end
+		local angle = math.atan2(line:dx(), line:dy()) + math.pi/2
+		--if line:dy() >=0 then angle = math.pi * 2 - angle end
 		
-		local arrowP1 = center - QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
-		local arrowP2 = center - QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
+		local arrowP1 = center + QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
+		--local arrowP1 = center - QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
+		local arrowP2 = center + QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
+		--local arrowP2 = center - QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
 		local arrowHead = QPolygonF.new_local()
 		arrowHead:IN(center):IN(arrowP1):IN(arrowP2)
 
@@ -108,7 +110,7 @@ function View:_init(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
 	
 	self.view:setTransformationAnchor('AnchorUnderMouse')
-	self.view:setViewportUpdateMode('SmartViewportUpdate')
+	self.view:setViewportUpdateMode('BoundingRectViewportUpdate')
 	self.view:setRenderHint('Antialiasing')
 	
 	self.items = {}
@@ -264,7 +266,6 @@ function View:reload(graph)
 	self:display(graph.elements.Main)
 	-- self:scramble()
 	-- self.layouter:start(self.attract, self.repulse, true)
-	io.open('reg', 'w'):write(repr(debug.getregistry()))
 end
 
 return View

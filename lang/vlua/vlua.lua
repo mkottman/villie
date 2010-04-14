@@ -52,14 +52,14 @@ local vlua_types = {
 		Repeat = { color = "brown" };
 
 		Op = { color = "green" };
-		Local = { color = "pink" };
+		Local = { color = "wheat" };
 		Return = { color = "lightgray", icon = "lang/vlua/icons/return.png" };
 		Break = { color = "gray" };
 		
 		Block = { color = "green" };
 		Call = { color = "lightblue" };
 		Invoke = { color = "blue" };
-		Set = { color = "white" };
+		Set = { color = "white", icon = "lang/vlua/icons/assign.gif" };
 		
 		Unknown = { color = "red" }; -- placeholder
 	};
@@ -134,7 +134,7 @@ function toggle(view, item)
 			if not a then fatal("Not a valid expression: %s", err)
 			else
 				item.value = lres
-				item.visual.item:setPlainText(res)
+				item.visual.item:setText(res)
 			end
 		end
 	end

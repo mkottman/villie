@@ -1,4 +1,6 @@
 
+DEBUG, HELLO, WORLD = 1, 2, 3
+
 local function shortcutTable()
 	return setmetatable({}, {__index = function(t,key)
 		local names = List()
@@ -242,7 +244,11 @@ function Graph:dump()
 
 	for n in self.nodes:iter() do
 		trace(" N %s", tostring(n))
-		f:write(' n', n.id, ' [shape=box, label=', string.format("%q", (n.value or '?') .. ':' .. (n.type and n.type.name or '?')), ']\n')
+		if n.type.name == "Stat" or n.type.name == "Exp" then
+			f:write(' n', n.id, ' [shape=point]\n')
+		else
+			f:write(' n', n.id, ' [shape=box, label=', string.format("%q", (n.value or '?') .. ':' .. (n.type and n.type.name or '?')), ']\n')
+		end
 	end
 	for e in self.edges:iter() do
 		trace(" E %s", tostring(e))

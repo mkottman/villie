@@ -35,16 +35,18 @@ function translate(ast, graph)
 		end
 				
 		local edge
-		if tag == "Set" then
+		if tag == "Set" or tag == "Local" then
 			edge = graph:createEdge(tag)
-			if #s[1] > 1 or #s[2] > 1 then
-				fatal("Unhandled multiple assignment")
-			else
-				local lhs = processExpression(s[1][1])
-				local rhs = processExpression(s[2][1])
-				graph:connect(lhs, edge, "to", "out")
-				graph:connect(rhs, edge, "value", "in")
+			local lhs = {}
+			for i,exp in ipairs(s[1]) do
+				lhs[i] = AST.decompile(exp)
 			end
+			local rhs = {}
+			for i,exp in ipairs(s[2]) do
+				rhs[i] = AST.decompile(exp)
+			end
+			edge.lhs = lhs
+			edge.rhs = rhs
 		elseif tag == "If" then
 			edge = graph:createEdge(tag)
 			local cond = processExpression(s[1])
@@ -140,12 +142,14 @@ function translate(ast, graph)
 				last = s
 			end
 		end
+		block.count = count
 		graph:connect(ndo, block, "do", "in")
 		return ndo
 	end
 
 	local main = processBlock(ast)
 	io.open('ast', 'w'):write(repr(ast, 'ast', {maxlevel=999}))
+	graph.ast = ast
 	graph.elements.Main = main.edges["do"]
 end
 
