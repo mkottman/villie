@@ -166,33 +166,6 @@ local function createLog()
 	end)
 end
 
-function selectLanguage()
---[[
-	local dir = QDir.new_local(Q"lang")
-	local langs = dir:entryList({'Dirs','NoDotAndDotDot'})
-	
-	local dlg = QDialog.new_local()
-	dlg:setWindowTitle(Q"Select language")
-	
-	local combo = QComboBox.new_local()
-	combo:addItems(langs)
-	
-	local ok = QPushButton.new_local(Q"Ok")
-	ok:connect('2pressed()', dlg, '1accept()')
-	
-	local layout = QHBoxLayout.new_local()
-	layout:addWidget(combo)
-	layout:addWidget(ok)
-	dlg:setLayout(layout)
-	
-	if dlg:exec() then
-		local sel = S(combo:currentText())
-		base.language = require(sel)
-	end
-]]
-	base.language = require('vlua')
-end
-
 function run(...)
 	local desktop = app.desktop()
 	desktopSize = desktop:availableGeometry()

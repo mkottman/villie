@@ -42,6 +42,120 @@ function package.strict(t)
   end
 end
 
+-- adapted from penlight: http://penlight.luaforge.net/
+
+local function call_ctor (c,obj,...)
+    -- nice alias for the base class ctor
+    if c._base then obj.super = c._base._init end
+    local res = c._init(obj,...)
+    obj.super = nil
+    return res
+end
+
+local function is_a(self,klass)
+    local m = getmetatable(self)
+    if not m then return false end --*can't be an object!
+    while m do
+        if m == klass then return true end
+        m = rawget(m,'_base')
+    end
+    return false
+end
+
+local function class_of(klass,obj)
+    if type(klass) ~= 'table' or not rawget(klass,'is_a') then return false end
+    return klass.is_a(obj,klass)
+end
+
+local function _class_tostring (obj)
+    local mt = obj._class
+    local name = rawget(mt,'_name')
+    setmetatable(obj,nil)
+    local str = tostring(obj)
+    setmetatable(obj,mt)
+    if name then str = name ..str:gsub('table','') end
+    return str
+end
+
+local function _class(base,c_arg,c)
+    c = c or {}     -- a new class instance, which is the metatable for all objects of this type
+    -- the class will be the metatable for all its objects,
+    -- and they will look up their methods in it.
+    local mt = {}   -- a metatable for the class instance
+
+    if type(base) == 'table' then
+        -- our new class is a shallow copy of the base class!
+        tupdate(c,base)
+        c._base = base
+        -- inherit the 'not found' handler, if present
+        if c._handler then mt.__index = c._handler end
+    elseif base ~= nil then
+        error("must derive from a table type")
+    end
+
+    c.__index = c
+    setmetatable(c,mt)
+    c._init = nil
+
+    if base and base._class_init then
+        base._class_init(c,c_arg)
+    end
+
+    -- expose a ctor which can be called by <classname>(<args>)
+    mt.__call = function(class_tbl,...)
+        local obj = {}
+        setmetatable(obj,c)
+
+        if c._init then -- explicit constructor
+            local res = call_ctor(c,obj,...)
+            if res then -- _if_ a ctor returns a value, it becomes the object...
+                obj = res
+                setmetatable(obj,c)
+            end
+        elseif base and base._init then -- default constructor
+            -- make sure that any stuff from the base class is initialized!
+            call_ctor(base,obj,...)
+        end
+
+        if base and base._post_init then
+            base._post_init(obj)
+        end
+
+        if not rawget(c,'__tostring') then
+            c.__tostring = _class_tostring
+        end
+        return obj
+    end
+    c.is_a = is_a
+    c.class_of = class_of
+    c._class = c
+    return c
+end
+
+class = setmetatable({},{
+    __index = function(tbl,key)
+        local env = getfenv(2)
+        return function(...)
+            local c = _class(...)
+            c._name = key
+            env[key] = c
+            return c
+        end
+    end
+})
+
+class.List()
+function List:append(x)
+	table.insert(self, x)
+end
+function List:iter()
+	local s = {i=0, arr = self, cnt=#self}
+	return function(s)
+		if s.i == s.cnt then return end
+		s.i = s.i + 1
+		return s.arr[s.i]
+	end, s
+end
 
 --- Returns a new QString.
 -- Uses UTF8.
@@ -59,6 +173,10 @@ end
 -- @return Lua string represented by argument q
 function S(q)
   return q:toUtf8()
+end
+
+function trim(s)
+	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
 
