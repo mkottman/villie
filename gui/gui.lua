@@ -27,17 +27,16 @@ local function createMenus()
 	file:addAction(actions["Quit"])
 
 	local edit = QMenu.new(Q"Edit")
-
-	local layout = QMenu.new(Q"Layout")
-	layout:addAction(actions["Layout"])
+	edit:addAction(actions["Back"])
 
 	local tools = QMenu.new(Q"Tools")
+	tools:addAction(actions["Layout"])
+	tools:addAction(actions["Execute"])
 
 	local help = QMenu.new(Q"Help")
 
 	menubar:addMenu(file)
 	menubar:addMenu(edit)
-	menubar:addMenu(layout)
 	menubar:addMenu(tools)
 	menubar:addMenu(help)
 
@@ -97,6 +96,14 @@ local function createActions()
 	makeAction("Layout", function()
 		scene:fullLayout()
 	end)
+	
+	makeAction("Back", function()
+		scene:back()
+	end)
+	
+	makeAction("Execute", function()
+		base.language.execute(scene.graph)
+	end)
 end
 
 local function createWindow()
@@ -122,7 +129,9 @@ local function createToolbar()
 	toolbar:addAction(actions['Export'])
 	toolbar:addSeparator()
 	toolbar:addAction(actions['Layout'])
-
+	toolbar:addAction(actions['Back'])
+	toolbar:addAction(actions['Execute'])
+	
 	mainWindow:addToolBar(toolbar)
 end
 

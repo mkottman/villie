@@ -72,12 +72,10 @@ function VConnector:_init(from, to)
 		--txt:setPos(center:x() + 15, center:y())
 		
 		local angle = math.atan2(line:dx(), line:dy()) + math.pi/2
-		--if line:dy() >=0 then angle = math.pi * 2 - angle end
 		
 		local arrowP1 = center + QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
-		--local arrowP1 = center - QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
 		local arrowP2 = center + QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
-		--local arrowP2 = center - QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
+		
 		local arrowHead = QPolygonF.new_local()
 		arrowHead:IN(center):IN(arrowP1):IN(arrowP2)
 
@@ -113,6 +111,7 @@ function View:_init(parent)
 	self.view:setViewportUpdateMode('BoundingRectViewportUpdate')
 	self.view:setRenderHint('Antialiasing')
 	
+	self.history = {}
 	self.items = {}
 	self.attract = {}
 	self.repulse = {}
@@ -145,6 +144,13 @@ function View:_init(parent)
 		self.layouter:start(self.attract, self.repulse)
 	end)
 ]]
+end
+
+function View:back()
+	if #self.history < 2 then return end
+	table.remove(self.history)
+	local top = table.remove(self.history)
+	self:display(top)
 end
 
 function View:addItem(x)
@@ -231,9 +237,15 @@ function View:fullLayout()
 end
 
 function View:display(start)
+	assert(start, "Trying to display nil")
 	self:clear()
 	self:addItem(start)
+
+	table.insert(self.history, start)
+
 	self.repulse[start] = true
+	start.expanded = false
+	
 	language.toggle(self, start)
 	start.visual.item:moveBy(1,1)
 end
@@ -263,9 +275,7 @@ end
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
-	self:display(graph.elements.Main)
-	-- self:scramble()
-	-- self.layouter:start(self.attract, self.repulse, true)
+	self:display(graph.elements.__Main)
 end
 
 return View
