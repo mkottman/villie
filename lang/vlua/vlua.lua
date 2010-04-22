@@ -24,43 +24,33 @@ local vlua_types = {
 		Nil = { color = "white" };
 		Dots = { color = "purple" };
 		Expression = { color = "orange" };
-
+		
+		Info = { color = "white" };
 		Exp = { color = "black" };
 		Stat = { color = "white" };
 	};
 	edges = {
-		Index = { color = "white" };
-		Function = { color = "blue" };
-		If = {
-			color = "skyblue";
-			meta = {
-				["do"] = V{-20, 0};
-				body = V{20, 20};
-				condition = V{20, -20};
-			}
-		};
-		Fornum = { color = "yellow" };
-		Forin = { color = "orange" };
-		While = {
-			color = "brown";
-			meta = {
-				["do"] = V{-20, 0};
-				body = V{20, 20};
-				condition = V{20, -20};
-			}
-		};
-		Repeat = { color = "brown" };
+		Function = { color = "blue", icon = "lang/vlua/icons/function.png" };
+		Funcdef = { color = "plum", icon = "lang/vlua/icons/function.png" };
 
-		Op = { color = "green" };
-		Local = { color = "wheat" };
+		If = { color = "skyblue" };
+		Fornum = { color = "yellow", icon = "lang/vlua/icons/loop.png" };
+		Forin = { color = "orange", icon = "lang/vlua/icons/loop.png" };
+		While = { color = "brown", icon = "lang/vlua/icons/loop.png" };
+		Repeat = { color = "brown", icon = "lang/vlua/icons/loop.png" };
+
+		Set = { color = "white", icon = "lang/vlua/icons/assign.gif" };
+		Local = { color = "wheat", icon = "lang/vlua/icons/assign.gif" };
+
 		Return = { color = "lightgray", icon = "lang/vlua/icons/return.png" };
-		Break = { color = "gray" };
+		Break = { color = "gray", icon = "lang/vlua/icons/break.png" };
 		
-		Block = { color = "green" };
 		Call = { color = "lightblue" };
 		Invoke = { color = "blue" };
-		Set = { color = "white", icon = "lang/vlua/icons/assign.gif" };
-		
+
+		Block = { color = "white" };		
+		Locals = { color = "cyan" };
+		Ref = { color = "cyan" };
 		Unknown = { color = "red" }; -- placeholder
 	};
 }
@@ -72,7 +62,7 @@ end
 
 function import(graph)
 --	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
-	local name = Q("model/graph.lua")
+	local name = Q("test.lua")
 	if not name:isEmpty() then
 		graph = Graph()
 		initialize(graph)
@@ -89,7 +79,7 @@ function canConnect()
 end
 
 function export(graph)
-	local src = ast.decompile(graph.ast)
+	local src = ast.decompile(translator.toAst(graph))
 	log(STR, 'Source', src)
 end
 
@@ -125,6 +115,10 @@ function toggle(view, item)
 			block.visual.item:setPos(x + 200, y)
 		end
 		item.expanded = not item.expanded
+	elseif item.type.name == "Funcdef" then
+		doLater(function()
+			view:display(item.func)
+		end)
 	elseif item.type.name == "Expression" then
 		local value = item.value
 		local res = QInputDialog.getText(view.view, Q"Enter expression", Q"Expression", 'Normal', Q(value))
@@ -140,6 +134,9 @@ function toggle(view, item)
 	end
 end
 
+function execute(graph)
+	TODO "Graph execution"
+end
 
 
 return _M
