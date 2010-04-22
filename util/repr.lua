@@ -2,9 +2,14 @@ function sortedpairs(t)
   local keys = {}
   for k in pairs(t) do table.insert(keys, k) end
   table.sort(keys, function(a,b)
-    if tonumber(a) and tonumber(b) then
+	local ta, tb = type(a), type(b)
+    if ta == "number" and tb == "number" then
       return a < b
-    else
+    elseif ta == "string" and tb == "number" then
+	  return true
+    elseif ta == "number" and tb == "string" then
+	  return false
+	else
       return tostring(a)<tostring(b)
     end
   end)
