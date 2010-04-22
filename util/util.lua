@@ -252,8 +252,17 @@ function TODO(s)
   end
 end
 
-
-
+--- Calls func after timeout ms (default 100).
+function doLater(func, timeout)
+	local o = QObject.new()
+	local id
+	function o:timerEvent(e)
+		func()
+		o:killTimer(id)
+		o:deleteLater()
+	end
+	id = o:startTimer(timeout or 100)
+end
 
 ----------------------------------------------------
 -- Vector class
