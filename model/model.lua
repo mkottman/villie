@@ -2,7 +2,7 @@
 local hooks = {}
 
 function emit(event, ...)
-	trace(STR, 'Emitting signal', event, ...)
+	-- trace(STR, 'Emitting signal', event, ...)
 	for _,h in ipairs(hooks[event]) do
 		h(...)
 	end

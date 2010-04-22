@@ -1,14 +1,8 @@
-
-DEBUG, HELLO, WORLD = 1, 2, 3
-
 local function shortcutTable()
 	return setmetatable({}, {__index = function(t,key)
-		local names = List()
 		for k,v in pairs(t) do
 			if k.name == key then return v end
-			names:append(k.name)
 		end
-		warn('Incidence %q not found, avaliable: %s', key, table.concat(names, ', '))
 	end})
 end
 
@@ -243,7 +237,7 @@ function Graph:dump()
 	f:write('edge [len=2]\n')
 
 	for n in self.nodes:iter() do
-		trace(" N %s", tostring(n))
+		-- trace(" N %s", tostring(n))
 		if n.type.name == "Stat" or n.type.name == "Exp" then
 			f:write(' n', n.id, ' [shape=point]\n')
 		else
@@ -251,7 +245,7 @@ function Graph:dump()
 		end
 	end
 	for e in self.edges:iter() do
-		trace(" E %s", tostring(e))
+		-- trace(" E %s", tostring(e))
 		f:write(' e', e.id, ' [label="', e.type and e.type.name or 'unknown', '"]\n')
 	end
 	
