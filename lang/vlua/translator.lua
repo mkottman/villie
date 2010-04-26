@@ -41,7 +41,10 @@ function translate(ast, graph)
 			body.edges["do"].title = name .. ' : ' .. table.concat(args, ', ')
 			
 			local funcdef = graph:createEdge("Funcdef")
-			funcdef.func = func
+			local nm = graph:createNode("Id")
+			nm.value = name
+			graph:connect(nm, funcdef, "name", "in")
+
 			funcdef.value = name
 			local ndo = graph:createNode("Stat")
 			graph:connect(ndo, funcdef, "do", "in")
@@ -70,6 +73,11 @@ function translate(ast, graph)
 					l.value = var
 					graph:connect(l, currentBlock.nodes.info.edges.locals, var, "out")
 					graph:connect(l, edge, "defines", "out")
+				else
+					local v = processExpression(s[1][1])
+					local val = processExpression(s[2][1])
+					graph:connect(v, edge, "target", "out")
+					graph:connect(val, edge, "value", "in")
 				end
 				
 				edge.value = AST.decompile(s)
@@ -130,7 +138,7 @@ function translate(ast, graph)
 			local body = processBlock(s[1], currentBlock)
 			local cond = processExpression(s[2])
 			graph:connect(body, edge, "body", "out")
-			graph:connect(cond, edge, "condition", "in")
+			graph:connect(cond, edge, "until", "in")
 		elseif tag == "Return" then
 			edge = graph:createEdge(tag)
 			local exp = processExpression(s[1])
@@ -290,7 +298,7 @@ function toAst(graph)
 			res[2] = body
 		elseif tag == "Repeat" then
 			local body = toBlock(stat.nodes["body"].edges["do"])
-			local cond = toExpression(stat.nodes["condition"])
+			local cond = toExpression(stat.nodes["until"])
 			res[1] = body
 			res[2] = cond
 		elseif tag == "Call" then
@@ -331,8 +339,8 @@ function toAst(graph)
 			res[2] = {toExpression(stat.nodes["iterator"])}
 			res[3] = toBlock(stat.nodes["body"].edges["do"])
 		elseif tag == "Funcdef" then
-			local func = stat.func
 			local name = stat.value
+			local func = graph.elements[name]
 			res.tag = "Set"
 			res[1] = {{tag="Id", name}}
 			res[2] = {{tag="Function", {}}}
