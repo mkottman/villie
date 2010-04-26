@@ -91,7 +91,6 @@ do
 			end
 		end
 		
-		print('Block', block, block.title and '>'..block.title..'<')
 		item:setZValue(0)
 		
 		local pos = item:pos()
@@ -160,34 +159,6 @@ do
 		end
 	end
 
---[[ For multiple assignment, not supported yet
-
-	local function createSetRenderer(view, item, edge)
-		local count = #edge.value
-		local width = WIDTH
-		local height = 10 + count * SIMPLE_HEIGHT/2
-		edge.height = height
-		local size = QRectF.new_local(-width/2, -height/2, width, height)
-		local brush = QBrush.new_local(to_color(edge.type.color))
-
-
-
-		function item:boundingRect()
-			return size
-		end
-		function item:paint(painter)
-			painter:setBrush(brush)
-			painter:drawRect(size)
-			local y = -height/2 + 15
-			for i=1,count do
-				painter:drawText(-width/2 + 28, math.floor(y), Q(edge.value[i]))
-				y = y + SIMPLE_HEIGHT/2
-			end
-			if self.icon then painter:drawPixmap(QPointF.new_local(-width/2 + 4, -8), self.icon) end
-		end
-	end
-]]
-
 	local size = QRectF.new_local(-WIDTH/2, -SIMPLE_HEIGHT/2, WIDTH, SIMPLE_HEIGHT)
 	local gradient = QRadialGradient.new_local(center_point, WIDTH / 2, center_point)
 	gradient:setColorAt(0, to_color"white")
@@ -230,10 +201,9 @@ do
 		item:setFlag('ItemIsMovable', true)
 		item:setZValue(1)
 			
-		local str
-		str = edge.type and edge.type.name or 'unknown'
-		if edge.value then str = edge.value end
-		str = Q(str)
+		item.str = edge.type and edge.type.name or 'unknown'
+		if edge.value then item.str = edge.value end
+		item.str = Q(item.str)
 		
 		function item:boundingRect()
 			return size
@@ -253,9 +223,10 @@ do
 				else
 					painter:drawRoundedRect(size, 8, 8)
 				end
-				painter:drawText(size, str, center_text)
+				painter:drawText(size, Q(edge.value), center_text)
 				if self.icon then
-					painter:drawPixmap(QPointF.new_local(-WIDTH/2+5, -8), self.icon)
+					local iconX = edge.type.iconRight and (WIDTH/2-21) or (-WIDTH/2+5)
+					painter:drawPixmap(QPointF.new_local(iconX, -8), self.icon)
 				end
 			end
 		end

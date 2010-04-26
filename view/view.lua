@@ -56,6 +56,12 @@ function VConnector:_init(from, to)
 	item.from = from
 	item.to = to
 
+	function item:boundingRect()
+		return QRectF.new_local(self.from.visual.item:pos(), self.to.visual.item:pos())
+			:normalized()
+			:adjusted(-10, -10, 10, 10)
+	end
+
 	function item:paint(painter)
 		local fromv = self.from.visual.item
 		local tov = self.to.visual.item	
@@ -119,7 +125,11 @@ function View:_init(parent)
 	
 	local this = self
 	function self.view:contextMenuEvent(e)
-		this:showPopup(e:globalPos())
+		if this.ignoreClick then
+			this.ignoreClick = nil
+		else
+			this:showPopup(e:globalPos())
+		end
 	end
 	function self.view:wheelEvent(e)
 		local scale = e:delta() > 0 and 1.25 or 0.8
@@ -171,6 +181,14 @@ function View:addItem(x)
 	item:setPos(math.random(-100,100), math.random(-100, 100))
 
 	local view = self
+	
+	function item:mousePressEvent(e)
+		if e:button() == "RightButton" and language.edit(view, x) then
+			view.ignoreClick = true
+		else
+			super()
+		end
+	end
 	
 	function item:mouseMoveEvent(e)
 		x.ignored = true

@@ -188,7 +188,7 @@ function decompile(ast)
 		Repeat = function(t)
 			local cond = process(t[2])
 			local body = process(t[1])
-			return 'repeat\n' .. body .. ('  '):rep(indent-1) .. 'until ' .. cond
+			return 'repeat\n' .. body .. ('  '):rep(indent-1) .. 'until ' .. cond .. '\n'
 		end,
 		
 		Forin = function(t)

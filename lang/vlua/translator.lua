@@ -38,14 +38,23 @@ function translate(ast, graph)
 			
 			graph.elements[name] = func
 			
-			body.edges["do"].title = name .. ' : ' .. table.concat(args, ', ')
-			
 			local funcdef = graph:createEdge("Funcdef")
-			local nm = graph:createNode("Id")
+			
+			local nm = graph:createNode("Expression")
 			nm.value = name
 			graph:connect(nm, funcdef, "name", "in")
+			
+			function funcdef:update()
+				graph.elements[name] = nil
+				name = nm.value
+				graph.elements[name] = func
+				body.edges["do"].title = name .. ' : ' .. table.concat(args, ', ')
+				funcdef.value = name
+				self.value = name
+			end
+			
+			funcdef:update()
 
-			funcdef.value = name
 			local ndo = graph:createNode("Stat")
 			graph:connect(ndo, funcdef, "do", "in")
 			return ndo
@@ -58,29 +67,43 @@ function translate(ast, graph)
 		
 		local funcdef = handleFunctionDefinition(s)
 		if funcdef then return funcdef end
-				
+		
 		local edge
 		if tag == "Set" or tag == "Local" then
 			edge = graph:createEdge(tag)
-			local value = {}
 			
 			if math.max(#s[1], #s[2]) > 1 then
 				fatal("Unable to parse multiple assignment: %s", AST.decompile(s))
 			else
 				local var = s[1][1][1]
 				if tag == "Local" then
-					local l = graph:createNode("Id")
+					local l = graph:createNode("Expression")
 					l.value = var
 					graph:connect(l, currentBlock.nodes.info.edges.locals, var, "out")
 					graph:connect(l, edge, "defines", "out")
+					local val
+					if s[2][1] then
+						val = processExpression(s[2][1])
+					else
+						val = graph:createNode("Expression")
+						val.value = ""
+					end
+					graph:connect(val, edge, "value", "in")
+					
+					function edge:update()
+						self.value = "local " .. l.value
+						if val.value ~= "" then self.value = self.value .. " = " .. val.value end
+					end
 				else
 					local v = processExpression(s[1][1])
 					local val = processExpression(s[2][1])
 					graph:connect(v, edge, "target", "out")
 					graph:connect(val, edge, "value", "in")
+					
+					function edge:update()
+						self.value = v.value .. ' = ' .. val.value
+					end
 				end
-				
-				edge.value = AST.decompile(s)
 			end
 		elseif tag == "If" then
 			edge = graph:createEdge(tag)
@@ -98,7 +121,9 @@ function translate(ast, graph)
 					graph:connect(els, edge, "else", "out")
 				end
 				
-				edge.value = AST.decompile(s[1])
+				function edge:update()
+					self.value = cond.value
+				end
 			end
 		elseif tag == "Fornum" then
 			edge = graph:createEdge(tag)
@@ -110,42 +135,53 @@ function translate(ast, graph)
 			graph:connect(from, edge, "from", "in")
 			graph:connect(to, edge, "to", "in")
 			graph:connect(body, edge, "body", "out")
+			
+			function edge:update()
+				self.value = var.value .. ' = ' .. from.value .. ', ' .. to.value
+			end
 		elseif tag == "Forin" then
 			edge = graph:createEdge(tag)
-			local vars = {}
-			for i,v in ipairs(s[1]) do
-				local var = processExpression(v)
-				vars[i] = v[1]
-				graph:connect(var, edge, "var"..i, "in")
-			end
-			edge.count = #s[1]
-			
+			local var = processExpression(s[1][1])
+			graph:connect(var, edge, "variable", "in")
 			local exp = processExpression(s[2][1])
 			graph:connect(exp, edge, "iterator", "in")
 			local body = processBlock(s[3])
 			graph:connect(body, edge, "body", "out")
 			
-			edge.value = trim(table.concat(vars, ', ') .. ' in ' .. AST.decompile(s[2]))
+			function edge:update()
+				self.value = var.value .. ' in ' .. exp.value
+			end
 		elseif tag == "While" then
 			edge = graph:createEdge(tag)
 			local cond = processExpression(s[1])
 			local body = processBlock(s[2], currentBlock)
 			graph:connect(cond, edge, "condition", "in")
 			graph:connect(body, edge, "body", "out")
-			edge.value = AST.decompile(s[1])
+			
+			function edge:update()
+				self.value = cond.value
+			end
 		elseif tag == "Repeat" then
 			edge = graph:createEdge(tag)
 			local body = processBlock(s[1], currentBlock)
 			local cond = processExpression(s[2])
 			graph:connect(body, edge, "body", "out")
 			graph:connect(cond, edge, "until", "in")
+			
+			function edge:update()
+				self.value = cond.value
+			end
 		elseif tag == "Return" then
 			edge = graph:createEdge(tag)
 			local exp = processExpression(s[1])
 			graph:connect(exp, edge, "returns", "in")
-			edge.value = AST.decompile(s[1])
+			
+			function edge:update()
+				self.value = exp.value
+			end
 		elseif tag == "Break" then
 			edge = graph:createEdge(tag)
+			edge.value = "Break"
 		elseif tag == "Call" then
 			edge = graph:createEdge(tag)
 			local func = processExpression(s[1])
@@ -155,7 +191,14 @@ function translate(ast, graph)
 				graph:connect(arg, edge, "arg"..(i-1), "in")
 			end
 			edge.count = #s - 1
-			edge.value = AST.decompile(s):sub(1, -2)
+			
+			function edge:update()
+				local args = List()
+				for i=1,self.count do
+					args:append(self.nodes["arg"..i].value)
+				end
+				self.value = func.value .. '('..table.concat(args, ', ')..')'
+			end
 		elseif tag == "Invoke" then
 			edge = graph:createEdge(tag)
 			local obj = processExpression(s[1])
@@ -167,11 +210,20 @@ function translate(ast, graph)
 				graph:connect(arg, edge, "arg"..(i-2), "in")
 			end
 			edge.count = #s - 2
-			edge.value = AST.decompile(s):sub(1, -3)
+			
+			function edge:update()
+				local args = List()
+				for i=1,self.count do
+					args:append(self.nodes["arg"..i].value)
+				end
+				self.value = obj.value .. ':' .. func.value:gsub('"','') .. '('..table.concat(args, ', ')..')'
+			end
 		else
 			fatal("Unhandled statement %s", tag)
 			edge = graph:createEdge("Unknown")
 		end
+		
+		if edge.update then edge:update() end
 		
 		local ndo = graph:createNode("Stat")
 		graph:connect(ndo, edge, "do", "in")
@@ -204,19 +256,10 @@ function translate(ast, graph)
 	end
 	
 	function processExpression(e)
-		local tag = e.tag
-		if not tag then error(STR("Error in processing expression", repr(e))) end
-		local simple = isSimpleNode(tag)
-		if simple then
-			local n = graph:createNode(tag)
-			n.value = type(simple) == "string" and simple or e[1]
-			return n
-		else
-			local n = graph:createNode("Expression")
-			resolveIds(e, n, currentBlock)
-			n.value = AST.decompile(e)
-			return n
-		end
+		local n = graph:createNode("Expression")
+		resolveIds(e, n, currentBlock)
+		n.value = AST.decompile(e)
+		return n
 	end
 
 	function processBlock(b, parent)
@@ -268,7 +311,8 @@ function toAst(graph)
 	function toExpression(exp)
 		if exp.type.name == "Expression" then
 			assert(exp.value, "expression doesn't have value!")
-			return ast.compile(exp.value, true)
+			local res = ast.compile(tostring(exp.value), true)
+			return res
 		else
 			local res = {}
 			res.tag = exp.type.name
@@ -284,13 +328,21 @@ function toAst(graph)
 		
 		res.tag = tag
 		
-		if tag == "Set" or tag == "Local" then
-			res = ast.compile(stat.value)[1]
+		if tag == "Set" then
+			print(repr(stat, "Set", {maxlevel=4}))
+			res[1] = {toExpression(stat.nodes["target"])}
+			res[2] = {toExpression(stat.nodes["value"])}
+		elseif tag == "Local" then
+			res[1] = {toExpression(stat.nodes["defines"])}
+			res[2] = {}
+			if stat.nodes["value"].value ~= "" then
+				res[2][1] = toExpression(stat.nodes["value"])
+			end
 		elseif tag == "If" then
 			local cond = toExpression(stat.nodes["condition"])
 			local body = toBlock(stat.nodes["body"].edges["do"])
 			res[1] = cond
-			res[2] = body			
+			res[2] = body
 		elseif tag == "While" then
 			local cond = toExpression(stat.nodes["condition"])
 			local body = toBlock(stat.nodes["body"].edges["do"])
@@ -332,14 +384,11 @@ function toAst(graph)
 			res[3] = to
 			res[4] = body
 		elseif tag == "Forin" then
-			res[1] = {}
-			for i=1,stat.count do
-				res[1][i] = toExpression(stat.nodes["var"..i])
-			end
+			res[1] = {toExpression(stat.nodes["variable"])}
 			res[2] = {toExpression(stat.nodes["iterator"])}
 			res[3] = toBlock(stat.nodes["body"].edges["do"])
 		elseif tag == "Funcdef" then
-			local name = stat.value
+			local name = stat.nodes["name"].value
 			local func = graph.elements[name]
 			res.tag = "Set"
 			res[1] = {{tag="Id", name}}

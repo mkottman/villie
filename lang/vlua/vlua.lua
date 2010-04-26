@@ -37,7 +37,7 @@ local vlua_types = {
 		Fornum = { color = "yellow", icon = "lang/vlua/icons/loop.png" };
 		Forin = { color = "orange", icon = "lang/vlua/icons/loop.png" };
 		While = { color = "brown", icon = "lang/vlua/icons/loop.png" };
-		Repeat = { color = "brown", icon = "lang/vlua/icons/loop.png" };
+		Repeat = { color = "brown", icon = "lang/vlua/icons/loop.png", iconRight = true };
 
 		Set = { color = "white", icon = "lang/vlua/icons/assign.gif" };
 		Local = { color = "wheat", icon = "lang/vlua/icons/assign.gif" };
@@ -69,17 +69,13 @@ function import(graph)
 		local ast = ast.compile(io.open(S(name)))
 		graph.ast = ast
 		vlua.translator.translate(ast, graph)
-		graph:dump()
 	end
 	return graph
 end
 
-function canConnect()
-
-end
-
 function export(graph)
-	local src = ast.decompile(translator.toAst(graph))
+	local a = translator.toAst(graph)
+	local src = ast.decompile(a)
 	log(STR, 'Source', src)
 end
 
@@ -134,7 +130,75 @@ function toggle(view, item)
 	end
 end
 
+function edit(view, edge)
+	if edge:is_a(Edge) then
+		if edge.type.name ~= "Block" then
+			local expressions = List()
+			for inc, node in pairs(edge.nodes) do
+				if node.type.name == "Expression" then
+					expressions:append { name = inc.name, node = node }
+				end
+			end
+			if #expressions > 0 then
+				table.sort(expressions, function(a,b) return a.name < b.name end)
+
+				local dialog = QDialog.new_local()
+				
+				local form = QFormLayout.new(dialog)
+				for _,item in ipairs(expressions) do
+					local edit = QLineEdit.new(Q(item.node.value), dialog)
+					item.edit = edit
+					form:addRow(Q(item.name), edit)
+				end
+				
+				local w = QWidget.new(dialog)
+				w:setLayout(form)
+				
+				local boxes = QHBoxLayout.new(dialog)
+				local ok = QPushButton.new(Q"Change", dialog)
+				local cancel = QPushButton.new(Q"Cancel", dialog)
+				ok:connect('2pressed()', dialog, '1accept()')
+				cancel:connect('2pressed()', dialog, '1reject()')
+				boxes:addWidget(ok)
+				boxes:addWidget(cancel)
+				local w2 = QWidget.new(dialog)
+				w2:setLayout(boxes)
+
+				local layout = QVBoxLayout.new(dialog)
+				layout:addWidget(w)
+				layout:addWidget(w2)
+				dialog:setLayout(layout)
+				
+				local done = false
+				dialog:__addmethod('changeValues()', function()
+					if done then return end
+					for _,item in ipairs(expressions) do
+						local value = S(item.edit:text())
+						if value ~= item.node.value then
+							local ok, err = pcall(ast.compile, value, true)
+							trace(STR, ok, repr(err, "err"), value)
+							if ok then
+								item.node.value = value
+								if edge.update then edge:update() end
+								edge.visual.item:update()
+							else
+								QMessageBox.critical(dialog, Q"Syntax error", Q(err))
+							end
+						end
+					end
+					done = true
+				end)
+				dialog:connect('2accepted()', dialog, '1changeValues()')
+				dialog:exec()
+				
+				return true
+			end
+		end
+	end
+end
+
 function execute(graph)
+	graph:dump()
 	TODO "Graph execution"
 end
 

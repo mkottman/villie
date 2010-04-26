@@ -5,8 +5,10 @@ local d = {}
 local e
 
 c = 3 + A / B
-d = 4 * c
+d[1] = 4 * c
 e = 5 + d
+
+print(A, B+c, d[e])
 
 if math.sin(A) > 0 then F = 6 end
 
