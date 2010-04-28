@@ -1,9 +1,37 @@
-local function shortcutTable()
-	return setmetatable({}, {__index = function(t,key)
+local function incidenceNames(t)
+	local res = List()
+	for inc in pairs(t) do
+		res:append(inc.name)
+	end
+	table.sort(res)
+	return res
+end
+
+--- Finds a connected node or edge by string key. Used as an __index
+-- metamethod in shortcutTable. Iterates through table's incidences,
+-- and if finds one with the name equal to key, returns the other side
+-- of incidence. It the key starts with '@', returns the incidence instead.
+-- If the key is "__names", returns a List containing all incidence names.
+function shortcutIndex(t, key)
+	if key == "__names" then return incidenceNames(t)
+	elseif key:sub(1,1) == '@' then
+		key = key:sub(2)
+		for k,v in pairs(t) do
+			if k.name == key then return k end
+		end
+	else
 		for k,v in pairs(t) do
 			if k.name == key then return v end
 		end
-	end})
+	end
+end
+
+local shortcutMt = {__index = shortcutIndex}
+
+--- Creates a lookup table for incidences. Uses shortcutIndex to lookup up
+-- nodes and edges based on string keys.
+function shortcutTable()
+	return setmetatable({}, shortcutMt)
 end
 
 
@@ -103,6 +131,10 @@ function Graph:createNode(typ)
 	return n
 end
 
+function Graph:removeNode(node)
+	self.nodes:remove(node)
+	evRemoved(self, node)
+end
 
 function Graph:createEdge(typ)
 	if type(typ) == "string" then typ = resolveType(typ, self.edge_types) end
@@ -110,6 +142,11 @@ function Graph:createEdge(typ)
 	self.edges:append(e)
 	evAdded(self, e)
 	return e
+end
+
+function Graph:removeEdge(edge)
+	self.edges:remove(edge)
+	evRemoved(self, edge)
 end
 
 --- Connects a <code>node</code> with an <code>edge</code> with incidence named <code>name</code> and
@@ -132,9 +169,20 @@ function Graph:connect(node, edge, name, dir)
 end
 
 function Graph:disconnect(node, edge)
-	TODO "disconnect node and edge"
-	
-	evDisconnected(self, node, edge)
+	local inc
+	for i,e in pairs(node.edges) do
+		if e == edge then
+			inc = i
+			break
+		end
+	end
+
+	if not inc then fatal(STR, 'Node and edge not connected!', node, edge)
+	else
+		node.edges[inc] = nil
+		edge.nodes[inc] = nil
+		evDisconnected(self, node, edge, inc)
+	end
 end
 
 --- Loads a graph from a GraphML file

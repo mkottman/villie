@@ -10,7 +10,7 @@ e = 5 + d
 
 print(A, B+c, d[e])
 
-if math.sin(A) > 0 then F = 6 end
+if math.sin(A) > 0 then F = 6 else F = 8 end
 
 local G = 7
 

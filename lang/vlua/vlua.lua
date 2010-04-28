@@ -95,38 +95,61 @@ local function remove(view, block)
 	rec(block, true)
 end
 
-function toggle(view, item)
-	if item.nodes and item.nodes["body"] then
-		local block = item.nodes["body"].edges["do"]
-		assert(block.type.name == "Block")
-		if item.expanded then
-			remove(view, block)
-		else
-			view:addItem(block)
-			view:connect(item, block)
-			view.attract[item] = true
-			view.attract[block] = true
-			local pos = item.visual.item:pos()
-			local x, y = pos:x(), pos:y()
-			block.visual.item:setPos(x + 200, y)
+local function edgeParent(item)
+	local d = item.nodes["do"]
+	for inc, edge in pairs(d.edges) do
+		if inc.name ~= "do" and inc.name ~= "next" then
+			assert(edge.type.name == "Block", tostring(edge).." is not a block!")
+			return edge, inc.name
 		end
+	end
+end
+
+local function previousEdge(edge, block)
+	if block.count == 0 then return end
+	local prev = block.nodes["1"].edges["do"]
+	if prev == edge then return end
+	local curr
+	for i=2, block.count do
+		curr = block.nodes[tostring(i)].edges["do"]
+		if curr == edge then
+			return prev
+		end
+		prev = curr
+	end
+end
+
+function toggle(view, item)
+	if item.nodes then
+		local blocks = List()
+		local parent = edgeParent(item)
+
+		for inc, node in pairs(item.nodes) do
+			local ndo = node.edges["do"]
+			if ndo and ndo ~= item and ndo ~= parent and ndo.type.name == "Block" then
+				blocks:append(ndo)
+			end
+		end
+
+		for _,block in ipairs(blocks) do
+			if item.expanded then
+				remove(view, block)
+			else
+				view:addItem(block)
+				view:connect(item, block)
+				view.attract[item] = true
+				view.attract[block] = true
+				local pos = item.visual.item:pos()
+				local x, y = pos:x(), pos:y()
+				block.visual.item:setPos(x + 200, y)
+			end
+		end
+
 		item.expanded = not item.expanded
 	elseif item.type.name == "Funcdef" then
 		doLater(function()
 			view:display(item.func)
 		end)
-	elseif item.type.name == "Expression" then
-		local value = item.value
-		local res = QInputDialog.getText(view.view, Q"Enter expression", Q"Expression", 'Normal', Q(value))
-		local lres = S(res)
-		if lres ~= value then
-			local a, err = pcall(ast.compile, lres, true)
-			if not a then fatal("Not a valid expression: %s", err)
-			else
-				item.value = lres
-				item.visual.item:setText(res)
-			end
-		end
 	end
 end
 
@@ -196,6 +219,51 @@ function edit(view, edge)
 		end
 	end
 end
+
+function delete(graph, view, item)
+	if item.type.name == "Block" then
+
+	else
+		local ndo = item.nodes["do"]
+		local block, order = edgeParent(item)
+		local prev = previousEdge(item, block)
+		local nxt = item.nodes["next"]
+		trace(STR, item, block, order, prev, nxt)
+
+		if prev then
+			-- disconnect from previous
+			graph:disconnect(ndo, prev)
+			if nxt then
+				-- connect previous to next
+				graph:connect(nxt, prev, "next", "out")
+			end
+		end
+
+		-- disconnect activator
+		graph:disconnect(ndo, item)
+		graph:disconnect(ndo, block)
+		graph:removeNode(ndo)
+
+		if nxt then
+			-- disconnect item from next
+			graph:disconnect(nxt, item)
+		end
+
+		TODO "Remove dependencies"
+		view:removeItem(item)
+		graph:removeEdge(item)
+
+		order = assert(tonumber(order), "order nonnumeric: " .. order)
+		for i=order+1, block.count do
+			local inc = block.nodes['@'..i]
+			inc.name = tostring(i-1)
+		end
+		block.count = block.count - 1
+		block:update()
+	end
+	return true
+end
+
 
 function execute(graph)
 	graph:dump()

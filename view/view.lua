@@ -123,6 +123,11 @@ function View:_init(parent)
 	self.repulse = {}
 	self.layouter = Layouter()
 	
+
+	local deletePixmap = QPixmap.new_local(Q"gui/icons/Delete.png")
+	self.normalCursor = QCursor.new_local()
+	self.deleteCursor = QCursor.new_local(deletePixmap)
+
 	local this = self
 	function self.view:contextMenuEvent(e)
 		if this.ignoreClick then
@@ -136,6 +141,16 @@ function View:_init(parent)
 		self:scale(scale, scale)
 	end
 	
+	function self.view:keyPressEvent(e)
+		local key = e:key()
+		if key == Qt.Key.Key_Escape and this.isDeleting then
+			this.isDeleting = false
+			this.view:setCursor(this.normalCursor)
+		elseif key == Qt.Key.Key_Delete and not this.isDeleting then
+			this:startDeleting()
+		end
+	end
+
 --[[
 	handle("itemChanged", function(e)
 		local items = {[e]=true}
@@ -185,6 +200,9 @@ function View:addItem(x)
 	function item:mousePressEvent(e)
 		if e:button() == "RightButton" and language.edit(view, x) then
 			view.ignoreClick = true
+		elseif view.isDeleting and language.delete(view.graph, view, x) then
+			view.isDeleting = false
+			view.view:setCursor(view.normalCursor)
 		else
 			super()
 		end
@@ -288,6 +306,11 @@ function View:showPopup(point)
 		menu:addAction(action)
 	end
 	menu:popup(point)
+end
+
+function View:startDeleting()
+	self.isDeleting = true
+	self.view:setCursor(self.deleteCursor)
 end
 
 function View:reload(graph)

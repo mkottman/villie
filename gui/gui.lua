@@ -28,6 +28,8 @@ local function createMenus()
 
 	local edit = QMenu.new(Q"Edit")
 	edit:addAction(actions["Back"])
+	edit:addSeparator()
+	edit:addAction(actions["Delete"])
 
 	local tools = QMenu.new(Q"Tools")
 	tools:addAction(actions["Layout"])
@@ -104,6 +106,10 @@ local function createActions()
 	makeAction("Execute", function()
 		base.language.execute(scene.graph)
 	end)
+
+	makeAction("Delete", function()
+		scene:startDeleting()
+	end)
 end
 
 local function createWindow()
@@ -132,6 +138,8 @@ local function createToolbar()
 	toolbar:addAction(actions['Back'])
 	toolbar:addAction(actions['Execute'])
 	
+	toolbar:addAction(actions['Delete'])
+
 	mainWindow:addToolBar(toolbar)
 end
 

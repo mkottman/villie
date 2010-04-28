@@ -80,49 +80,56 @@ do
 	end
 	
 	local function createBlockRenderer(view, item, block)
-		local height = 25
-		local width = WIDTH + 10
+		local height, width
+		local size, titleSize, titleSubsize
 
-		-- prepare the values such as count and height
-		for inc, node in pairs(block.nodes) do
-			if inc.name ~= "do" and inc.name ~= "info" then
-				local stat = node.edges["do"]
-				height = height + (stat.height or SIMPLE_HEIGHT) + 5
-			end
-		end
-		
 		item:setZValue(0)
-		
-		local pos = item:pos()
-		local x, y = pos:x(), pos:y()
-		log('Block pos is: %d, %d', x, y)
-		y = item:pos():y() - height/2 + 20
-		
-		for i=1,block.count do
-			local node = block.nodes[tostring(i)]
-			local stat = node.edges["do"]
-			
-			local h = stat.height or SIMPLE_HEIGHT
-			y = y + h / 2
-			view:addItem(stat)
-			y = y + h / 2 + 5				
-			stat.visual.item:setPos(x, y)
-			
-			--addExpressions(view, stat)
-			
-			-- disable moving for items in block
-			stat.visual.item:setFlag('ItemIsMovable', false)
-			stat.visual.item:setZValue(3)
-			
-			stat.visual.parent = block
-			stat.locked = true
+
+		function block:update()
+			height = 25
+			width = WIDTH + 10
+
+			item:prepareGeometryChange()
+
+			-- prepare the values such as count and height
+			for inc, node in pairs(block.nodes) do
+				if inc.name ~= "do" and inc.name ~= "info" then
+					local stat = node.edges["do"]
+					height = height + (stat.height or SIMPLE_HEIGHT) + 5
+				end
+			end
+
+			local pos = item:pos()
+			local x, y = pos:x(), pos:y()
+			y = item:pos():y() - height/2 + 20
+
+			-- setup the position of all child items
+			for i=1,block.count do
+				local node = block.nodes[tostring(i)]
+				local stat = node.edges["do"]
+
+				local h = stat.height or SIMPLE_HEIGHT
+				y = y + h / 2
+				if not stat.visual then
+					view:addItem(stat)
+					-- disable moving for items in block
+					stat.visual.item:setFlag('ItemIsMovable', false)
+					stat.visual.item:setZValue(3)
+				end
+				y = y + h / 2 + 5
+				stat.visual.item:setPos(x, y)
+
+				stat.visual.parent = block
+				stat.locked = true
+			end
+
+			size = QRectF.new_local(-width/2, -height/2, width, height)
+			titleSize = QRectF.new_local(-width/2, -height/2, width, 20)
+			titleSubsize = QRectF.new_local(-width/2, -height/2 + 15, width, 5)
 		end
-		
-		view.repulse[block] = true
-		
-		local size = QRectF.new_local(-width/2, -height/2, width, height)
-		local titleSize = QRectF.new_local(-width/2, -height/2, width, 20)
-		local titleSubsize = QRectF.new_local(-width/2, -height/2 + 15, width, 5)
+
+		block:update()
+
 		local brush = QBrush.new_local(to_color"white")
 		local titleBrush = QBrush.new_local(to_color"gray")
 		
@@ -133,7 +140,7 @@ do
 				local stat = block.nodes[tostring(i)]
 				assert(stat, "cannot find statement "..i.." in block")
 				stat = stat.edges["do"]
-				local h = stat.height or SIMPLE_HEIGHT	
+				local h = stat.height or SIMPLE_HEIGHT
 				y = y + h / 2
 				stat.visual.item:setPos(x, y)
 				y = y + h / 2 + 5

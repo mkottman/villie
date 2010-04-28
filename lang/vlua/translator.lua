@@ -118,11 +118,13 @@ function translate(ast, graph)
 				
 				if #s == 3 then
 					local els = processBlock(s[3], currentBlock)
+					els.title = "else"
 					graph:connect(els, edge, "else", "out")
 				end
 				
 				function edge:update()
 					self.value = cond.value
+					body.title = cond.value
 				end
 			end
 		elseif tag == "Fornum" then
@@ -235,7 +237,7 @@ function translate(ast, graph)
 			for i,n in pairs(inBlock.nodes.info.edges["locals"].nodes) do
 				if id == i.name then
 					local e = graph:createEdge("Ref")
-					graph:connect(node, e, "refereces", "in")
+					graph:connect(node, e, "references", "in")
 					graph:connect(n, e, "variable", "out")
 					return
 				end

@@ -148,6 +148,14 @@ class.List()
 function List:append(x)
 	table.insert(self, x)
 end
+function List:remove(x)
+	for i,v in ipairs(self) do
+		if v == x then
+			table.remove(self, i)
+			break
+		end
+	end
+end
 function List:iter()
 	local s = {i=0, arr = self, cnt=#self}
 	return function(s)
