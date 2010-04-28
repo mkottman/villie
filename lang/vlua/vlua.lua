@@ -260,6 +260,7 @@ function delete(graph, view, item)
 		end
 		block.count = block.count - 1
 		block:update()
+		view.scene:update()
 	end
 	return true
 end

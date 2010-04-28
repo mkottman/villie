@@ -89,8 +89,6 @@ do
 			height = 25
 			width = WIDTH + 10
 
-			item:prepareGeometryChange()
-
 			-- prepare the values such as count and height
 			for inc, node in pairs(block.nodes) do
 				if inc.name ~= "do" and inc.name ~= "info" then
@@ -123,12 +121,11 @@ do
 				stat.locked = true
 			end
 
+			item:updateChildPositions(item:pos())
 			size = QRectF.new_local(-width/2, -height/2, width, height)
 			titleSize = QRectF.new_local(-width/2, -height/2, width, 20)
 			titleSubsize = QRectF.new_local(-width/2, -height/2 + 15, width, 5)
 		end
-
-		block:update()
 
 		local brush = QBrush.new_local(to_color"white")
 		local titleBrush = QBrush.new_local(to_color"gray")
@@ -164,6 +161,8 @@ do
 			painter:setPen(oldpen)
 			if block.title then painter:drawText(titleSize, Q(block.title), center_text) end
 		end
+
+		block:update()
 	end
 
 	local size = QRectF.new_local(-WIDTH/2, -SIMPLE_HEIGHT/2, WIDTH, SIMPLE_HEIGHT)

@@ -118,13 +118,13 @@ function translate(ast, graph)
 				
 				if #s == 3 then
 					local els = processBlock(s[3], currentBlock)
-					els.title = "else"
+					els.edges["do"].title = "else"
 					graph:connect(els, edge, "else", "out")
 				end
 				
 				function edge:update()
 					self.value = cond.value
-					body.title = cond.value
+					body.edges["do"].title = cond.value
 				end
 			end
 		elseif tag == "Fornum" then
@@ -140,6 +140,7 @@ function translate(ast, graph)
 			
 			function edge:update()
 				self.value = var.value .. ' = ' .. from.value .. ', ' .. to.value
+				body.edges["do"].title = 'Variable: '..var.value
 			end
 		elseif tag == "Forin" then
 			edge = graph:createEdge(tag)
@@ -152,6 +153,7 @@ function translate(ast, graph)
 			
 			function edge:update()
 				self.value = var.value .. ' in ' .. exp.value
+				body.edges["do"].title = 'for' .. self.value
 			end
 		elseif tag == "While" then
 			edge = graph:createEdge(tag)
@@ -162,6 +164,7 @@ function translate(ast, graph)
 			
 			function edge:update()
 				self.value = cond.value
+				body.edges["do"].title = 'while ' .. cond.value
 			end
 		elseif tag == "Repeat" then
 			edge = graph:createEdge(tag)
@@ -172,6 +175,7 @@ function translate(ast, graph)
 			
 			function edge:update()
 				self.value = cond.value
+				body.edges["do"].title = 'until ' .. cond.value
 			end
 		elseif tag == "Return" then
 			edge = graph:createEdge(tag)
