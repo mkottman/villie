@@ -163,7 +163,7 @@ function translate(ast, graph)
 			graph:connect(body, edge, "body", "out")
 			
 			function edge:update()
-				self.value = cond.value
+				self.value = 'while ' .. cond.value
 				body.edges["do"].title = 'while ' .. cond.value
 			end
 		elseif tag == "Repeat" then
@@ -174,7 +174,7 @@ function translate(ast, graph)
 			graph:connect(cond, edge, "until", "in")
 			
 			function edge:update()
-				self.value = cond.value
+				self.value = 'until ' .. cond.value
 				body.edges["do"].title = 'until ' .. cond.value
 			end
 		elseif tag == "Return" then
