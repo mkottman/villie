@@ -6,63 +6,31 @@ require 'ast'
 require 'visual'
 require 'translator'
 
-assert(Vector, 'vector class not loaded')
-local function V(t)
-	t.x, t.y = t[1], t[2]
-	t[1], t[2] = nil, nil
-	return setmetatable(t, Vector)
+local function loadTypes()
+	local func, err = loadfile("lang/vlua/types.lua")
+	if not func then fatal("Error while loading types: %s", err)
+	else
+		local ok, res = pcall(func)
+		if not ok then fatal("Error while loading types: %s", res)
+		else
+			return res
+		end
+	end
 end
 
-local vlua_types = {
-	nodes = {
-		Number = { color = "red" };
-		String = { color = "yellow" };
-		Boolean = { color = "blue" };
-		True = { color = "blue" };
-		False = { color = "blue" };
-		Id = { color = "green" };
-		Nil = { color = "white" };
-		Dots = { color = "purple" };
-		Expression = { color = "orange" };
-		
-		Info = { color = "white" };
-		Exp = { color = "black" };
-		Stat = { color = "white" };
-	};
-	edges = {
-		Function = { color = "blue", icon = "lang/vlua/icons/function.png" };
-		Funcdef = { color = "plum", icon = "lang/vlua/icons/function.png" };
-
-		If = { color = "skyblue" };
-		Fornum = { color = "yellow", icon = "lang/vlua/icons/loop.png" };
-		Forin = { color = "orange", icon = "lang/vlua/icons/loop.png" };
-		While = { color = "brown", icon = "lang/vlua/icons/loop.png" };
-		Repeat = { color = "brown", icon = "lang/vlua/icons/loop.png", iconRight = true };
-
-		Set = { color = "white", icon = "lang/vlua/icons/assign.gif" };
-		Local = { color = "wheat", icon = "lang/vlua/icons/assign.gif" };
-
-		Return = { color = "lightgray", icon = "lang/vlua/icons/return.png" };
-		Break = { color = "gray", icon = "lang/vlua/icons/break.png" };
-		
-		Call = { color = "lightblue" };
-		Invoke = { color = "blue" };
-
-		Block = { color = "white" };		
-		Locals = { color = "cyan" };
-		Ref = { color = "cyan" };
-		Unknown = { color = "red" }; -- placeholder
-	};
-}
+function reload(graph)
+	local vlua_types = loadTypes()
+	graph:registerTypes(vlua_types)
+	gui.updateScene()
+end
 
 function initialize(graph)
-	graph:registerTypes(vlua_types)
+	reload(graph)
 end
-
 
 function import(graph)
 --	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
-	local name = Q("test.lua")
+	local name = Q("test2.lua")
 	if not name:isEmpty() then
 		graph = Graph()
 		initialize(graph)
@@ -97,6 +65,7 @@ end
 
 local function edgeParent(item)
 	local d = item.nodes["do"]
+	if not d then return end
 	for inc, edge in pairs(d.edges) do
 		if inc.name ~= "do" and inc.name ~= "next" then
 			assert(edge.type.name == "Block", tostring(edge).." is not a block!")
@@ -120,7 +89,15 @@ local function previousEdge(edge, block)
 end
 
 function toggle(view, item)
-	if item.nodes then
+	trace(STR, "Toggle", item)
+	if item.type.name == "Funcdef" then
+		local name = item.nodes['name'].value
+		local func = view.graph.elements[name]
+		doLater(function()
+			trace(STR, 'Opening function', func)
+			view:display(func)
+		end)
+	elseif item.nodes then
 		local blocks = List()
 		local parent = edgeParent(item)
 
@@ -146,10 +123,6 @@ function toggle(view, item)
 		end
 
 		item.expanded = not item.expanded
-	elseif item.type.name == "Funcdef" then
-		doLater(function()
-			view:display(item.func)
-		end)
 	end
 end
 

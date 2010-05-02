@@ -32,6 +32,7 @@ local function createMenus()
 	edit:addAction(actions["Delete"])
 
 	local tools = QMenu.new(Q"Tools")
+	tools:addAction(actions["Reload"])
 	tools:addAction(actions["Layout"])
 	tools:addAction(actions["Execute"])
 
@@ -110,6 +111,10 @@ local function createActions()
 	makeAction("Delete", function()
 		scene:startDeleting()
 	end)
+	
+	makeAction("Reload", function()
+		base.language.reload(scene.graph)
+	end)
 end
 
 local function createWindow()
@@ -135,6 +140,7 @@ local function createToolbar()
 	toolbar:addAction(actions['Export'])
 	toolbar:addSeparator()
 	toolbar:addAction(actions['Layout'])
+	toolbar:addAction(actions['Reload'])
 	toolbar:addAction(actions['Back'])
 	toolbar:addAction(actions['Execute'])
 	
@@ -181,6 +187,10 @@ local function createLog()
 		errlog:setTextColor(oldcol)
 		return true
 	end)
+end
+
+function updateScene()
+	scene.scene:update()
 end
 
 function run(...)

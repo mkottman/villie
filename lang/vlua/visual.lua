@@ -84,7 +84,11 @@ do
 		local size, titleSize, titleSubsize
 
 		item:setZValue(0)
-
+		-- Qt 4.6
+		if QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges then
+			item:setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, true)
+		end
+		
 		function block:update()
 			height = 25
 			width = WIDTH + 10
@@ -169,36 +173,6 @@ do
 	local gradient = QRadialGradient.new_local(center_point, WIDTH / 2, center_point)
 	gradient:setColorAt(0, to_color"white")
 	
-	local WW = WIDTH/2
-	local HH = SIMPLE_HEIGHT/2
-	local CALL_EDGE = 20
-	local FOR_EDGE = 10
-	
-	local custom_polys = {
-		If = QPolygonF.new_local()
-			:IN(QPointF.new_local(-WW, 0))
-			:IN(QPointF.new_local(0, -HH))
-			:IN(QPointF.new_local(WW, 0))
-			:IN(QPointF.new_local(0, HH));
-	
-		Call = QPolygonF.new_local()
-			:IN(QPointF.new_local(-WW+20, -HH))
-			:IN(QPointF.new_local(WW, -HH))
-			:IN(QPointF.new_local(WW-20, HH))
-			:IN(QPointF.new_local(-WW, HH));
-			
-		Fornum = QPolygonF.new_local()
-			:IN(QPointF.new_local(-WW+FOR_EDGE, -HH))
-			:IN(QPointF.new_local( WW-FOR_EDGE, -HH))
-			:IN(QPointF.new_local( WW         , -HH+FOR_EDGE))
-			:IN(QPointF.new_local( WW         , HH-FOR_EDGE))
-			:IN(QPointF.new_local( WW-FOR_EDGE, HH))
-			:IN(QPointF.new_local(-WW+FOR_EDGE, HH))
-			:IN(QPointF.new_local(-WW         , HH-FOR_EDGE))
-			:IN(QPointF.new_local(-WW         , -HH+FOR_EDGE))
-	}
-	custom_polys.Invoke = custom_polys.Call
-
 	function vlua.setupEdgeRenderer(view, edge)
 		local item = QGraphicsItem.new_local()
 		
@@ -219,7 +193,7 @@ do
 			createBlockRenderer(view, item, edge)
 		else
 			if edge.type.icon then item.icon = icon(edge.type.icon) end
-			item.poly = custom_polys[edge.type.name]
+			item.poly = edge.type.poly
 			function item:paint(painter)
 				local col = edge.type.color and to_color(edge.type.color) or to_color"pink"
 				gradient:setColorAt(1, col)
