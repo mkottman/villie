@@ -26,59 +26,14 @@ local WIDTH = 240
 	
 -- Node renderer
 do
-	local size = QRectF.new_local(-40, -10, 80, 20)
-	local small = QRectF.new_local(-5, -5, 10, 10)
-	--local gradient = QRadialGradient.new_local(center_point, size:height(), center_point)
-	--gradient:setColorAt(0, to_color"white")
-	local whiteBrush = QBrush.new_local(to_color"white")
-
 	function vlua.setupNodeRenderer(view, node)
-		local item
-		
-		if node.type.name == "Expression" then
-			item = QGraphicsSimpleTextItem.new_local(Q(node.value))
-		elseif node.type.name == "Exp" or node.type.name == "Stat" then
-			item = QGraphicsRectItem.new_local(small)
-			item:setBrush(QBrush.new_local(to_color"black"))
-		else
-			item = QGraphicsItem.new_local()
-			item.str = Q(node.value)
-			function item:boundingRect()
-				return size
-			end
-			function item:paint(painter)
-				painter:drawRect(size)
-				painter:drawText(size, self.str)
-			end
-		end
-		
-		item:setFlag('ItemIsSelectable', true)
-		item:setFlag('ItemIsMovable', true)
-		item:setZValue(2)
-		
-		return item
+		warn(STR, "Trying to display a node", node)
 	end
 end
 
 
 -- Edge renderer
 do
-
-
-
-	local function addExpressions(view, stat)
-		for inc, node in pairs(stat.nodes) do
-			if node.type.name == "Expression" then
-				view:addItem(node)
-				view:connect(node, stat)
-				local pos = stat.visual.item:pos()
-				local x, y = pos:x(), pos:y()
-				log('Setting pos to %d, %d', x, y)
-				node.visual.item:setPos(x + 200, y)
-			end
-		end
-	end
-	
 	local function createBlockRenderer(view, item, block)
 		local height, width
 		local size, titleSize, titleSubsize
