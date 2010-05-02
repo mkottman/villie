@@ -123,6 +123,18 @@ function View:_init(parent)
 	self.repulse = {}
 	self.layouter = Layouter()
 	
+	local widget = QWidget.new(parent)
+	local layout = QHBoxLayout.new(widget)
+	
+	local elements = QListWidget.new(widget)
+	elements:setMaximumWidth(100)
+
+	self.widget = widget
+	self.elements = elements
+	
+	layout:addWidget(self.elements)
+	layout:addWidget(self.view)
+	
 
 	local deletePixmap = QPixmap.new_local(Q"gui/icons/Delete.png")
 	self.normalCursor = QCursor.new_local()
@@ -150,6 +162,14 @@ function View:_init(parent)
 			this:startDeleting()
 		end
 	end
+	
+	
+	self.elements:__addmethod('doubleClick(QListWidgetItem*)', function(self, item)
+		local name = item.name
+		trace("Doubleclick on element %s", name)
+		this:display(this.graph.elements[name])
+	end)
+	self.elements:connect('2itemDoubleClicked(QListWidgetItem*)', self.elements, '1doubleClick(QListWidgetItem*)')
 
 --[[
 	handle("itemChanged", function(e)
@@ -256,6 +276,9 @@ end
 
 function View:clear()
 	self.layouter:stop()
+	for i in pairs(self.items) do
+		i.visual = nil
+	end
 	self.scene:clear()
 	self.attract = {}
 	self.repulse = {}
@@ -313,9 +336,25 @@ function View:startDeleting()
 	self.view:setCursor(self.deleteCursor)
 end
 
+function View:updateElements()
+	local names = List()
+	for k in pairs(self.graph.elements) do
+		names:append(k)
+	end
+	-- fill the list with sorted items
+	table.sort(names)
+	self.elements:clear()
+	for n in names:iter() do
+		-- add item to the list using parent parameter
+		local w = QListWidgetItem.new(Q(n), self.elements)
+		w.name = n
+	end
+end
+
 function View:reload(graph)
 	if graph == self.graph then trace("No need to reload graph") return end
 	self.graph = graph
+	self:updateElements()
 	self:display(graph.elements.__Main)
 end
 

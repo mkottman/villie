@@ -156,7 +156,7 @@ local function createScene()
 			scene.layouter:stop()
 		end
 	end
-	central:addWidget(scene.view)
+	central:addWidget(scene.widget)
 end
 
 local function createLog()
