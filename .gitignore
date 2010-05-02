@@ -1,3 +1,5 @@
 build/*
 clidebug.cmd
 dbg.cmd
+graph*
+.project

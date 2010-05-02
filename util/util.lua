@@ -265,7 +265,8 @@ function doLater(func, timeout)
 	local o = QObject.new()
 	local id
 	function o:timerEvent(e)
-		func()
+		local ok, err = xpcall(func, debug.traceback)
+		if not ok then fatal(err) end
 		o:killTimer(id)
 		o:deleteLater()
 	end

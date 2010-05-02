@@ -47,6 +47,7 @@ function translate(ast, graph)
 			function funcdef:update()
 				graph.elements[name] = nil
 				name = nm.value
+				func.value = name
 				graph.elements[name] = func
 				body.edges["do"].title = name .. ' : ' .. table.concat(args, ', ')
 				funcdef.value = name
@@ -84,15 +85,12 @@ function translate(ast, graph)
 					local val
 					if s[2][1] then
 						val = processExpression(s[2][1])
-					else
-						val = graph:createNode("Expression")
-						val.value = ""
+						graph:connect(val, edge, "value", "in")
 					end
-					graph:connect(val, edge, "value", "in")
 					
 					function edge:update()
 						self.value = "local " .. l.value
-						if val.value ~= "" then self.value = self.value .. " = " .. val.value end
+						if val then self.value = self.value .. " = " .. val.value end
 					end
 				else
 					local v = processExpression(s[1][1])
@@ -153,7 +151,7 @@ function translate(ast, graph)
 			
 			function edge:update()
 				self.value = var.value .. ' in ' .. exp.value
-				body.edges["do"].title = 'for' .. self.value
+				body.edges["do"].title = 'for ' .. self.value
 			end
 		elseif tag == "While" then
 			edge = graph:createEdge(tag)
@@ -179,11 +177,15 @@ function translate(ast, graph)
 			end
 		elseif tag == "Return" then
 			edge = graph:createEdge(tag)
-			local exp = processExpression(s[1])
-			graph:connect(exp, edge, "returns", "in")
+			local exp
+			if s[1] then
+				exp = processExpression(s[1])
+				graph:connect(exp, edge, "returns", "in")
+			end
 			
 			function edge:update()
-				self.value = exp.value
+				self.value = 'return'
+				if exp then self.value = self.value .. ' ' .. exp.value end
 			end
 		elseif tag == "Break" then
 			edge = graph:createEdge(tag)

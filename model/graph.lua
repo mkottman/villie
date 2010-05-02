@@ -99,14 +99,31 @@ function Graph:_init()
 	evCreated(self)
 end
 
+local function resolveType(typ, where)
+	if not where[typ] then fatal("Trying to create unknown type: %s", typ)
+	else return where[typ]
+	end
+end
+
 function Graph:registerTypes(types)
+	-- register new node types
 	self.node_types = types.nodes
 	for k, v in pairs(self.node_types) do
 		v.name = k
 	end
+	-- refresh nodes with new type definitions
+	for n in self.nodes:iter() do
+		n.type = resolveType(n.type.name, self.node_types)
+	end
+
+	-- register new edge types
 	self.edge_types = types.edges
 	for k, v in pairs(self.edge_types) do
 		v.name = k
+	end
+	-- refresh edges with new type definitions
+	for e in self.edges:iter() do
+		e.type = resolveType(e.type.name, self.edge_types)
 	end
 end
 
@@ -114,13 +131,6 @@ local next_id = 0
 local function gen_id()
 	next_id = next_id + 1
 	return next_id
-end
-
-
-local function resolveType(typ, where)
-	if not where[typ] then fatal("Trying to create unknown type: %s", typ)
-	else return where[typ]
-	end
 end
 
 function Graph:createNode(typ)
@@ -286,10 +296,10 @@ function Graph:dump()
 
 	for n in self.nodes:iter() do
 		-- trace(" N %s", tostring(n))
-		if n.type.name == "Stat" or n.type.name == "Exp" then
+		if n.type.name == "Stat" or n.type.name == "Exp" or n.type.name == "Info" then
 			f:write(' n', n.id, ' [shape=point]\n')
 		else
-			f:write(' n', n.id, ' [shape=box, label=', string.format("%q", (n.value or '?') .. ':' .. (n.type and n.type.name or '?')), ']\n')
+			f:write(' n', n.id, ' [shape=box, label=', string.format("%q", n.value or '?'), ']\n')
 		end
 	end
 	for e in self.edges:iter() do
