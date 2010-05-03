@@ -7,6 +7,102 @@ function isSimpleNode(tag)
 	return simpleNode[tag]
 end
 
+-- very ugly
+local globGraph
+
+updaters = {
+	Set = function (self)
+		local v = self.nodes.target
+		local val = self.nodes.value
+		self.value = v.value .. ' = ' .. val.value
+	end,
+	Local = function(self)
+		local l = self.nodes.defines
+		local val = self.nodes.value
+		self.value = "local " .. l.value
+		if val then self.value = self.value .. " = " .. val.value end
+	end,
+	If = function (self)
+		local cond = self.nodes.condition
+		local body = self.nodes.body
+		local els = self.nodes["else"]
+		self.value = cond.value
+		body.edges["do"].title = cond.value
+		els.edges["do"].title = 'else'
+	end,
+	Fornum = function(self)
+		local var = self.nodes.variable
+		local from = self.nodes.from
+		local to = self.nodes.to
+		local body = self.nodes.body
+		self.value = var.value .. ' = ' .. from.value .. ', ' .. to.value
+		body.edges["do"].title = 'Variable: '..var.value
+	end,
+	Forin = function(self)
+		local var = self.nodes.variable
+		local exp = self.nodes.iterator
+		local body = self.nodes.body
+		self.value = var.value .. ' in ' .. exp.value
+		body.edges["do"].title = 'for ' .. self.value
+	end,
+	While = function(self)
+		local cond = self.nodes.condition
+		local body = self.nodes.body
+		self.value = 'while ' .. cond.value
+		body.edges["do"].title = 'while ' .. cond.value
+	end,
+	Repeat = function(self)
+		local cond = self.nodes["until"]
+		local body = self.nodes.body
+		self.value = 'until ' .. cond.value
+		body.edges["do"].title = 'until ' .. cond.value
+	end,
+	Return = function(self)
+		local value = self.nodes.value
+		self.value = 'return'
+		if exp then self.value = self.value .. ' ' .. exp.value end
+	end,
+	Call = function(self)
+		local func = self.nodes["function"]
+		local args = List()
+		for i=1,self.count do
+			args:append(self.nodes["arg"..i].value)
+		end
+		self.value = func.value .. '('..table.concat(args, ', ')..')'
+	end,
+	Invoke = function(self)
+		local obj = self.nodes.object
+		local func = self.nodes.method
+		local args = List()
+		for i=1,self.count do
+			args:append(self.nodes["arg"..i].value)
+		end
+		self.value = obj.value .. ':' .. func.value:gsub('"','') .. '('..table.concat(args, ', ')..')'
+	end,
+	Funcdef = function (self)
+		local nm = self.nodes.name
+		local name = nm.value
+		local graph = gui.scene.graph or globGraph
+
+		-- rename in scene elements
+		local func = graph.elements[nm.oldvalue]
+		local body = func.nodes.body
+		local args = List()
+		for i=1,func.count do
+			args:append(func.nodes["arg"..i].value)
+		end
+
+		graph.elements[nm.oldvalue] = nil
+		graph.elements[name] = func
+		body.edges["do"].title = 'Arguments: ' .. table.concat(args, ', ')
+		
+		func.value = name
+		self.value = name
+		nm.oldvalue = name
+	end
+}
+
+
 --- Translates a Lua AST <code>ast</code> to graph model. Fills <code>graph</code>
 -- with appropriate nodes, edges and incidences. Also resolves references between
 -- variables. Function definitions are handled as separate graph elements, indexed
@@ -42,18 +138,10 @@ function translate(ast, graph)
 			
 			local nm = graph:createNode("Expression")
 			nm.value = name
+			nm.oldvalue = name
 			graph:connect(nm, funcdef, "name", "in")
-			
-			function funcdef:update()
-				graph.elements[name] = nil
-				name = nm.value
-				func.value = name
-				graph.elements[name] = func
-				body.edges["do"].title = name .. ' : ' .. table.concat(args, ', ')
-				funcdef.value = name
-				self.value = name
-			end
-			
+
+			funcdef.update = updaters.Funcdef
 			funcdef:update()
 
 			local ndo = graph:createNode("Stat")
@@ -87,20 +175,11 @@ function translate(ast, graph)
 						val = processExpression(s[2][1])
 						graph:connect(val, edge, "value", "in")
 					end
-					
-					function edge:update()
-						self.value = "local " .. l.value
-						if val then self.value = self.value .. " = " .. val.value end
-					end
 				else
 					local v = processExpression(s[1][1])
 					local val = processExpression(s[2][1])
 					graph:connect(v, edge, "target", "out")
 					graph:connect(val, edge, "value", "in")
-					
-					function edge:update()
-						self.value = v.value .. ' = ' .. val.value
-					end
 				end
 			end
 		elseif tag == "If" then
@@ -116,13 +195,7 @@ function translate(ast, graph)
 				
 				if #s == 3 then
 					local els = processBlock(s[3], currentBlock)
-					els.edges["do"].title = "else"
 					graph:connect(els, edge, "else", "out")
-				end
-				
-				function edge:update()
-					self.value = cond.value
-					body.edges["do"].title = cond.value
 				end
 			end
 		elseif tag == "Fornum" then
@@ -135,57 +208,32 @@ function translate(ast, graph)
 			graph:connect(from, edge, "from", "in")
 			graph:connect(to, edge, "to", "in")
 			graph:connect(body, edge, "body", "out")
-			
-			function edge:update()
-				self.value = var.value .. ' = ' .. from.value .. ', ' .. to.value
-				body.edges["do"].title = 'Variable: '..var.value
-			end
 		elseif tag == "Forin" then
 			edge = graph:createEdge(tag)
 			local var = processExpression(s[1][1])
-			graph:connect(var, edge, "variable", "in")
 			local exp = processExpression(s[2][1])
-			graph:connect(exp, edge, "iterator", "in")
 			local body = processBlock(s[3])
+			graph:connect(var, edge, "variable", "in")
+			graph:connect(exp, edge, "iterator", "in")
 			graph:connect(body, edge, "body", "out")
-			
-			function edge:update()
-				self.value = var.value .. ' in ' .. exp.value
-				body.edges["do"].title = 'for ' .. self.value
-			end
 		elseif tag == "While" then
 			edge = graph:createEdge(tag)
 			local cond = processExpression(s[1])
 			local body = processBlock(s[2], currentBlock)
 			graph:connect(cond, edge, "condition", "in")
 			graph:connect(body, edge, "body", "out")
-			
-			function edge:update()
-				self.value = 'while ' .. cond.value
-				body.edges["do"].title = 'while ' .. cond.value
-			end
 		elseif tag == "Repeat" then
 			edge = graph:createEdge(tag)
 			local body = processBlock(s[1], currentBlock)
 			local cond = processExpression(s[2])
 			graph:connect(body, edge, "body", "out")
 			graph:connect(cond, edge, "until", "in")
-			
-			function edge:update()
-				self.value = 'until ' .. cond.value
-				body.edges["do"].title = 'until ' .. cond.value
-			end
 		elseif tag == "Return" then
 			edge = graph:createEdge(tag)
 			local exp
 			if s[1] then
 				exp = processExpression(s[1])
 				graph:connect(exp, edge, "returns", "in")
-			end
-			
-			function edge:update()
-				self.value = 'return'
-				if exp then self.value = self.value .. ' ' .. exp.value end
 			end
 		elseif tag == "Break" then
 			edge = graph:createEdge(tag)
@@ -199,14 +247,6 @@ function translate(ast, graph)
 				graph:connect(arg, edge, "arg"..(i-1), "in")
 			end
 			edge.count = #s - 1
-			
-			function edge:update()
-				local args = List()
-				for i=1,self.count do
-					args:append(self.nodes["arg"..i].value)
-				end
-				self.value = func.value .. '('..table.concat(args, ', ')..')'
-			end
 		elseif tag == "Invoke" then
 			edge = graph:createEdge(tag)
 			local obj = processExpression(s[1])
@@ -218,19 +258,12 @@ function translate(ast, graph)
 				graph:connect(arg, edge, "arg"..(i-2), "in")
 			end
 			edge.count = #s - 2
-			
-			function edge:update()
-				local args = List()
-				for i=1,self.count do
-					args:append(self.nodes["arg"..i].value)
-				end
-				self.value = obj.value .. ':' .. func.value:gsub('"','') .. '('..table.concat(args, ', ')..')'
-			end
 		else
 			fatal("Unhandled statement %s", tag)
 			edge = graph:createEdge("Unknown")
 		end
 		
+		if updaters[tag] then edge.update = updaters[tag] end
 		if edge.update then edge:update() end
 		
 		local ndo = graph:createNode("Stat")
@@ -303,12 +336,14 @@ function translate(ast, graph)
 		return ndo
 	end
 
+	globGraph = graph
+
 	local main = processBlock(ast)
+	main.edges["do"].title = 'Main program'
 	io.open('ast', 'w'):write(repr(ast, 'ast', {maxlevel=999}))
 	graph.ast = ast
 	graph.elements.__Main = main.edges["do"]
 end
-
 
 --- Translates graph back to Lua AST, so that it can be converted to Lua using ast.decompile.
 -- @param graph Graph, whose element __Main will be translated as main program

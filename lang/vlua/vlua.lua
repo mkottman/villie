@@ -18,8 +18,10 @@ local function loadTypes()
 	end
 end
 
+vlua_types = loadTypes()
+
 function reload(graph)
-	local vlua_types = loadTypes()
+	vlua_types = loadTypes()
 	graph:registerTypes(vlua_types)
 	gui.updateScene()
 end
@@ -97,7 +99,7 @@ function toggle(view, item)
 			trace(STR, 'Opening function', func)
 			view:display(func)
 		end)
-	elseif item.nodes then
+	elseif item.type.name ~= "Block" and item.nodes then
 		local blocks = List()
 		local parent = edgeParent(item)
 
@@ -113,6 +115,7 @@ function toggle(view, item)
 				remove(view, block)
 			else
 				view:addItem(block)
+				block.visual.item:setZValue(item.visual.item:zValue() + 3)
 				view:connect(item, block)
 				view.attract[item] = true
 				view.attract[block] = true
@@ -126,7 +129,7 @@ function toggle(view, item)
 	end
 end
 
-function edit(view, edge)
+function edit(edge)
 	if edge:is_a(Edge) then
 		if edge.type.name ~= "Block" then
 			local expressions = List()
@@ -193,9 +196,11 @@ function edit(view, edge)
 	end
 end
 
+
+
 function delete(graph, view, item)
 	if item.type.name == "Block" then
-
+		TODO "Delete block"
 	else
 		local ndo = item.nodes["do"]
 		local block, order = edgeParent(item)
@@ -244,5 +249,82 @@ function execute(graph)
 	TODO "Graph execution"
 end
 
+
+function createItemIn(block, pos)
+	local toCreate = vlua.isCreating
+	local graph = gui.scene.graph
+	vlua.isCreating = false
+	
+	-- change the order of all operations following pos
+	for i=pos+1, block.count do
+		local inc = block.nodes['@'..i]
+		inc.name = tostring(i+1)
+	end
+	block.count = block.count + 1
+	
+	-- create the operation in graph
+	local edge = graph:createEdge(toCreate)
+	local ndo = graph:createNode("Stat")
+	graph:connect(ndo, edge, "do", "in")
+	graph:connect(ndo, block, tostring(pos+1), "out")
+	
+	block:update()
+	
+	local edgePos = edge.visual.item:pos()
+	local x, y = edgePos:x(), edgePos:y()
+	
+	-- add prototype incidences
+	local proto = vlua_types.edges[toCreate].proto
+	if proto then
+		for _,key in pairs(proto) do
+			local typ = key:sub(1,1)
+			local name = key:sub(2)
+			trace(STR, "Incidence", typ, name)
+			
+			if typ == "B" then
+				local ndo2 = graph:createNode("Stat")
+				local newBlock = graph:createEdge("Block")
+				graph:connect(ndo2, newBlock, "do", "in")
+				graph:connect(ndo2, edge, name, "out")
+
+				newBlock.count = 0
+				gui.scene:addItem(newBlock)
+				newBlock.visual.item:setZValue(edge.visual.item:zValue() + 3)
+				newBlock.visual.item:setPos(x + 200, y)
+
+				gui.scene:connect(edge, newBlock)
+			elseif typ == "I" or typ == "O" then
+				TODO "Handle incidences"
+			end
+		end
+	end
+	
+
+end
+
+function toolbar(window)
+	local toolbar = QToolBar.new(window)
+	window:addToolBar('RightToolBarArea', toolbar)
+	
+	local function addAction(name, func)
+		local action = QAction.new(Q(name), window)
+		local aname = 'action'..name..'()'
+		window:__addmethod(aname, function()
+			local ok, err = xpcall(func, debug.traceback)
+			if not ok then
+				fatal("error in action handler for '%s': %s", name, tostring(err))
+			end
+		end)
+		action:connect('2triggered()', window, '1'..aname)
+		toolbar:addAction(action)
+	end
+	
+	local ignore = {Ref = true, Locals = true, Unknown = true}
+	for k in sortedpairs(vlua_types.edges) do
+		if not ignore[k] then
+			addAction(k, function() vlua.isCreating = k end)
+		end
+	end
+end
 
 return _M

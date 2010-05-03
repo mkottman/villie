@@ -1,6 +1,6 @@
 local base = _G
 
-module(..., package.clean, package.strict)
+module(..., package.clean)
 
 local mainWindow
 local actions
@@ -10,7 +10,7 @@ local desktopSize
 
 local central
 local errlog
-local scene
+scene = nil
 
 local function createMenus()
 	local menubar = QMenuBar.new()
@@ -119,7 +119,7 @@ end
 
 local function createWindow()
 	mainWindow = QMainWindow.new()
-	mainWindow:setWindowTitle(Q"Villie")
+	mainWindow:setWindowTitle(Q"Villie2")
 	mainWindow:setMinimumSize(640, 480)
 	mainWindow:move(0, 0)
 
@@ -145,6 +145,8 @@ local function createToolbar()
 	toolbar:addAction(actions['Execute'])
 	
 	toolbar:addAction(actions['Delete'])
+
+	if base.language.toolbar then base.language.toolbar(mainWindow) end
 
 	mainWindow:addToolBar(toolbar)
 end

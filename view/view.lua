@@ -43,12 +43,13 @@ do
 	local blackBrush = QBrush.new_local(colors.black)
 
 function VConnector:_init(from, to)
-	local item = QGraphicsLineItem.new_local()
-	
 	log(STR, "Connecting", from.type.name, to.type.name)
 	assert(from.visual, "'from' does not have it's visual representation")
 	assert(to.visual, "'to' does not have it's visual representation")
-	
+
+	local item = QGraphicsLineItem.new_local()
+	item:setZValue(math.min(from.visual.item:zValue(), to.visual.item:zValue()) - 1)	
+
 	--local txt = QGraphicsTextItem.new_local(Q(inc.name))
 	--local pen = QPen.new_local(inc.ignored and colors.red or colors.black)
 	--item:setPen(pen)
@@ -116,6 +117,7 @@ function View:_init(parent)
 	self.view:setTransformationAnchor('AnchorUnderMouse')
 	self.view:setViewportUpdateMode('BoundingRectViewportUpdate')
 	self.view:setRenderHint('Antialiasing')
+	self.view:setDragMode('ScrollHandDrag')
 	
 	self.history = {}
 	self.items = {}
@@ -216,15 +218,17 @@ function View:addItem(x)
 	item:setPos(math.random(-100,100), math.random(-100, 100))
 
 	local view = self
-	
-	function item:mousePressEvent(e)
-		if e:button() == "RightButton" and language.edit(view, x) then
-			view.ignoreClick = true
-		elseif view.isDeleting and language.delete(view.graph, view, x) then
-			view.isDeleting = false
-			view.view:setCursor(view.normalCursor)
-		else
-			super()
+
+	if not item.mousePressOverride then
+		function item:mousePressEvent(e)
+			if e:button() == "RightButton" and language.edit(view, x) then
+				view.ignoreClick = true
+			elseif view.isDeleting and language.delete(view.graph, view, x) then
+				view.isDeleting = false
+				view.view:setCursor(view.normalCursor)
+			else
+				super()
+			end
 		end
 	end
 	
