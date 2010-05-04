@@ -146,15 +146,19 @@ do
 			end
 		end
 		
+		local function enableItems(on)
+			for i=1,block.count do
+				local stat = block.nodes[tostring(i)]
+				stat = stat.edges["do"]
+				stat.visual.item:setEnabled(on)
+			end
+		end
+		
 		-- support for creating of operations inside a block
 		item:setAcceptHoverEvents(true)
 		function item:hoverEnterEvent(e)
 			if vlua.isCreating then
-				for i=1,block.count do
-					local stat = block.nodes[tostring(i)]
-					stat = stat.edges["do"]
-					stat.visual.item:setEnabled(false)
-				end
+				enableItems(false)
 			end
 			super()
 		end
@@ -165,17 +169,14 @@ do
 				local y2 = y + height/2
 				local createPos = math.floor(y2 / (SIMPLE_HEIGHT + 5))
 				self.createPos = createPos
+				enableItems(true)
 				self:update()
 			end
 		end
 		function item:hoverLeaveEvent(e)
 			if vlua.isCreating then
 				self.createPos = nil
-				for i=1,block.count do
-					local stat = block.nodes[tostring(i)]
-					stat = stat.edges["do"]
-					stat.visual.item:setEnabled(true)
-				end
+				enableItems(true)
 			end
 			super()
 		end

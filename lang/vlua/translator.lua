@@ -35,14 +35,14 @@ updaters = {
 		local from = self.nodes.from
 		local to = self.nodes.to
 		local body = self.nodes.body
-		self.value = var.value .. ' = ' .. from.value .. ', ' .. to.value
+		self.value = 'for ' .. var.value .. ' = ' .. from.value .. ', ' .. to.value
 		body.edges["do"].title = 'Variable: '..var.value
 	end,
 	Forin = function(self)
 		local var = self.nodes.variable
 		local exp = self.nodes.iterator
 		local body = self.nodes.body
-		self.value = var.value .. ' in ' .. exp.value
+		self.value = 'for ' .. var.value .. ' in ' .. exp.value
 		body.edges["do"].title = 'for ' .. self.value
 	end,
 	While = function(self)
@@ -58,13 +58,14 @@ updaters = {
 		body.edges["do"].title = 'until ' .. cond.value
 	end,
 	Return = function(self)
-		local value = self.nodes.value
+		local exp = self.nodes.returns
 		self.value = 'return'
 		if exp then self.value = self.value .. ' ' .. exp.value end
 	end,
 	Call = function(self)
 		local func = self.nodes["function"]
 		local args = List()
+		if not self.count then self.count = 0 end
 		for i=1,self.count do
 			args:append(self.nodes["arg"..i].value)
 		end
@@ -74,6 +75,7 @@ updaters = {
 		local obj = self.nodes.object
 		local func = self.nodes.method
 		local args = List()
+		if not self.count then self.count = 0 end
 		for i=1,self.count do
 			args:append(self.nodes["arg"..i].value)
 		end
@@ -94,11 +96,14 @@ updaters = {
 
 		graph.elements[nm.oldvalue] = nil
 		graph.elements[name] = func
+		if gui.scene.graph then gui.scene:updateElements() end
+		
 		body.edges["do"].title = 'Arguments: ' .. table.concat(args, ', ')
 		
 		func.value = name
 		self.value = name
 		nm.oldvalue = name
+		
 	end
 }
 

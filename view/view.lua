@@ -117,7 +117,7 @@ function View:_init(parent)
 	self.view:setTransformationAnchor('AnchorUnderMouse')
 	self.view:setViewportUpdateMode('BoundingRectViewportUpdate')
 	self.view:setRenderHint('Antialiasing')
-	self.view:setDragMode('ScrollHandDrag')
+	-- self.view:setDragMode('ScrollHandDrag')
 	
 	self.history = {}
 	self.items = {}
@@ -143,6 +143,7 @@ function View:_init(parent)
 	self.deleteCursor = QCursor.new_local(deletePixmap)
 
 	local this = self
+	--[[
 	function self.view:contextMenuEvent(e)
 		if this.ignoreClick then
 			this.ignoreClick = nil
@@ -150,6 +151,7 @@ function View:_init(parent)
 			this:showPopup(e:globalPos())
 		end
 	end
+	]]
 	function self.view:wheelEvent(e)
 		local scale = e:delta() > 0 and 1.25 or 0.8
 		self:scale(scale, scale)
@@ -221,7 +223,8 @@ function View:addItem(x)
 
 	if not item.mousePressOverride then
 		function item:mousePressEvent(e)
-			if e:button() == "RightButton" and language.edit(view, x) then
+			trace(STR, 'Mouse pressed', e:button(), x)
+			if e:button() == "RightButton" and language.edit(x) then
 				view.ignoreClick = true
 			elseif view.isDeleting and language.delete(view.graph, view, x) then
 				view.isDeleting = false
@@ -313,6 +316,7 @@ function View:display(start)
 	start.visual.item:moveBy(1,1)
 end
 
+--[[
 function View:showPopup(point)
 	if not self.graph then return end
 	local this = self
@@ -334,6 +338,7 @@ function View:showPopup(point)
 	end
 	menu:popup(point)
 end
+]]
 
 function View:startDeleting()
 	self.isDeleting = true

@@ -190,6 +190,8 @@ function edit(edge)
 				dialog:connect('2accepted()', dialog, '1changeValues()')
 				dialog:exec()
 				
+				edge:update()
+				
 				return true
 			end
 		end
@@ -273,6 +275,7 @@ function createItemIn(block, pos)
 	local edgePos = edge.visual.item:pos()
 	local x, y = edgePos:x(), edgePos:y()
 	
+	local needEdit = false
 	-- add prototype incidences
 	local proto = vlua_types.edges[toCreate].proto
 	if proto then
@@ -294,12 +297,26 @@ function createItemIn(block, pos)
 
 				gui.scene:connect(edge, newBlock)
 			elseif typ == "I" or typ == "O" then
-				TODO "Handle incidences"
+				local node = graph:createNode("Expression")
+				node.value = '?'
+				local dir = typ == "I" and "in" or "out"
+				graph:connect(node, edge, name, dir)
+				needEdit = true
+			else
+				warn("Bad prototype incidence (key %s) for %s; %s not one of B, I, O",
+					key, toCreate, typ)
 			end
 		end
 	end
 	
-
+	if translator.updaters[toCreate] then
+		edge.update = translator.updaters[toCreate]
+		edge:update()
+	end
+	
+	if needEdit then
+		edit(edge)
+	end
 end
 
 function toolbar(window)
@@ -319,7 +336,7 @@ function toolbar(window)
 		toolbar:addAction(action)
 	end
 	
-	local ignore = {Ref = true, Locals = true, Unknown = true}
+	local ignore = {Ref = true, Locals = true, Unknown = true, Function = true, Block = true}
 	for k in sortedpairs(vlua_types.edges) do
 		if not ignore[k] then
 			addAction(k, function() vlua.isCreating = k end)
