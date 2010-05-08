@@ -28,17 +28,18 @@ end
 
 function initialize(graph)
 	reload(graph)
+	local main = graph:createEdge("Block")
+	main.title = 'Main program'
+	graph.elements.__Main = main
 end
 
 function import(graph)
---	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
-	local name = Q("test2.lua")
+	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
 	if not name:isEmpty() then
 		graph = Graph()
 		initialize(graph)
 		local ast = ast.compile(io.open(S(name)))
-		graph.ast = ast
-		vlua.translator.translate(ast, graph)
+		vlua.translator.fromAst(ast, graph)
 	end
 	return graph
 end
@@ -129,23 +130,48 @@ function toggle(view, item)
 	end
 end
 
+local function hasArguments(e)
+	return e.type.name == "Call"
+		or e.type.name == "Invoke"
+		or e.type.name == "Function"
+end
+
 function edit(edge)
+	local graph = gui.view.graph
+	
 	if edge:is_a(Edge) then
 		if edge.type.name ~= "Block" then
 			local expressions = List()
+			local hasArgs = hasArguments(edge)
+			
+			-- collect existing nodes and values
 			for inc, node in pairs(edge.nodes) do
 				if node.type.name == "Expression" then
-					expressions:append { name = inc.name, node = node }
+					expressions:append { name = inc.name, value = node.value,
+						oldvalue = node.oldvalue}
+				end
+			end
+			
+			-- remove nodes from graph (will be reconstructed later)
+			for exp in expressions:iter() do
+				graph:disconnect(edge.nodes[exp.name], edge)
+			end
+			
+			-- create dummy arguments up to arg9
+			if hasArgs then
+				for i=edge.count+1,9 do
+					expressions:append { name = "arg"..i, value = '' }
 				end
 			end
 			if #expressions > 0 then
 				table.sort(expressions, function(a,b) return a.name < b.name end)
 
 				local dialog = QDialog.new_local()
+				dialog:setWindowTitle(Q"Edit values")
 				
 				local form = QFormLayout.new(dialog)
 				for _,item in ipairs(expressions) do
-					local edit = QLineEdit.new(Q(item.node.value), dialog)
+					local edit = QLineEdit.new(Q(item.value), dialog)
 					item.edit = edit
 					form:addRow(Q(item.name), edit)
 				end
@@ -169,28 +195,51 @@ function edit(edge)
 				dialog:setLayout(layout)
 				
 				local done = false
-				dialog:__addmethod('changeValues()', function()
+				local function update(save)
 					if done then return end
+					local shouldSave = true
 					for _,item in ipairs(expressions) do
-						local value = S(item.edit:text())
-						if value ~= item.node.value then
-							local ok, err = pcall(ast.compile, value, true)
-							trace(STR, ok, repr(err, "err"), value)
-							if ok then
-								item.node.value = value
-								if edge.update then edge:update() end
-								edge.visual.item:update()
-							else
-								QMessageBox.critical(dialog, Q"Syntax error", Q(err))
+						local value = item.value
+						if save then
+							local newValue = S(item.edit:text())
+							if newValue ~= item.value then
+								local ok, err = pcall(ast.compile, newValue, true)
+								if not ok then
+									QMessageBox.critical(dialog, Q"Syntax error", Q(err))
+								end
+								value = newValue
 							end
 						end
+						-- special handling of argN parameters
+						if hasArgs and item.name:match("^arg%d+") then
+							-- stop saving at first empty argument
+							if shouldSave and value == "" then
+								edge.count = tonumber(item.name:match("^arg(%d+)$")) - 1
+								shouldSave = false
+							elseif shouldSave then
+								local node = graph:createNode("Expression")
+								node.value = value
+								graph:connect(node, edge, item.name, "in")
+							end
+						else
+							local node = graph:createNode("Expression")
+							node.value = value
+							node.oldvalue = item.oldvalue
+							graph:connect(node, edge, item.name, "in")
+						end
 					end
+					if edge.update then edge:update() end
+					edge.visual.item:update()
 					done = true
-				end)
-				dialog:connect('2accepted()', dialog, '1changeValues()')
+				end
+				
+				dialog:__addmethod('saveValues()', function() update(true) end)
+				dialog:__addmethod('cancelChanges()', function () update(false) end)
+				dialog:connect('2accepted()', dialog, '1saveValues()')
+				dialog:connect('2rejected()', dialog, '1cancelChanges()')
 				dialog:exec()
 				
-				edge:update()
+				if edge.update then edge:update() end
 				
 				return true
 			end
@@ -201,9 +250,9 @@ end
 
 
 function delete(graph, view, item)
-	if item.type.name == "Block" then
-		TODO "Delete block"
-	else
+	if item.type.name ~= "Block" then
+		if item.expanded then toggle(view, item) end
+		
 		local ndo = item.nodes["do"]
 		local block, order = edgeParent(item)
 		local prev = previousEdge(item, block)
@@ -252,9 +301,8 @@ function execute(graph)
 end
 
 
-function createItemIn(block, pos)
-	local toCreate = vlua.isCreating
-	local graph = gui.scene.graph
+function create(type, block, pos)
+	local graph = gui.view.graph
 	vlua.isCreating = false
 	
 	-- change the order of all operations following pos
@@ -265,7 +313,7 @@ function createItemIn(block, pos)
 	block.count = block.count + 1
 	
 	-- create the operation in graph
-	local edge = graph:createEdge(toCreate)
+	local edge = graph:createEdge(type)
 	local ndo = graph:createNode("Stat")
 	graph:connect(ndo, edge, "do", "in")
 	graph:connect(ndo, block, tostring(pos+1), "out")
@@ -277,7 +325,7 @@ function createItemIn(block, pos)
 	
 	local needEdit = false
 	-- add prototype incidences
-	local proto = vlua_types.edges[toCreate].proto
+	local proto = vlua_types.edges[type].proto
 	if proto then
 		for _,key in pairs(proto) do
 			local typ = key:sub(1,1)
@@ -291,11 +339,11 @@ function createItemIn(block, pos)
 				graph:connect(ndo2, edge, name, "out")
 
 				newBlock.count = 0
-				gui.scene:addItem(newBlock)
+				gui.view:addItem(newBlock)
 				newBlock.visual.item:setZValue(edge.visual.item:zValue() + 3)
 				newBlock.visual.item:setPos(x + 200, y)
 
-				gui.scene:connect(edge, newBlock)
+				gui.view:connect(edge, newBlock)
 			elseif typ == "I" or typ == "O" then
 				local node = graph:createNode("Expression")
 				node.value = '?'
@@ -304,13 +352,28 @@ function createItemIn(block, pos)
 				needEdit = true
 			else
 				warn("Bad prototype incidence (key %s) for %s; %s not one of B, I, O",
-					key, toCreate, typ)
+					key, type, typ)
 			end
 		end
 	end
 	
-	if translator.updaters[toCreate] then
-		edge.update = translator.updaters[toCreate]
+	-- funcdef is a special case - also add new function element
+	if type == "Funcdef" then
+		local func = graph:createEdge("Function")
+		local body = graph:createEdge("Block")
+		local ndo = graph:createNode("Stat")
+		graph:connect(ndo, func, "body", "out")
+		graph:connect(ndo, body, "do", "in")
+		graph.elements["?"] = func
+		func.count = 0
+		body.count = 0
+		func.funcdef = edge
+		func.update = translator.updaters.Function
+		edge.nodes.name.oldvalue = "?"
+	end
+	
+	if translator.updaters[type] then
+		edge.update = translator.updaters[type]
 		edge:update()
 	end
 	

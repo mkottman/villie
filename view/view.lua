@@ -170,7 +170,7 @@ function View:_init(parent)
 	
 	self.elements:__addmethod('doubleClick(QListWidgetItem*)', function(self, item)
 		local name = item.name
-		trace("Doubleclick on element %s", name)
+		trace(STR, "Doubleclick on element", name)
 		this:display(this.graph.elements[name])
 	end)
 	self.elements:connect('2itemDoubleClicked(QListWidgetItem*)', self.elements, '1doubleClick(QListWidgetItem*)')

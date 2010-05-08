@@ -15,7 +15,7 @@ return {
 	edges = {
 		Function = { color = "plum", icon = "lang/vlua/icons/function.png" };
 		Funcdef = { color = "plum", icon = "lang/vlua/icons/function.png",
-			proto = {'Iname', 'Iarg1'};
+			proto = {'Iname'};
 		};
 
 		If = { color = "skyblue", poly = QPolygonF.new_local()
@@ -63,14 +63,14 @@ return {
 				:IN(QPointF.new_local(WW, -HH))
 				:IN(QPointF.new_local(WW-20, HH))
 				:IN(QPointF.new_local(-WW, HH));
-			proto = {'Ifunction', 'Iarg1'};
+			proto = {'Ifunction'};
 		};
 		Invoke = { color = "blue", poly = QPolygonF.new_local()
 				:IN(QPointF.new_local(-WW+20, -HH))
 				:IN(QPointF.new_local(WW, -HH))
 				:IN(QPointF.new_local(WW-20, HH))
 				:IN(QPointF.new_local(-WW, HH));
-			proto = {'Iobject', 'Imethod', 'Iarg1'};
+			proto = {'Iobject', 'Imethod'};
 		};
 
 		Block = { color = "white" };

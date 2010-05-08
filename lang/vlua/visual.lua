@@ -53,6 +53,7 @@ do
 		if QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges then
 			item:setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, true)
 		end
+		if not block.count then block.count = 0 end
 		
 		-- sets up child positions and total height
 		function block:update()
@@ -187,7 +188,7 @@ do
 				stat = stat.edges["do"]
 				stat.visual.item:setEnabled(true)
 			end
-			local ok, err = xpcall(function() vlua.createItemIn(block, self.createPos) end, debug.traceback)
+			local ok, err = xpcall(function() vlua.create(vlua.isCreating, block, self.createPos) end, debug.traceback)
 			if not ok then fatal(err) end
 			self.createPos = nil
 		end

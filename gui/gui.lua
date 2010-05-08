@@ -10,7 +10,7 @@ local desktopSize
 
 local central
 local errlog
-scene = nil
+view = nil
 
 local function createMenus()
 	local menubar = QMenuBar.new()
@@ -67,14 +67,18 @@ local function createActions()
 
 	makeAction("New", function()
 		TODO "New - create new graph"
+		view:clear()
+		local g = Graph()
+		base.language.initialize(g)
+		view:reload(g)
 	end)
 
 	makeAction("Load", function()
-		scene:clear()
+		view:clear()
 		local g = Graph()
 		TODO "Load - file select dialog"
 		g:load('graph.graphml')
-		scene:reload(g)
+		view:reload(g)
 	end)
 
 	makeAction("Save", function()
@@ -83,13 +87,13 @@ local function createActions()
 	end)
 	
 	makeAction("Import", function()
-		scene:clear()
-		local g = base.language.import(scene.graph)
-		scene:reload(g)
+		view:clear()
+		local g = base.language.import(view.graph)
+		view:reload(g)
 	end)
 	
 	makeAction("Export", function()
-		base.language.export(scene.graph)
+		base.language.export(view.graph)
 	end)
 	
 	makeAction("Quit", function()
@@ -97,23 +101,23 @@ local function createActions()
 	end)
 
 	makeAction("Layout", function()
-		scene:fullLayout()
+		view:fullLayout()
 	end)
 	
 	makeAction("Back", function()
-		scene:back()
+		view:back()
 	end)
 	
 	makeAction("Execute", function()
-		base.language.execute(scene.graph)
+		base.language.execute(view.graph)
 	end)
 
 	makeAction("Delete", function()
-		scene:startDeleting()
+		view:startDeleting()
 	end)
 	
 	makeAction("Reload", function()
-		base.language.reload(scene.graph)
+		base.language.reload(view.graph)
 	end)
 end
 
@@ -152,13 +156,13 @@ local function createToolbar()
 end
 
 local function createScene()
-	scene = View(mainWindow)
+	view = View(mainWindow)
 	function mainWindow:keyPressEvent(e)
 		if e:key() == 32 then
-			scene.layouter:stop()
+			view.layouter:stop()
 		end
 	end
-	central:addWidget(scene.widget)
+	central:addWidget(view.widget)
 end
 
 local function createLog()
@@ -192,7 +196,7 @@ local function createLog()
 end
 
 function updateScene()
-	scene.scene:update()
+	view.scene:update()
 end
 
 function run(...)
@@ -207,7 +211,11 @@ function run(...)
 	createScene()
 	createLog()
 	
-	scene:clear()
+	actions.New:trigger()
+	
+	--[[
+	view:clear()
 	local g = base.language.import(scene.graph)
-	scene:reload(g)
+	view:reload(g)
+	]]
 end
