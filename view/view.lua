@@ -129,7 +129,8 @@ function View:_init(parent)
 	local layout = QHBoxLayout.new(widget)
 	
 	local elements = QListWidget.new(widget)
-	elements:setMaximumWidth(100)
+	elements:setMinimumWidth(120)
+	elements:setMaximumWidth(120)
 
 	self.widget = widget
 	self.elements = elements
@@ -153,8 +154,14 @@ function View:_init(parent)
 	end
 	]]
 	function self.view:wheelEvent(e)
-		local scale = e:delta() > 0 and 1.25 or 0.8
-		self:scale(scale, scale)
+		local mods = e:modifiers()
+		local mod = mods[#mods]
+		if mod == 'ControlModifier' then
+			local scale = e:delta() > 0 and 1.25 or 0.8
+			self:scale(scale, scale)
+		else
+			super()
+		end
 	end
 	
 	function self.view:keyPressEvent(e)
@@ -169,8 +176,9 @@ function View:_init(parent)
 	
 	
 	self.elements:__addmethod('doubleClick(QListWidgetItem*)', function(self, item)
-		local name = item.name
-		trace(STR, "Doubleclick on element", name)
+		local name = S(item:text())
+		trace("Doubleclick on %s", name)
+		if name == "Main program" then name = "__Main" end
 		this:display(this.graph.elements[name])
 	end)
 	self.elements:connect('2itemDoubleClicked(QListWidgetItem*)', self.elements, '1doubleClick(QListWidgetItem*)')
@@ -313,7 +321,10 @@ function View:display(start)
 	start.expanded = false
 	
 	language.toggle(self, start)
+	-- force layout of items
 	start.visual.item:moveBy(1,1)
+	self.view:centerOn(start.visual.item)
+	self.scene:update()
 end
 
 --[[
@@ -355,7 +366,9 @@ function View:updateElements()
 	self.elements:clear()
 	for n in names:iter() do
 		-- add item to the list using parent parameter
-		local w = QListWidgetItem.new(Q(n), self.elements)
+		local name = n
+		if n == "__Main" then name = "Main program" end
+		local w = QListWidgetItem.new(Q(name), self.elements)
 		w.name = n
 	end
 end

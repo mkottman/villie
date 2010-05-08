@@ -226,12 +226,20 @@ do
 				local col = edge.type.color and to_color(edge.type.color) or to_color"pink"
 				gradient:setColorAt(1, col)
 				painter:setBrush(QBrush.new_local(gradient))
+				
+				-- draw type polygon, or rounded rect as default
 				if self.poly then
 					painter:drawPolygon(self.poly)
 				else
 					painter:drawRoundedRect(size, 8, 8)
 				end
-				painter:drawText(size, Q(edge.value), center_text)
+				
+				-- draw edge value as text
+				local text = edge.value
+				if #text > 26 then text = text:sub(1,26) .. '...' end
+				painter:drawText(size, Q(text), center_text)
+				
+				-- draw operation icon
 				if self.icon then
 					local iconX = edge.type.iconRight and (WIDTH/2-21) or (-WIDTH/2+5)
 					painter:drawPixmap(QPointF.new_local(iconX, -8), self.icon)

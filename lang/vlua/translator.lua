@@ -27,8 +27,8 @@ updaters = {
 		local body = self.nodes.body
 		local els = self.nodes["else"]
 		self.value = cond.value
-		body.edges["do"].title = cond.value
-		els.edges["do"].title = 'else'
+		body.edges["do"].title = 'if ' .. cond.value
+		if els then els.edges["do"].title = 'else' end
 	end,
 	Fornum = function(self)
 		local var = self.nodes.variable
@@ -43,7 +43,7 @@ updaters = {
 		local exp = self.nodes.iterator
 		local body = self.nodes.body
 		self.value = 'for ' .. var.value .. ' in ' .. exp.value
-		body.edges["do"].title = 'for ' .. self.value
+		body.edges["do"].title = 'Variable: '..var.value
 	end,
 	While = function(self)
 		local cond = self.nodes.condition
@@ -85,22 +85,29 @@ updaters = {
 	Funcdef = function (self)
 		local nm = self.nodes.name
 		local name = nm.value
-		local graph = gui.view.graph or globGraph
+		local graph = globGraph or gui.view.graph
+
+		trace(STR, graph, repr(graph.elements, 'elements'))
 
 		-- rename in scene elements
-		local func = graph.elements[nm.oldvalue]
-		graph.elements[nm.oldvalue] = nil
-		graph.elements[name] = func
-		nm.oldvalue = name
-		
+		if nm.oldvalue and nm.oldvalue ~= name then
+			trace('Renaming element %s to %s', nm.oldname, name)
+			local func = graph.elements[nm.oldvalue]
+			graph.elements[nm.oldvalue] = nil
+			graph.elements[name] = func
+			nm.oldvalue = name
+			if gui.view.graph then gui.view:updateElements() end
+		end
+
+		trace('Retrieving function %s', name)
+		local func = graph.elements[name]
+
 		-- construct argument list
 		local body = func.nodes.body
 		local args = List()
 		for i=1,func.count do
 			args:append(func.nodes["arg"..i].value)
 		end
-
-		if gui.view.graph then gui.view:updateElements() end
 		
 		args = table.concat(args, ', ')
 		body.edges["do"].title = 'Arguments: ' .. args
@@ -146,8 +153,9 @@ function fromAst(ast, graph)
 			local body = processBlock(f[#f], currentBlock)
 			graph:connect(body, func, "body", "out")
 			
+			trace('Creating element %s with value %s', name, tostring(func))
 			graph.elements[name] = func
-			
+
 			local funcdef = graph:createEdge("Funcdef")
 			func.funcdef = funcdef
 			
@@ -218,7 +226,7 @@ function fromAst(ast, graph)
 			local var = processExpression(s[1])
 			local from = processExpression(s[2])
 			local to = processExpression(s[3])
-			local body = processBlock(s[4], currentBlock)
+			local body = processBlock(s[#s], currentBlock)
 			graph:connect(var, edge, "variable", "in")
 			graph:connect(from, edge, "from", "in")
 			graph:connect(to, edge, "to", "in")
@@ -351,12 +359,12 @@ function fromAst(ast, graph)
 		return ndo
 	end
 
+	-- temporary global
 	globGraph = graph
-
 	local main = processBlock(ast)
 	main.edges["do"].title = 'Main program'
 	graph.elements.__Main = main.edges["do"]
-	io.open('ast', 'w'):write(repr(ast, 'ast', {maxlevel=999}))
+	globGraph = nil
 end
 
 --- Translates graph back to Lua AST, so that it can be converted to Lua using ast.decompile.
@@ -471,6 +479,5 @@ function toAst(graph)
 	end
 	
 	local ast = toBlock(graph.elements.__Main)
-	print(repr(ast, 'ast', {maxlevel=999}))
 	return ast
 end

@@ -39,6 +39,7 @@ function import(graph)
 		graph = Graph()
 		initialize(graph)
 		local ast = ast.compile(io.open(S(name)))
+		io.open('ast.txt', 'w'):write(repr(ast, 'ast', {maxlevel=999}))
 		vlua.translator.fromAst(ast, graph)
 	end
 	return graph
@@ -122,7 +123,7 @@ function toggle(view, item)
 				view.attract[block] = true
 				local pos = item.visual.item:pos()
 				local x, y = pos:x(), pos:y()
-				block.visual.item:setPos(x + 200, y)
+				block.visual.item:setPos(x + 300, y)
 			end
 		end
 
@@ -168,6 +169,7 @@ function edit(edge)
 
 				local dialog = QDialog.new_local()
 				dialog:setWindowTitle(Q"Edit values")
+				dialog:setMinimumWidth(450)
 				
 				local form = QFormLayout.new(dialog)
 				for _,item in ipairs(expressions) do
@@ -195,6 +197,9 @@ function edit(edge)
 				dialog:setLayout(layout)
 				
 				local done = false
+				
+				-- function that will recreate the nodes with previous values if save==false,
+				-- or new values if save==true
 				local function update(save)
 					if done then return end
 					local shouldSave = true
@@ -202,7 +207,7 @@ function edit(edge)
 						local value = item.value
 						if save then
 							local newValue = S(item.edit:text())
-							if newValue ~= item.value then
+							if newValue ~= value then
 								local ok, err = pcall(ast.compile, newValue, true)
 								if not ok then
 									QMessageBox.critical(dialog, Q"Syntax error", Q(err))
@@ -211,7 +216,7 @@ function edit(edge)
 							end
 						end
 						-- special handling of argN parameters
-						if hasArgs and item.name:match("^arg%d+") then
+						if hasArgs and item.name:match("^arg%d+$") then
 							-- stop saving at first empty argument
 							if shouldSave and value == "" then
 								edge.count = tonumber(item.name:match("^arg(%d+)$")) - 1
