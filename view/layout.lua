@@ -4,7 +4,7 @@
 
 -- some parameters
 
-local K = 400
+local K = 300
 local MAX_DIST = 1000
 
 -- repulsive force

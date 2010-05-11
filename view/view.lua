@@ -42,6 +42,8 @@ do
 	local ARROWSIZE = 10
 	local blackBrush = QBrush.new_local(colors.black)
 
+	local nulRect = QRectF.new_local(0,0,0,0)
+
 function VConnector:_init(from, to)
 	log(STR, "Connecting", from.type.name, to.type.name)
 	assert(from.visual, "'from' does not have it's visual representation")
@@ -54,12 +56,14 @@ function VConnector:_init(from, to)
 	item.to = to
 
 	function item:boundingRect()
+		if not self.from.visual or not self.to.visual then return nulRect end
 		return QRectF.new_local(self.from.visual.item:pos(), self.to.visual.item:pos())
 			:normalized()
 			:adjusted(-10, -10, 10, 10)
 	end
 
 	function item:paint(painter)
+		if not self.from.visual or not self.to.visual then return end
 		local fromv = self.from.visual.item
 		local tov = self.to.visual.item	
 	

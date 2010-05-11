@@ -437,6 +437,9 @@ function create(type, block, pos)
 				newBlock.visual.item:setPos(x + 200, y)
 
 				gui.view:connect(edge, newBlock)
+				gui.view:connectLayoutItems(block, newBlock)
+				
+				edge.expanded = true
 			elseif typ == "I" or typ == "O" then
 				local node = graph:createNode("Expression")
 				node.value = '?'

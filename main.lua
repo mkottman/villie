@@ -15,7 +15,7 @@ require 'gui'
 
 language = require('vlua')
 
-DEBUG = true
+-- DEBUG = true
 
 app = QApplication.new(1 + select('#', ...), {arg[0], ...})
 

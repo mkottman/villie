@@ -43,7 +43,7 @@ return {
 			proto = {'Icondition', 'Bbody'};
 		};
 		Repeat = { color = "brown", icon = "lang/vlua/icons/loop.png", iconRight = true,
-			proto = {'Icondition', 'Bbody'};
+			proto = {'Iuntil', 'Bbody'};
 		};
 
 		Set = { color = "white", icon = "lang/vlua/icons/assign.gif",
