@@ -20,12 +20,14 @@ end
 
 vlua_types = loadTypes()
 
+--- Reloads visual type definitions from file lang/vlua/types.lua.
 function reload(graph)
 	vlua_types = loadTypes()
 	graph:registerTypes(vlua_types)
 	gui.updateScene()
 end
 
+--- Initiatizes the graph by registering visual types and creating main program block.
 function initialize(graph)
 	reload(graph)
 	local main = graph:createEdge("Block")
@@ -33,24 +35,32 @@ function initialize(graph)
 	graph.elements.__Main = main
 end
 
+--- Imports the graph from Lua. When a file is chosen, it's source is translated to graph representation.
 function import(graph)
 	local name = QFileDialog.getOpenFileName(nil, Q"Select Lua source",  Q".", Q"Lua source (*.lua)")
 	if not name:isEmpty() then
 		graph = Graph()
 		initialize(graph)
 		local ast = ast.compile(io.open(S(name)))
-		io.open('ast.txt', 'w'):write(repr(ast, 'ast', {maxlevel=999}))
+		if DEBUG then io.open('ast.txt', 'w'):write(repr(ast, 'ast', {maxlevel=999})) end
 		vlua.translator.fromAst(ast, graph)
 	end
 	return graph
 end
 
+--- Exports the graph as Lua. When a file is chosen, the graph representation is translated to Lua source.
 function export(graph)
-	local a = translator.toAst(graph)
-	local src = ast.decompile(a)
-	log(STR, 'Source', src)
+	local name = QFileDialog.getSaveFileName(nil, Q"Select output file",  Q".", Q"Lua source (*.lua)")
+	if not name:isEmpty() then
+		local a = translator.toAst(graph)
+		local src = ast.decompile(a)
+		local f = assert(io.open(S(name), 'w'))
+		f:write(src)
+		f:close()
+	end
 end
 
+-- recursively removes connected items and blocks from view
 local function remove(view, block)
 	local done = {}
 	local function rec(item, first)
@@ -62,11 +72,14 @@ local function remove(view, block)
 				rec(e)
 			end
 		end
-		view:removeItem(item)
+		if item.visual then
+			view:removeItem(item)
+		end
 	end
 	rec(block, true)
 end
 
+-- finds the block in which the item resides
 local function edgeParent(item)
 	local d = item.nodes["do"]
 	if not d then return end
@@ -78,6 +91,7 @@ local function edgeParent(item)
 	end
 end
 
+-- finds the previous edge in block
 local function previousEdge(edge, block)
 	if block.count == 0 then return end
 	local prev = block.nodes["1"].edges["do"]
@@ -92,6 +106,9 @@ local function previousEdge(edge, block)
 	end
 end
 
+--- Handle doubleclick of an item. If the clicked item has child blocks, they are shown/hidden.
+-- @param view Current view.
+-- @param item Doubleclicked item.
 function toggle(view, item)
 	trace(STR, "Toggle", item)
 	if item.type.name == "Funcdef" then
@@ -103,7 +120,7 @@ function toggle(view, item)
 		end)
 	elseif item.type.name ~= "Block" and item.nodes then
 		local blocks = List()
-		local parent = edgeParent(item)
+		local parent = edgeParent(item) or item
 
 		for inc, node in pairs(item.nodes) do
 			local ndo = node.edges["do"]
@@ -119,8 +136,7 @@ function toggle(view, item)
 				view:addItem(block)
 				block.visual.item:setZValue(item.visual.item:zValue() + 3)
 				view:connect(item, block)
-				view.attract[item] = true
-				view.attract[block] = true
+				view:connectLayoutItems(parent, block)
 				local pos = item.visual.item:pos()
 				local x, y = pos:x(), pos:y()
 				block.visual.item:setPos(x + 300, y)
@@ -253,7 +269,10 @@ function edit(edge)
 end
 
 
-
+--- Delete an item. Removes the operation <code>item</code> from it's parent block.
+-- @param graph Current graph.
+-- @param view Current view.
+-- @param item Edge, which should be deleted.
 function delete(graph, view, item)
 	if item.type.name ~= "Block" then
 		if item.expanded then toggle(view, item) end
@@ -283,10 +302,10 @@ function delete(graph, view, item)
 			graph:disconnect(nxt, item)
 		end
 
-		TODO "Remove dependencies"
 		view:removeItem(item)
 		graph:removeEdge(item)
 
+		-- reorder the operations
 		order = assert(tonumber(order), "order nonnumeric: " .. order)
 		for i=order+1, block.count do
 			local inc = block.nodes['@'..i]
@@ -299,13 +318,82 @@ function delete(graph, view, item)
 	return true
 end
 
-
+--- Executes the graph. Converts the graph to Lua source and executes it.
+-- @param graph Graph to be executed
 function execute(graph)
-	graph:dump()
-	TODO "Graph execution"
+	local a = translator.toAst(graph)
+	local src = ast.decompile(a)
+	
+	local dialog = QDialog.new_local()
+	dialog:setWindowTitle(Q"Execution")
+	
+	local font = QFont.new_local(Q'Courier New', 10)
+	
+	local layout = QVBoxLayout.new_local()
+	
+	local sp = QSplitter.new_local()
+	local srct = QTextEdit.new_local()
+	local text = QTextEdit.new_local()
+	
+	srct:setPlainText(Q(src))
+	srct:setFont(font)
+	text:setFont(font)
+	
+	sp:addWidget(srct)
+	sp:addWidget(text)
+
+	local w = QWidget.new_local()
+	local l2 = QHBoxLayout.new_local()
+	local exec = QPushButton.new_local(Q"Execute")
+	dialog:__addmethod('do()', function()
+		-- prepare a custom print function
+		local env = {}
+		function env.print(...)
+			local n = select('#', ...)
+			local a = {...}
+			for i=1,n do
+				a[i] = tostring(a[i])
+			end
+			text:append(Q(table.concat(a, '\t') .. '\n'))
+		end
+		env.keys = pairs
+		-- setup environment
+		setmetatable(env, {__index = _G})
+		local src = S(srct:toPlainText())
+		
+		trace("Executing: %s", src)
+		
+		local f, err = loadstring(src, 'main')
+		if not f then 
+			QMessageBox.critical(dialog, Q"Parse error", Q(err))
+		else
+			setfenv(f, env)
+			local ok, err = pcall(f)
+			if not ok then
+				QMessageBox.critical(dialog, Q"Runtime error", Q(err))
+			end
+		end
+	end)
+	exec:connect('2pressed()', dialog, '1do()')
+	
+	local close = QPushButton.new_local(Q"Close")
+	close:connect('2pressed()', dialog, '1accept()')
+	
+	l2:addWidget(exec)
+	l2:addWidget(close)
+	w:setLayout(l2)
+	
+	layout:addWidget(sp)
+	layout:addWidget(w)
+	
+	dialog:setLayout(layout)
+	dialog:exec()
 end
 
-
+--- Creates an item in a block.
+-- @param type Type of item to be created
+-- @param block Block, in which it will be created
+-- @param pos Position (0-based) in which the operation will be placed
 function create(type, block, pos)
 	local graph = gui.view.graph
 	vlua.isCreating = false
@@ -387,6 +475,7 @@ function create(type, block, pos)
 	end
 end
 
+--- Defines a custom toolbar for Vlua.
 function toolbar(window)
 	local toolbar = QToolBar.new(window)
 	window:addToolBar('RightToolBarArea', toolbar)

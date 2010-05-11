@@ -66,7 +66,6 @@ local function createActions()
 	end
 
 	makeAction("New", function()
-		TODO "New - create new graph"
 		view:clear()
 		local g = Graph()
 		base.language.initialize(g)
@@ -214,10 +213,4 @@ function run(...)
 	createLog()
 	
 	actions.New:trigger()
-	
-	--[[
-	view:clear()
-	local g = base.language.import(scene.graph)
-	view:reload(g)
-	]]
 end

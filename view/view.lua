@@ -48,12 +48,8 @@ function VConnector:_init(from, to)
 	assert(to.visual, "'to' does not have it's visual representation")
 
 	local item = QGraphicsLineItem.new_local()
-	item:setZValue(math.min(from.visual.item:zValue(), to.visual.item:zValue()) - 1)	
-
-	--local txt = QGraphicsTextItem.new_local(Q(inc.name))
-	--local pen = QPen.new_local(inc.ignored and colors.red or colors.black)
-	--item:setPen(pen)
-
+	item:setZValue(math.min(from.visual.item:zValue(), to.visual.item:zValue()) - 1)
+	
 	item.from = from
 	item.to = to
 
@@ -110,6 +106,7 @@ class.View()
 
 local evChanged = event "itemChanged"
 
+--- View class constructor. Sets up the QGraphicsScene and QGraphicsView and adds a QListWidget for graph elements.
 function View:_init(parent)
 	self.scene = QGraphicsScene.new(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
@@ -121,8 +118,8 @@ function View:_init(parent)
 	
 	self.history = {}
 	self.items = {}
-	self.attract = {}
-	self.repulse = {}
+	self.layout_items = {}
+	self.layout_connections = {}
 	self.layouter = Layouter()
 	
 	local widget = QWidget.new(parent)
@@ -144,15 +141,7 @@ function View:_init(parent)
 	self.deleteCursor = QCursor.new_local(deletePixmap)
 
 	local this = self
-	--[[
-	function self.view:contextMenuEvent(e)
-		if this.ignoreClick then
-			this.ignoreClick = nil
-		else
-			this:showPopup(e:globalPos())
-		end
-	end
-	]]
+	-- enable on ctrl+wheel
 	function self.view:wheelEvent(e)
 		local mods = e:modifiers()
 		local mod = mods[#mods]
@@ -163,7 +152,7 @@ function View:_init(parent)
 			super()
 		end
 	end
-	
+	-- enable activation of item delete by keyboard
 	function self.view:keyPressEvent(e)
 		local key = e:key()
 		if key == Qt.Key.Key_Escape and this.isDeleting then
@@ -183,8 +172,8 @@ function View:_init(parent)
 	end)
 	self.elements:connect('2itemDoubleClicked(QListWidgetItem*)', self.elements, '1doubleClick(QListWidgetItem*)')
 
---[[
 	handle("itemChanged", function(e)
+--[[
 		local items = {[e]=true}
 		local neighbours = {}
 		for k,v in pairs(e.nodes or e.edges) do
@@ -198,9 +187,9 @@ function View:_init(parent)
 				items[v] = true
 			end
 		end
-		self.layouter:start(self.attract, self.repulse)
-	end)
 ]]
+		self.layouter:start(self.layout_items, self.layout_connections)
+	end)
 end
 
 function View:back()
@@ -256,7 +245,8 @@ function View:addItem(x)
 	end
 	
 	function item:mouseDoubleClickEvent(e)
-		language.toggle(view, x)
+		local ok, err = xpcall(function () language.toggle(view, x) end, debug.traceback)
+		if not ok then fatal(err) end
 		super()
 	end
 	
@@ -265,6 +255,8 @@ function View:addItem(x)
 end
 
 function View:removeItem(x)
+	self.layouter:stop()
+	
 	if not self.items[x] then warn('Trying to remove item that is not on scene') return end
 	
 	self.scene:removeItem(x.visual.item)
@@ -273,11 +265,14 @@ function View:removeItem(x)
 		other.visual.connectors[c] = nil
 		self.scene:removeItem(c.item)
 	end
+	for o in pairs(self.layout_connections[x] or {}) do
+		self.layout_connections[o][x] = nil
+	end
+	self.layout_connections[x] = nil
 	
 	x.visual = nil
 	self.items[x] = nil
-	self.attract[x] = nil
-	self.repulse[x] = nil
+	self.layout_items[x] = nil
 end
 
 function View:connect(a, b)
@@ -295,8 +290,8 @@ function View:clear()
 		i.visual = nil
 	end
 	self.scene:clear()
-	self.attract = {}
-	self.repulse = {}
+	self.layout_items = {}
+	self.layout_connections = {}
 	self.items = {}
 end
 
@@ -307,7 +302,7 @@ function View:scramble()
 end
 
 function View:fullLayout()
-	self.layouter:start(self.attract, self.repulse, true)
+	self.layouter:start(self.layout_items, true)
 end
 
 function View:display(start)
@@ -317,7 +312,6 @@ function View:display(start)
 
 	table.insert(self.history, start)
 
-	self.repulse[start] = true
 	start.expanded = false
 	
 	language.toggle(self, start)
@@ -327,29 +321,15 @@ function View:display(start)
 	self.scene:update()
 end
 
---[[
-function View:showPopup(point)
-	if not self.graph then return end
-	local this = self
-	local menu = QMenu.new()
-	menu:connect('2aboutToHide()', menu, '1deleteLater()')
-	local names = {}
-	for name in pairs(self.graph.elements) do
-		table.insert(names, name)
-	end
-	table.sort(names)
-	for _,name in ipairs(names) do
-		local item = self.graph.elements[name]
-		local action = QAction.new(Q(name), menu)
-		menu:__addmethod(name..'()', function()
-			this:display(item)
-		end)
-		action:connect('2triggered()', menu, '1'..name..'()')
-		menu:addAction(action)
-	end
-	menu:popup(point)
+function View:connectLayoutItems(a, b)
+	trace(STR, "Connecting for layout:", a, b)
+	self.layout_items[a] = true
+	self.layout_items[b] = true
+	self.layout_connections[a] = self.layout_connections[a] or {}
+	self.layout_connections[b] = self.layout_connections[b] or {}
+	self.layout_connections[a][b] = true
+	self.layout_connections[b][a] = true
 end
-]]
 
 function View:startDeleting()
 	self.isDeleting = true

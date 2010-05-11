@@ -10,6 +10,7 @@ end
 -- very ugly
 local globGraph
 
+--- List of updating functions for edge types. Each retrieves the edge, and can update block titles and values.
 updaters = {
 	Set = function (self)
 		local v = self.nodes.target
@@ -91,7 +92,7 @@ updaters = {
 
 		-- rename in scene elements
 		if nm.oldvalue and nm.oldvalue ~= name then
-			trace('Renaming element %s to %s', nm.oldname, name)
+			trace(STR, 'Renaming element', nm.oldname, 'to', name)
 			local func = graph.elements[nm.oldvalue]
 			graph.elements[nm.oldvalue] = nil
 			graph.elements[name] = func
@@ -135,6 +136,7 @@ function fromAst(ast, graph)
 	local processBlock, processExpression, processStatement, handleFunctionDefinition
 	local currentBlock
 
+	-- special case - handle function definition by creating a new graph element
 	function handleFunctionDefinition(s)
 		if s.tag == "Set" and s[1] and s[2] and #s[1] == 1 and #s[2] == 1 and s[2][1].tag == "Function"
 		or s.tag == "Localrec" and #s == 2 and s[2][1].tag == "Function" and s[1][1].tag == "Id"
@@ -173,6 +175,7 @@ function fromAst(ast, graph)
 		end
 	end
 
+	-- process a statement and return it's activation node
 	function processStatement(s)
 		local tag = s.tag
 		if not tag then error(STR("Error in processing statement", repr(s))) end
@@ -319,6 +322,7 @@ function fromAst(ast, graph)
 		findIds(exp)
 	end
 	
+	-- create a node for expression
 	function processExpression(e)
 		local n = graph:createNode("Expression")
 		resolveIds(e, n, currentBlock)
@@ -326,6 +330,7 @@ function fromAst(ast, graph)
 		return n
 	end
 
+	-- creates a block for edges
 	function processBlock(b, parent)
 		local ndo = graph:createNode("Stat")
 		local block = graph:createEdge("Block")
@@ -408,6 +413,10 @@ function toAst(graph)
 			local body = toBlock(stat.nodes["body"].edges["do"])
 			res[1] = cond
 			res[2] = body
+			if stat.nodes["else"] then
+				local els = toBlock(stat.nodes["else"].edges["do"])
+				res[3] = els
+			end
 		elseif tag == "While" then
 			local cond = toExpression(stat.nodes["condition"])
 			local body = toBlock(stat.nodes["body"].edges["do"])
@@ -437,8 +446,10 @@ function toAst(graph)
 		elseif tag == "Break" then
 			-- done
 		elseif tag == "Return" then
-			local exp = toExpression(stat.nodes["returns"])
-			res[1] = exp
+			if stat.nodes["returns"] then
+				local exp = toExpression(stat.nodes["returns"])
+				res[1] = exp
+			end
 		elseif tag == "Fornum" then
 			local var = toExpression(stat.nodes["variable"])
 			local from = toExpression(stat.nodes["from"])
