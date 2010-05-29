@@ -35,6 +35,7 @@ local function createMenus()
 	tools:addAction(actions["Reload"])
 	tools:addAction(actions["Layout"])
 	tools:addAction(actions["Execute"])
+	tools:addAction(actions["Screenshot"])
 
 	local help = QMenu.new(Q"Help")
 
@@ -92,11 +93,11 @@ local function createActions()
 		local g = base.language.import(view.graph)
 		view:reload(g)
 	end)
-	
+
 	makeAction("Export", function()
 		base.language.export(view.graph)
 	end)
-	
+
 	makeAction("Quit", function()
 		app.exit()
 	end)
@@ -104,11 +105,11 @@ local function createActions()
 	makeAction("Layout", function()
 		view:fullLayout()
 	end)
-	
+
 	makeAction("Back", function()
 		view:back()
 	end)
-	
+
 	makeAction("Execute", function()
 		base.language.execute(view.graph)
 	end)
@@ -116,9 +117,25 @@ local function createActions()
 	makeAction("Delete", function()
 		view:startDeleting()
 	end)
-	
+
 	makeAction("Reload", function()
 		base.language.reload(view.graph)
+	end)
+
+	makeAction("Screenshot", function()
+		require 'qtsvg'
+		local gen = QSvgGenerator.new_local()
+		gen:setFileName(Q"out.svg")
+
+		local r = view.view:sceneRect()
+		local s = QSize.new_local(math.floor(r:width()), math.floor(r:height()))
+		gen:setSize(s)
+		gen:setViewBox(r)
+
+		local p = QPainter.new_local()
+		p:begin(gen)
+		view.scene:render(p)
+		p["end"](p)
 	end)
 end
 
@@ -148,7 +165,7 @@ local function createToolbar()
 	toolbar:addAction(actions['Reload'])
 	toolbar:addAction(actions['Back'])
 	toolbar:addAction(actions['Execute'])
-	
+
 	toolbar:addAction(actions['Delete'])
 
 	if base.language.toolbar then base.language.toolbar(mainWindow) end
@@ -211,6 +228,6 @@ function run(...)
 
 	createScene()
 	createLog()
-	
+
 	actions.New:trigger()
 end
