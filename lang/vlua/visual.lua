@@ -24,8 +24,8 @@ local center_point = QPointF.new_local(0,0)
 local center_text = QTextOption.new_local({'AlignHCenter', 'AlignVCenter'})
 
 local SIMPLE_HEIGHT = 30
-local WIDTH = 240
-	
+local WIDTH = 300
+
 -- Node renderer not needed
 do
 	function vlua.setupNodeRenderer(view, node)
@@ -44,17 +44,17 @@ do
 		:IN(QPointF.new_local(2, 0))
 		:IN(QPointF.new_local(-SIDEBAR_SIZE, SIDEBAR_SIZE/2 + 2))
 		:IN(QPointF.new_local(-SIDEBAR_SIZE, -SIDEBAR_SIZE/2 - 2))
-		
+
 	local function createBlockRenderer(view, item, block)
 		local height, width
 		local size, titleSize, titleSubsize
-		
+
 		-- Qt 4.6
 		if QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges then
 			item:setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, true)
 		end
 		if not block.count then block.count = 0 end
-		
+
 		-- sets up child positions and total height
 		function block:update()
 			height = 24
@@ -90,20 +90,20 @@ do
 				stat.visual.parent = block
 				stat.locked = true
 			end
-			
+
 			item:updateChildPositions(item:pos())
-			
+
 			size = QRectF.new_local(-width/2 - SIDEBAR_SIZE, -height/2, width + SIDEBAR_SIZE, height)
 			titleSize = QRectF.new_local(-width/2 - SIDEBAR_SIZE, -height/2, width + SIDEBAR_SIZE, 20)
 			titleSubsize = QRectF.new_local(-width/2 - SIDEBAR_SIZE, -height/2 + 15, width + SIDEBAR_SIZE, 5)
 		end
-		
+
 		-- update operation positions after moving of the block
 		function item:updateChildPositions(pos)
 			local x, y = pos:x(), pos:y()
 			local y = y - height/2 + 25
 			local zValue = item:zValue() + 2
-			
+
 			for i=1,block.count do
 				local stat = block.nodes[tostring(i)]
 				assert(stat, "cannot find statement "..i.." in block")
@@ -119,7 +119,7 @@ do
 			if typ == "ItemPositionChange" then self:updateChildPositions(val:toPointF()) end
 			super()
 		end
-		
+
 		-- rendering essentials
 		function item:boundingRect()
 			return size
@@ -136,7 +136,7 @@ do
 			if block.title then painter:drawText(titleSize, Q(block.title), center_text) end
 			painter:setBrush('NoBrush')
 			painter:drawRoundedRect(size, 8, 8)
-			
+
 			-- draw red creation position
 			if self.createPos then
 				painter:setBrush(redBrush)
@@ -146,7 +146,7 @@ do
 				painter:drawPolygon(triangle)
 			end
 		end
-		
+
 		local function enableItems(on)
 			for i=1,block.count do
 				local stat = block.nodes[tostring(i)]
@@ -154,7 +154,7 @@ do
 				stat.visual.item:setEnabled(on)
 			end
 		end
-		
+
 		-- support for creating of operations inside a block
 		item:setAcceptHoverEvents(true)
 		function item:hoverEnterEvent(e)
@@ -193,26 +193,26 @@ do
 			self.createPos = nil
 		end
 		item.mousePressOverride = true
-		
+
 		block:update()
 	end
 
 	local size = QRectF.new_local(-WIDTH/2, -SIMPLE_HEIGHT/2, WIDTH, SIMPLE_HEIGHT)
 	local gradient = QRadialGradient.new_local(center_point, WIDTH / 2, center_point)
 	gradient:setColorAt(0, to_color"white")
-	
+
 	function vlua.setupEdgeRenderer(view, edge)
 		local item = QGraphicsItem.new_local()
-		
+
 		edge.visual.height = SIMPLE_HEIGHT
 		item:setFlag('ItemIsSelectable', true)
 		item:setFlag('ItemIsMovable', true)
 		item:setZValue(1)
-			
+
 		item.str = edge.type and edge.type.name or 'unknown'
 		if edge.value then item.str = edge.value end
 		item.str = Q(item.str)
-	
+
 		if edge.type.name == "Block" then
 			createBlockRenderer(view, item, edge)
 		else
@@ -226,19 +226,19 @@ do
 				local col = edge.type.color and to_color(edge.type.color) or to_color"pink"
 				gradient:setColorAt(1, col)
 				painter:setBrush(QBrush.new_local(gradient))
-				
+
 				-- draw type polygon, or rounded rect as default
 				if self.poly then
 					painter:drawPolygon(self.poly)
 				else
 					painter:drawRoundedRect(size, 8, 8)
 				end
-				
+
 				-- draw edge value as text
 				local text = edge.value
-				if #text > 26 then text = text:sub(1,26) .. '...' end
+				if #text > WIDTH/9 then text = text:sub(1,WIDTH/9) .. '...' end
 				painter:drawText(size, Q(text), center_text)
-				
+
 				-- draw operation icon
 				if self.icon then
 					local iconX = edge.type.iconRight and (WIDTH/2-21) or (-WIDTH/2+5)
@@ -246,7 +246,7 @@ do
 				end
 			end
 		end
-		
+
 		return item
 	end
 end

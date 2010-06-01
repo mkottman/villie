@@ -73,21 +73,6 @@ local function createActions()
 		view:reload(g)
 	end)
 
---[[
-	makeAction("Load", function()
-		view:clear()
-		local g = Graph()
-		TODO "Load - file select dialog"
-		g:load('graph.graphml')
-		view:reload(g)
-	end)
-
-	makeAction("Save", function()
-		TODO "Save - file select dialog"
-		g:save('graph.graphml')
-	end)
-]]
-
 	makeAction("Import", function()
 		view:clear()
 		local g = base.language.import(view.graph)
@@ -95,6 +80,7 @@ local function createActions()
 	end)
 
 	makeAction("Export", function()
+		view.graph:dump()
 		base.language.export(view.graph)
 	end)
 
@@ -127,10 +113,10 @@ local function createActions()
 		local gen = QSvgGenerator.new_local()
 		gen:setFileName(Q"out.svg")
 
-		local r = view.view:sceneRect()
+		local r = view.scene:itemsBoundingRect()
 		local s = QSize.new_local(math.floor(r:width()), math.floor(r:height()))
 		gen:setSize(s)
-		gen:setViewBox(r)
+--		gen:setViewBox(r)
 
 		local p = QPainter.new_local()
 		p:begin(gen)

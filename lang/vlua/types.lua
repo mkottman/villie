@@ -1,5 +1,5 @@
 local HEIGHT = 30
-local WIDTH = 240
+local WIDTH = 300
 local WW = WIDTH/2
 local HH = HEIGHT/2
 local CALL_EDGE = 20
@@ -57,7 +57,7 @@ return {
 			proto = {'Ireturns'};
 		};
 		Break = { color = "gray", icon = "lang/vlua/icons/break.png" };
-		
+
 		Call = { color = "lightblue", poly = QPolygonF.new_local()
 				:IN(QPointF.new_local(-WW+20, -HH))
 				:IN(QPointF.new_local(WW, -HH))

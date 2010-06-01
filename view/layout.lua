@@ -4,7 +4,7 @@
 
 -- some parameters
 
-local K = 300
+local K = 400
 local MAX_DIST = 1000
 
 -- repulsive force
@@ -143,6 +143,12 @@ function Layouter:updatePositions()
 	end
 end
 
+local function intersects(u, v)
+	local ur = u.visual.item:sceneBoundingRect()
+	local vr = v.visual.item:sceneBoundingRect()
+	return ur:intersects(vr)
+end
+
 function Layouter:addAttractive()
 	for e in pairs(self.items) do
 		for other in pairs(self.connections[e]) do
@@ -153,21 +159,17 @@ function Layouter:addAttractive()
 	end
 end
 
-local function intersects(u, v)
-	local ur = u.visual.item:sceneBoundingRect()
-	local vr = v.visual.item:sceneBoundingRect()
-	return ur:intersects(vr)
-end
-
 function Layouter:addRepulsive()
 	for u in pairs(self.items) do
 		for v in pairs(self.items) do
 			if u ~= v then
 				local f = repulsive(u.pos, v.pos)
+--[[
 				if intersects(u, v) then
 					trace(STR, 'Intersected!', u, v)
 					f:mul(5)
 				end
+]]
 				u.force:add(f)
 				-- opposite force will be added in other iteration
 			end

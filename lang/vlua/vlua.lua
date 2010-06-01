@@ -67,7 +67,7 @@ local function remove(view, block)
 		if done[item] then return end
 		done[item] = true
 		for inc,e in pairs(item.nodes or item.edges) do
-			if first and inc.name == "do" then
+			if (first and (inc.name == "do" or inc.name =="info")) or inc.name == "references" then
 			else
 				rec(e)
 			end
@@ -126,10 +126,16 @@ function toggle(view, item)
 			local ndo = node.edges["do"]
 			if ndo and ndo ~= item and ndo ~= parent and ndo.type.name == "Block" then
 				blocks:append(ndo)
+				ndo.inc = inc.name
 			end
 		end
 
-		for _,block in ipairs(blocks) do
+		table.sort(blocks, function(a,b)
+			return a.inc < b.inc
+		end)
+
+		local lastBlock
+		for i,block in ipairs(blocks) do
 			if item.expanded then
 				remove(view, block)
 			else
@@ -137,9 +143,13 @@ function toggle(view, item)
 				block.visual.item:setZValue(item.visual.item:zValue() + 3)
 				view:connect(item, block)
 				view:connectLayoutItems(parent, block)
+				if lastBlock then
+					view:connectLayoutItems(lastBlock, block)
+				end
+				lastBlock = block
 				local pos = item.visual.item:pos()
 				local x, y = pos:x(), pos:y()
-				block.visual.item:setPos(x + 300, y)
+				block.visual.item:setPos(x + 300, y + 40*i)
 			end
 		end
 

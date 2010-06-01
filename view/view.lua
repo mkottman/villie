@@ -51,7 +51,7 @@ function VConnector:_init(from, to)
 
 	local item = QGraphicsLineItem.new_local()
 	item:setZValue(math.min(from.visual.item:zValue(), to.visual.item:zValue()) - 1)
-	
+
 	item.from = from
 	item.to = to
 
@@ -65,24 +65,24 @@ function VConnector:_init(from, to)
 	function item:paint(painter)
 		if not self.from.visual or not self.to.visual then return end
 		local fromv = self.from.visual.item
-		local tov = self.to.visual.item	
-	
+		local tov = self.to.visual.item
+
 		if fromv:collidesWithItem(tov) then return end
-		
+
 		local startp = fromv:pos() --+ fromv:boundingRect():center()
 		local endp = tov:pos() --+ tov:boundingRect():center()
-		
+
 		local line = QLineF.new_local(startp, endp)
 		self:setLine(line)
-		
+
 		local center = (startp + endp) / 2
 		--txt:setPos(center:x() + 15, center:y())
-		
+
 		local angle = math.atan2(line:dx(), line:dy()) + math.pi/2
-		
+
 		local arrowP1 = center + QPointF.new_local(math.sin(angle+math.pi/3) * ARROWSIZE, math.cos(angle + math.pi/ 3) * ARROWSIZE)
 		local arrowP2 = center + QPointF.new_local(math.sin(angle+2*math.pi/3) * ARROWSIZE, math.cos(angle + 2*math.pi/ 3) * ARROWSIZE)
-		
+
 		local arrowHead = QPolygonF.new_local()
 		arrowHead:IN(center):IN(arrowP1):IN(arrowP2)
 
@@ -90,7 +90,7 @@ function VConnector:_init(from, to)
 		painter:drawPolygon(arrowHead)
 		painter:drawLine(line)
 	end
-	
+
 	self.item = item
 end
 
@@ -114,31 +114,31 @@ local evChanged = event "itemChanged"
 function View:_init(parent)
 	self.scene = QGraphicsScene.new(parent)
 	self.view = QGraphicsView.new(self.scene, parent)
-	
+
 	self.view:setTransformationAnchor('AnchorUnderMouse')
 	self.view:setViewportUpdateMode('BoundingRectViewportUpdate')
 	self.view:setRenderHint('Antialiasing')
 	-- self.view:setDragMode('ScrollHandDrag')
-	
+
 	self.history = {}
 	self.items = {}
 	self.layout_items = {}
 	self.layout_connections = {}
 	self.layouter = Layouter()
-	
+
 	local widget = QWidget.new(parent)
 	local layout = QHBoxLayout.new(widget)
-	
+
 	local elements = QListWidget.new(widget)
 	elements:setMinimumWidth(120)
 	elements:setMaximumWidth(120)
 
 	self.widget = widget
 	self.elements = elements
-	
+
 	layout:addWidget(self.elements)
 	layout:addWidget(self.view)
-	
+
 
 	local deletePixmap = QPixmap.new_local(Q"gui/icons/Delete.png")
 	self.normalCursor = QCursor.new_local()
@@ -166,8 +166,8 @@ function View:_init(parent)
 			this:startDeleting()
 		end
 	end
-	
-	
+
+
 	self.elements:__addmethod('doubleClick(QListWidgetItem*)', function(self, item)
 		local name = S(item:text())
 		trace("Doubleclick on %s", name)
@@ -192,7 +192,7 @@ function View:_init(parent)
 			end
 		end
 ]]
-		self.layouter:start(self.layout_items, self.layout_connections)
+		-- self.layouter:start(self.layout_items, self.layout_connections)
 	end)
 end
 
@@ -208,7 +208,7 @@ function View:addItem(x)
 	if not x:is_a(Node) and not x:is_a(Edge) then
 		error("added item is not a Node or Edge: "..STR(x))
 	end
-	
+
 	local visual
 	if x:is_a(Node) then
 		visual = VNode(self, x)
@@ -235,34 +235,35 @@ function View:addItem(x)
 			end
 		end
 	end
-	
+
 	function item:mouseMoveEvent(e)
 		x.ignored = true
 		evChanged(x)
 		super()
 	end
-	
+
 	function item:mouseReleaseEvent(e)
 		x.ignored = false
 		evChanged(x)
 		super()
 	end
-	
+
 	function item:mouseDoubleClickEvent(e)
 		local ok, err = xpcall(function () language.toggle(view, x) end, debug.traceback)
 		if not ok then fatal(err) end
 		super()
 	end
-	
+
+	x.expanded = false
 	self.scene:addItem(item)
 	self.items[x] = true
 end
 
 function View:removeItem(x)
 	self.layouter:stop()
-	
+
 	if not self.items[x] then warn('Trying to remove item that is not on scene') return end
-	
+
 	self.scene:removeItem(x.visual.item)
 	for c in pairs(x.visual.connectors) do
 		local other = c:other(x)
@@ -273,7 +274,7 @@ function View:removeItem(x)
 		self.layout_connections[o][x] = nil
 	end
 	self.layout_connections[x] = nil
-	
+
 	x.visual = nil
 	self.items[x] = nil
 	self.layout_items[x] = nil
@@ -281,10 +282,10 @@ end
 
 function View:connect(a, b)
 	local conn = VConnector(a, b)
-	
+
 	a.visual.connectors[conn] = true
 	b.visual.connectors[conn] = true
-	
+
 	self.scene:addItem(conn.item)
 end
 
@@ -306,7 +307,7 @@ function View:scramble()
 end
 
 function View:fullLayout()
-	self.layouter:start(self.layout_items, true)
+	self.layouter:start(self.layout_items, self.layout_connections, true)
 end
 
 function View:display(start)
@@ -317,7 +318,7 @@ function View:display(start)
 	table.insert(self.history, start)
 
 	start.expanded = false
-	
+
 	language.toggle(self, start)
 	-- force layout of items
 	start.visual.item:moveBy(1,1)

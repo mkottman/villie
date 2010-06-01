@@ -109,12 +109,12 @@ updaters = {
 		for i=1,func.count do
 			args:append(func.nodes["arg"..i].value)
 		end
-		
+
 		args = table.concat(args, ', ')
 		body.edges["do"].title = 'Arguments: ' .. args
-		
+
 		args = '(' .. args .. ')'
-		
+
 		func.value = name .. args
 		self.value = name .. args
 	end,
@@ -154,13 +154,13 @@ function fromAst(ast, graph)
 
 			local body = processBlock(f[#f], currentBlock)
 			graph:connect(body, func, "body", "out")
-			
+
 			trace('Creating element %s with value %s', name, tostring(func))
 			graph.elements[name] = func
 
 			local funcdef = graph:createEdge("Funcdef")
 			func.funcdef = funcdef
-			
+
 			local nm = graph:createNode("Expression")
 			nm.value = name
 			nm.oldvalue = name
@@ -179,15 +179,16 @@ function fromAst(ast, graph)
 	function processStatement(s)
 		local tag = s.tag
 		if not tag then error(STR("Error in processing statement", repr(s))) end
-		
+
 		local funcdef = handleFunctionDefinition(s)
 		if funcdef then return funcdef end
-		
+
 		local edge
 		if tag == "Set" or tag == "Local" then
 			edge = graph:createEdge(tag)
-			
-			if math.max(#s[1], #s[2]) > 1 then
+
+--			if math.max(#s[1], #s[2]) > 1 then
+			if false then
 				fatal("Unable to parse multiple assignment: %s", AST.decompile(s))
 			else
 				local var = s[1][1][1]
@@ -210,7 +211,8 @@ function fromAst(ast, graph)
 			end
 		elseif tag == "If" then
 			edge = graph:createEdge(tag)
-			if #s > 3 then
+--			if #s > 3 then
+			if false then
 				fatal("Unable to parse elseif blocks")
 			else
 				local cond = processExpression(s[1])
@@ -218,9 +220,9 @@ function fromAst(ast, graph)
 
 				graph:connect(cond, edge, "condition", "in")
 				graph:connect(body, edge, "body", "out")
-				
-				if #s == 3 then
-					local els = processBlock(s[3], currentBlock)
+
+				if #s % 2 == 1 then
+					local els = processBlock(s[#s], currentBlock)
 					graph:connect(els, edge, "else", "out")
 				end
 			end
@@ -288,15 +290,15 @@ function fromAst(ast, graph)
 			fatal("Unhandled statement %s", tag)
 			edge = graph:createEdge("Unknown")
 		end
-		
+
 		if updaters[tag] then edge.update = updaters[tag] end
 		if edge.update then edge:update() end
-		
+
 		local ndo = graph:createNode("Stat")
 		graph:connect(ndo, edge, "do", "in")
 		return ndo
 	end
-	
+
 	local function resolveIds(exp, node, block)
 		local function resolve(id, inBlock)
 			for i,n in pairs(inBlock.nodes.info.edges["locals"].nodes) do
@@ -321,7 +323,7 @@ function fromAst(ast, graph)
 		end
 		findIds(exp)
 	end
-	
+
 	-- create a node for expression
 	function processExpression(e)
 		local n = graph:createNode("Expression")
@@ -335,7 +337,7 @@ function fromAst(ast, graph)
 		local ndo = graph:createNode("Stat")
 		local block = graph:createEdge("Block")
 		graph:connect(ndo, block, "do", "in")
-		
+
 		local oldBlock = currentBlock
 		currentBlock = block
 		block.parent = parent
@@ -344,7 +346,7 @@ function fromAst(ast, graph)
 		graph:connect(info, block, "info", "out")
 		local locals = graph:createEdge("Locals")
 		graph:connect(info, locals, "locals", "in")
-		
+
 		local last
 		local count = 0
 		for i=1, #b do
@@ -360,7 +362,7 @@ function fromAst(ast, graph)
 		end
 		block.count = count
 		currentBlock = oldBlock
-		
+
 		return ndo
 	end
 
@@ -377,7 +379,7 @@ end
 -- @return resulting AST
 function toAst(graph)
 	local toBlock, toExpression, toStatement
-	
+
 	function toExpression(exp)
 		if exp.type.name == "Expression" then
 			assert(exp.value, "expression doesn't have value!")
@@ -390,14 +392,14 @@ function toAst(graph)
 			return res
 		end
 	end
-	
+
 	function toStatement(stat)
 		local res = {}
 		stat = stat.edges["do"]
 		local tag = stat.type.name
-		
+
 		res.tag = tag
-		
+
 		if tag == "Set" then
 			print(repr(stat, "Set", {maxlevel=4}))
 			res[1] = {toExpression(stat.nodes["target"])}
@@ -477,10 +479,10 @@ function toAst(graph)
 		else
 			fatal("toAst: unknown tag: %s", tag)
 		end
-		
+
 		return res
 	end
-	
+
 	function toBlock(block)
 		local b = {}
 		for i=1,block.count do
@@ -488,7 +490,7 @@ function toAst(graph)
 		end
 		return b
 	end
-	
+
 	local ast = toBlock(graph.elements.__Main)
 	return ast
 end
